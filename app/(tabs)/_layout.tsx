@@ -1,59 +1,85 @@
-import React from 'react';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Link, Tabs } from 'expo-router';
-import { Pressable } from 'react-native';
-
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
-
-// You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
-function TabBarIcon(props: {
-  name: React.ComponentProps<typeof FontAwesome>['name'];
-  color: string;
-}) {
-  return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
-}
+import { Tabs } from "expo-router";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { StatusBar } from "react-native";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable>
-                {({ pressed }) => (
-                  <FontAwesome
-                    name="info-circle"
-                    size={25}
-                    color={Colors[colorScheme ?? 'light'].text}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
-          ),
-        }}
+    <>
+      <StatusBar
+        backgroundColor="#393E41" // Match the header background color
+        barStyle="light-content" // Light icons for dark background
       />
-      <Tabs.Screen
-        name="two"
-        options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+      <Tabs
+        screenOptions={{
+          tabBarActiveTintColor: "#F6F7EB",
+          headerStyle: {
+            backgroundColor: "#393E41",
+          },
+          headerTitleStyle: {
+            fontFamily: "QuicksandReg",
+          },
+          headerShadowVisible: false,
+          headerTintColor: "#F6F7EB",
+          tabBarShowLabel: false,
+          tabBarStyle: {
+            backgroundColor: "#393E41",
+          },
         }}
-      />
-    </Tabs>
+      >
+        <Tabs.Screen
+          name="feed"
+          options={{
+            title: "Feed",
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons
+                name={focused ? "newspaper" : "newspaper-outline"}
+                size={24}
+                color={color}
+              />
+            ),
+          }}
+        ></Tabs.Screen>
+
+        <Tabs.Screen
+          name="subscriptions"
+          options={{
+            title: "Subscriptions",
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons
+                name={focused ? "mail" : "mail-outline"}
+                size={24}
+                color={color}
+              />
+            ),
+          }}
+        ></Tabs.Screen>
+        <Tabs.Screen
+          name="achievements"
+          options={{
+            title: "Achievements",
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons
+                name={focused ? "trophy" : "trophy-outline"}
+                size={24}
+                color={color}
+              />
+            ),
+          }}
+        ></Tabs.Screen>
+        <Tabs.Screen
+          name="settings"
+          options={{
+            title: "Settings",
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons
+                name={focused ? "settings" : "settings-outline"}
+                size={24}
+                color={color}
+              />
+            ),
+          }}
+        ></Tabs.Screen>
+      </Tabs>
+    </>
   );
 }
