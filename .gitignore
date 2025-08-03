@@ -18,6 +18,19 @@ expo-env.d.ts
 *.key
 *.mobileprovision
 
+# Android
+android/
+.gradle/
+build/
+.gradletasknamecache
+*.apk
+*.aab
+local.properties
+.idea/
+*.iml
+.cxx/
+.externalNativeBuild/
+
 # Metro
 .metro-health-check*
 
@@ -35,3 +48,28 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
