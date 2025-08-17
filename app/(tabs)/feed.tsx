@@ -39,6 +39,7 @@ import {
 import { useRef } from "react";
 import { useFocusEffect } from "expo-router";
 import Toast from "react-native-toast-message";
+import { AdsConsent, AdsConsentStatus } from "react-native-google-mobile-ads";
 
 let adUnitId = "";
 
@@ -106,6 +107,7 @@ export default function FeedScreen() {
       } else if (user) {
         setUserid(user.id);
         await checkUserProfileStatus(user.id);
+        await initializeAdsConsent();
         await fetchExtracts();
         await processSubscriptions(user.id);
       }
@@ -116,6 +118,21 @@ export default function FeedScreen() {
     };
     checkUserAuthenticated();
   }, []);
+
+  const initializeAdsConsent = async () => {
+    try {
+      const consentInfo = await AdsConsent.requestInfoUpdate();
+
+      if (
+        consentInfo.isConsentFormAvailable &&
+        consentInfo.status === AdsConsentStatus.REQUIRED
+      ) {
+        await AdsConsent.loadAndShowConsentFormIfRequired();
+      }
+    } catch (error) {
+      console.error("Error initializing consent:", error);
+    }
+  };
 
   const checkUserProfileStatus = async function (userId: string) {
     const userProfile = await lookUpUserProfile(userId);
