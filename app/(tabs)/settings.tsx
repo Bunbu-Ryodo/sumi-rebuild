@@ -17,6 +17,7 @@ import { getUserSession, lookUpUserProfile } from "../../supabase_queries/auth";
 import supabase from "../../lib/supabase.js";
 import { updateSubscriptionInterval } from "../../supabase_queries/profiles";
 import Toast from "react-native-toast-message";
+import { AdsConsent } from "react-native-google-mobile-ads";
 
 export default function Settings() {
   const router = useRouter();
@@ -100,6 +101,22 @@ export default function Settings() {
     }
   };
 
+  const handleConsent = async () => {
+    try {
+      const consentInfo = await AdsConsent.requestInfoUpdate();
+
+      if (consentInfo.isConsentFormAvailable) {
+        await AdsConsent.showPrivacyOptionsForm();
+        displayToast("Privacy settings updated");
+      } else {
+        displayToast("No privacy options required for your location");
+      }
+    } catch (error) {
+      console.error("Error showing privacy options form:", error);
+      displayErrorToast("Unable to show privacy options");
+    }
+  };
+
   const intervals = [
     { label: "Daily", value: 1 },
     { label: "Every few days", value: 3 },
@@ -176,6 +193,14 @@ export default function Settings() {
               </TouchableOpacity>
             ))}
           </View>
+          <TouchableOpacity
+            style={styles.privacyButton}
+            onPress={handleConsent}
+          >
+            <Text style={styles.privacyButtonText}>
+              Manage Privacy Settings
+            </Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.logoutButton} onPress={Logout}>
             <Text style={styles.logoutButtonText}>Logout</Text>
           </TouchableOpacity>
@@ -394,6 +419,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "100%",
     marginTop: 12,
+  },
+  privacyButton: {
+    backgroundColor: "#F6F7EB",
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    width: "100%",
+    marginTop: 12,
+  },
+  privacyButtonText: {
+    color: "#393E41",
+    fontFamily: "QuicksandReg",
+    fontSize: 16,
   },
   logoutButtonText: {
     color: "#FFF",
