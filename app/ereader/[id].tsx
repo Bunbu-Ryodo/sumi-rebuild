@@ -41,6 +41,7 @@ import {
   TestIds,
   useForeground,
 } from "react-native-google-mobile-ads";
+import { useFocusEffect } from "expo-router";
 
 import Toast from "react-native-toast-message";
 import type { PropsWithChildren } from "react";
@@ -262,15 +263,27 @@ export default function EReader() {
     );
 
     if (existingSubscription) {
-      if (
+      const isActive =
         existingSubscription.active &&
-        existingSubscription.textid === extract.textid
-      ) {
-        setSubscribed(true);
-      }
+        existingSubscription.textid === extract.textid;
+      setSubscribed(isActive);
       setSubid(existingSubscription.id);
     } else {
       const userProfile = await lookUpUserProfile(userId);
+
+      const doubleCheckSubscription = await checkForSubscription(
+        userId,
+        extract.textid
+      );
+
+      if (doubleCheckSubscription) {
+        console.log("Subscription was created by another call");
+        setSubid(doubleCheckSubscription.id);
+        if (doubleCheckSubscription.active) {
+          setSubscribed(true);
+        }
+        return;
+      }
 
       let duedate;
       if (userProfile.subscriptioninterval) {
@@ -360,10 +373,12 @@ export default function EReader() {
     }
 
     if (subscribed) {
+      console.log("Subscription deactivated", subid);
       await deactivateSubscription(subid);
 
       await hideSeries(userid, subid);
     } else {
+      console.log("Subscription activated", subid);
       await activateSubscription(subid);
 
       await unhideSeries(userid, subid);
@@ -372,9 +387,14 @@ export default function EReader() {
 
   useEffect(() => {
     fetchExtract();
+  }, []);
 
+  useEffect(() => {
+    if (!subid || subid === 0) return;
+
+    console.log("Setting up listener for subscription:", subid);
     const updateListener = supabase
-      .channel("insert-subscriptions")
+      .channel(`subscription-updates-${subid}`)
       .on(
         "postgres_changes",
         {
@@ -384,23 +404,34 @@ export default function EReader() {
           filter: `id=eq.${subid}`,
         },
         (payload) => {
-          setSubscribed((subscribed) => !subscribed);
+          if (payload.new && "active" in payload.new) {
+            setSubscribed(payload.new.active);
+          }
         }
       )
       .subscribe();
 
-    // const popNotification = (title: string, body: string) => {
-    //   if (Platform.OS === "android") {
-    //     Notifications.scheduleNotificationAsync({
-    //       content: {
-    //         title: title,
-    //         body: body,
-    //       },
-    //       trigger: null,
-    //     });
-    //   }
+    // return () => {
+    //   console.log("Cleaning up listener for subscription:", subid);
+    //   supabase.removeChannel(updateListener);
     // };
   }, [subid]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      return () => {
+        // This runs when navigating away from the screen
+        console.log("Screen unfocused, cleaning up any active listeners");
+        // Force cleanup of any active channels
+        supabase.getChannels().forEach((channel) => {
+          if (channel.topic.includes("subscription-updates")) {
+            console.log("Force cleaning up channel:", channel.topic);
+            supabase.removeChannel(channel);
+          }
+        });
+      };
+    }, [])
+  );
 
   return (
     <>

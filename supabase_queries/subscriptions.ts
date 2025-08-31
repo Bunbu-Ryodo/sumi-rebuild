@@ -9,11 +9,6 @@ export async function createSubscription(userId: string, textId: number, chapter
   .from('subscriptions')
   .insert({ userid: userId, textid: textId, chapter: chapter, due: due, subscribeart: subscribeart }).select().single()
 
-  if (error) {
-    console.error("Error creating subscription:", error);
-    return null;
-  }
-
   return newSubscription;
 }
 
