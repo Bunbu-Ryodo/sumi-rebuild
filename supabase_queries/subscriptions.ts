@@ -17,78 +17,26 @@ export async function createSubscription(userId: string, textId: number, chapter
   return newSubscription;
 }
 
-export async function activateSubscription(id: number, chapter: number, userId: string, due: number){
-  const { data: profile, error: subscriptionUpdateError } = await supabase.from('subscriptions').update({active: true, chapter: chapter, due: due }).eq('id', id).select();
+export async function activateSubscription(id: number){
+  const { data, error: subscriptionUpdateError } = await supabase.from('subscriptions').update({active: true }).eq('id', id).select();
 
   if(subscriptionUpdateError){
     console.error("Error activating subscription:", subscriptionUpdateError);
     return null;
   }
 
-  const { data: profileData, error: profileFetchError } = await supabase
-  .from('profiles')
-  .select('subscribedCount')
-  .eq('user_id', userId)
-  .select()
-  .single();
-
-  if(profileFetchError){
-    console.error("Error fetching profile data:", profileFetchError);
-  } else {
-    const currentCount = profileData.subscribedCount || 0;
-    const newCount = currentCount + 1;
-
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ subscribedCount: newCount })
-      .eq('user_id', userId);
-    
-    if(updateError){
-      console.error("Error updating subscription count:", updateError);
-      return null;
-    }
-  }
+  return data;
 }
 
-export async function deactivateSubscription(id: number, userId: string, chapter: number){
-  const { error: subscriptionDeactivateError } = await supabase.from('subscriptions').update({active: false, chapter: chapter}).eq('id', id).select();
+export async function deactivateSubscription(id: number){
+  const { data, error: subscriptionDeactivateError } = await supabase.from('subscriptions').update({active: false}).eq('id', id).select();
 
   if(subscriptionDeactivateError){
     console.error("Error deactivating subscription:", subscriptionDeactivateError);
     return null;
   }
 
-  const { data: profileData, error: profileFetchError } = await supabase
-  .from('profiles')
-  .select('subscribedCount')
-  .eq('user_id', userId)
-  .select()
-  .single();
-
-  if(profileFetchError){
-    console.error("Error fetching profile data:", profileFetchError);
-  } else {
-    const currentCount = profileData.subscribedCount || 0;
-    const newCount = currentCount - 1;
-
-    const {data: countUpdate, error: updateError } = await supabase
-      .from('profiles')
-      .update({ subscribedCount: newCount })
-      .eq('user_id', userId);
-    
-    console.log("Updated subscription count:", countUpdate);
-
-    if(updateError){
-      console.error("Error updating subscription count:", updateError);
-      return null;
-    }
-
-    const { data, error: instalmentDeleteError } = await supabase.from('instalments').delete().match({userid: userId, subscriptionid: id}).select();
-    if(instalmentDeleteError){
-      console.error("Error deleting instalments:", instalmentDeleteError);
-      return null;
-    }
-  }
+  return data;
 }
 
 export async function checkForSubscription(userId: string, textId: number){
@@ -162,43 +110,108 @@ export async function getExtractByTextIdChapter(textId: number, chapter: number)
     return extract;
 }
 
-export async function createInstalment(userId: string, extractId: number, chapter: number, title: string, author: string, subscriptionId: number, subscribeart: string, sequeldue?: number){
-  if(!userId || !extractId || !chapter || !title || !author){
+export async function unhideSeries(userId: string, subscriptionid: number){
+  if(!userId || !subscriptionid){
     throw new Error("Missing required parameters");
   }
 
-  const { data: instalment, error } = await supabase
-    .from('instalments')
-    .insert({ userid: userId, extractid: extractId, chapter: chapter, title: title, author: author, subscriptionid: subscriptionId, subscribeart: subscribeart, sequeldue: sequeldue })
-    .select()
-    .single();
+  const { data: updatedSeries, error: updateError } = await supabase
+    .from("series")
+    .update({ hidden: false })
+    .match({ userid: userId, subscriptionid: subscriptionid });
 
-    if(error){
-      console.error("Error creating instalment:", error);
-      return null;
-
-    }
-
-    return instalment;
-}
-
-export async function deletePreviousInstalments(userId: string, title: string){
-  if(!userId || !title){
-    throw new Error("Missing required parameters");
-  }
-
-  const { data: deletedInstalments, error } = await supabase
-    .from('instalments')
-    .delete()
-    .match({ userid: userId, title: title })
-    .select();
-
-  if(error){
-    console.error("Error deleting previous instalments:", error);
+  if (updateError) {
+    console.error("Error unhiding series:", updateError);
     return null;
   }
 
-  return deletedInstalments;
+  return updatedSeries;
+}
+
+export async function hideSeries(userId: string, subscriptionid: number){
+  if(!userId || !subscriptionid){
+    throw new Error("Missing required parameters");
+  }
+
+  const { data: updatedSeries, error: updateError } = await supabase
+    .from("series")
+    .update({ hidden: true })
+    .match({ userid: userId, subscriptionid: subscriptionid });
+
+  if (updateError) {
+    console.error("Error hiding series:", updateError);
+    return null;
+  }
+
+  return updatedSeries;
+}
+
+
+export async function checkForSeries(userId: string, subscriptionid: number){
+  if(!userId || !subscriptionid){
+    throw new Error("Missing required parameters");
+  }
+
+  const { data: existingSeries } = await supabase
+    .from('series')
+    .select()
+    .match({ userid: userId, subscriptionid: subscriptionid })
+    .single();
+
+  return existingSeries;
+}
+
+export async function createSeries(userId: string, title: string, author: string, subscriptionid: number, subscribeart: string, extracts: any[], earnedchapters: number, totalchapters: number, sequeldue?: number) {
+    if (!userId || !title || !author || !subscriptionid || !subscribeart || !extracts || earnedchapters === undefined || totalchapters === undefined) {
+    throw new Error("Missing required parameters");
+  }
+  const { data: instalment, error } = await supabase
+    .from('series')
+    .insert({ userid: userId, title: title, author: author, subscriptionid: subscriptionid, subscribeart: subscribeart, extracts: extracts, earnedchapters: earnedchapters, totalchapters: totalchapters, sequeldue: sequeldue })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error creating series:", error);
+    return null;
+  }
+
+  return instalment;
+}
+
+export async function appendExtractToSeries(userid: string, subscriptionid: number, extract: any, sequeldue: number){
+  if(!userid || !subscriptionid){
+    throw new Error("Missing required parameters");
+  }
+
+   const { data: currentSeries, error: cantFindRow } = await supabase
+     .from("series")
+     .select("*")
+     .match({ userid: userid, subscriptionid: subscriptionid })
+     .single();
+
+     if(cantFindRow){
+       console.error("Error finding instalment row:", cantFindRow);
+       return null;
+     }
+
+     const currentExtracts = currentSeries?.extracts || [];
+
+     const updatedExtracts = [...currentExtracts, extract];
+
+  const { data: updatedSeries, error } = await supabase
+    .from("series")
+    .update({ extracts: updatedExtracts, earnedchapters: currentSeries?.earnedchapters + 1, sequeldue: sequeldue })
+    .match({ userid: userid, subscriptionid: subscriptionid })
+    .select()
+    .single();
+
+  if(error){
+    console.error("Error adding extract to instalment:", error);
+    return null;
+  }
+
+  return updatedSeries
 }
 
 export async function updateSubscription(subscriptionId: number, chapter: number, due: number){
@@ -221,21 +234,21 @@ export async function updateSubscription(subscriptionId: number, chapter: number
     return updatedSubscription;
 }
 
-export async function getAllInstalments(userId: string){
+export async function getAllSeries(userId: string){
   if(!userId){
     throw new Error("Missing required parameters");
   }
 
-  const { data: instalments, error } = await supabase
-    .from('instalments')
+  const { data: series, error } = await supabase
+    .from('series')
     .select()
-    .match({ userid: userId })
+    .match({ userid: userId, hidden: false })
     .select();
 
     if(error){
-      console.error("Error fetching instalments:", error);
+      console.error("Error fetching series:", error);
       return null;
     }
 
-    return instalments;
+    return series;
 }

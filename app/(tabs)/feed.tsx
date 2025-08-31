@@ -22,11 +22,9 @@ import {
 import { getExtracts } from "../../supabase_queries/feed";
 import {
   getAllDueSubscriptions,
-  deletePreviousInstalments,
   getExtractByTextIdChapter,
-  createInstalment,
   updateSubscription,
-  deactivateSubscription,
+  appendExtractToSeries,
 } from "../../supabase_queries/subscriptions";
 import { ExtractType } from "../../types/types.js";
 import Extract from "../../components/extract";
@@ -69,7 +67,6 @@ export default function FeedScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [allExtractsDismissed, setAllExtractsDismissed] = useState(false);
   const [userid, setUserid] = useState("");
-  const [instalmentCount, setInstalmentCount] = useState(0);
 
   const displayNewInstalmentsToast = (count: number) => {
     Toast.show({
@@ -111,10 +108,6 @@ export default function FeedScreen() {
         await fetchExtracts();
         await processSubscriptions(user.id);
       }
-      setRefreshing(false);
-      if (instalmentCount > 0) {
-        displayNewInstalmentsToast(instalmentCount);
-      }
     };
     checkUserAuthenticated();
   }, []);
@@ -153,7 +146,6 @@ export default function FeedScreen() {
   };
 
   const processSubscriptions = async function (userId: string) {
-    setInstalmentCount(0);
     const user = await getUserSession();
     const subscriptions = await getAllDueSubscriptions(userId);
     if (user && subscriptions) {
@@ -166,73 +158,44 @@ export default function FeedScreen() {
         );
 
         if (!extract) {
-          await deactivateSubscription(subscriptions[i].id, user.id, 1);
           continue;
         }
 
         const userProfile = await lookUpUserProfile(userId);
-        let interval;
+        let duedate;
         if (userProfile.subscriptioninterval) {
-          interval =
+          duedate =
             new Date().getTime() + userProfile.subscriptioninterval * 86400000;
         } else {
-          interval = new Date().getTime() + 7 * 86400000;
+          duedate = new Date().getTime() + 7 * 86400000;
         }
-        //For testing
-        // interval = new Date().getTime() + 1000;
+        // For testing
+        // let duedate = new Date().getTime() + 1000;
 
         if (extract) {
-          const updatedSubscription = await updateSubscription(
+          const newInstalment = await appendExtractToSeries(
+            userId,
             subscriptions[i].id,
-            subscriptions[i].chapter + 1,
-            interval
+            extract,
+            duedate
           );
 
-          if (updatedSubscription) {
-            await deletePreviousInstalments(userId, extract.title);
-
-            const nextExtract = await getExtractByTextIdChapter(
-              subscriptions[i].textid,
-              subscriptions[i].chapter + 1
+          if (newInstalment) {
+            const updatedSubscription = await updateSubscription(
+              subscriptions[i].id,
+              subscriptions[i].chapter + 1,
+              duedate
             );
-
-            if (!nextExtract) {
-              const newInstalment = await createInstalment(
-                userId,
-                extract.id,
-                extract.chapter,
-                extract.title,
-                extract.author,
-                updatedSubscription.id,
-                updatedSubscription.subscribeart
-              );
-
-              if (newInstalment) {
-                count++;
-                console.log("Instalment created successfully");
-              }
-            } else {
-              const newInstalment = await createInstalment(
-                userId,
-                extract.id,
-                extract.chapter,
-                extract.title,
-                extract.author,
-                updatedSubscription.id,
-                updatedSubscription.subscribeart,
-                updatedSubscription.due
-              );
-
-              if (newInstalment) {
-                count++;
-                console.log("Instalment created successfully");
-              }
+            if (updatedSubscription) {
+              count++;
+              console.log("Instalment created successfully");
             }
           }
         }
       }
+      setRefreshing(false);
       if (count > 0) {
-        setInstalmentCount(count);
+        displayNewInstalmentsToast(count);
       }
     } else {
       console.log("Subscriptions up to date");
@@ -263,16 +226,11 @@ export default function FeedScreen() {
 
   //Refresh data is for testing, should only processSubscriptions on initial load on login
   // const refreshData = async () => {
-  //   setInstalmentCount(0);
   //   setRefreshing(true);
   //   const user = await getUserSession();
   //   if (user) {
   //     await fetchExtracts();
   //     await processSubscriptions(user.id);
-  //   }
-  //   setRefreshing(false);
-  //   if (instalmentCount > 0) {
-  //     displayNewInstalmentsToast(instalmentCount);
   //   }
   // };
 

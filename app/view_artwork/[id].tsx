@@ -66,17 +66,17 @@ export default function ViewArtwork() {
   }, [artwork]);
 
   const screenWidth = Dimensions.get("window").width - 20;
-  let imageHeight = 200;
+  // let imageHeight = 200;
 
-  if (imgDimensions) {
-    imageHeight = (screenWidth * imgDimensions.height) / imgDimensions.width;
-  }
+  // if (imgDimensions) {
+  //   imageHeight = (screenWidth * imgDimensions.height) / imgDimensions.width;
+  // }
 
   const deleteArtwork = async () => {
     if (artwork) {
       const deleted = await deleteUserArtwork(artwork?.userid, artwork?.id);
       if (deleted) {
-        router.push("/subscriptions");
+        router.push("/artworks");
       }
     }
   };
@@ -95,7 +95,7 @@ export default function ViewArtwork() {
               source={{ uri: artwork.url }}
               style={{
                 width: screenWidth,
-                height: imageHeight,
+                height: 400,
                 marginBottom: 16,
                 borderRadius: 8,
               }}

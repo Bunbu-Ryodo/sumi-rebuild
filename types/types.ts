@@ -12,6 +12,7 @@ export type ExtractType = {
     coverartArtist: string;
     coverartYear: number;   
     coverartTitle: string;
+    totalchapters: number;
 }
 
 export type ArtworkType = {
@@ -71,27 +72,18 @@ export type SubscriptionTypeClient = {
     subscribeart: string;
 }
 
-export type InstalmentType = {
+export type SeriesType = {
     id: number;
-    extractid: number;
     userid: string;
-    title: string;   
+    subscriptionid: number;
+    title: string;
     author: string;
-    chapter: string;
-    subscriptionid: number;   
+    extracts: ExtractType[];
     subscribeart: string;
     sequeldue: number;
-}
-
-export type InstalmentTypeClient = {
-    id: number;
-    extractid: number;
-    title: string;   
-    author: string;
-    chapter: string;
-    subscribeart: string;
-    sequeldue: number;
-    onLongPress?: () => void;
+    earnedchapters: number;
+    totalchapters: number;
+    hidden: boolean;
 }
 
 export type AchievementType = {
