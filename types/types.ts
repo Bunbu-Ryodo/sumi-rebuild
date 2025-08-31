@@ -12,6 +12,7 @@ export type ExtractType = {
     coverartArtist: string;
     coverartYear: number;   
     coverartTitle: string;
+    totalchapters: number;
 }
 
 export type ArtworkType = {

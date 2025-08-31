@@ -81,18 +81,7 @@ const BounceView: React.FC<BounceInProps> = (props) => {
 
 export default function Achievements() {
   const bannerRef = useRef<BannerAd>(null);
-  const [achievements, setAchievements] = useState([]);
-  const [achievementScore, setAchievementScore] = useState(0);
-  const [bronzeCount, setBronzeCount] = useState(0);
-  const [silverCount, setSilverCount] = useState(0);
-  const [goldCount, setGoldCount] = useState(0);
-  const [readerTag, setReaderTag] = useState("");
-  const [readCount, setReadCount] = useState(0);
-  const [subscribedCount, setSubscribedCount] = useState(0);
-  const [pendingAchievements, setPendingAchievements] = useState<
-    PendingAchievementType[]
-  >([]);
-  const [loading, setLoading] = useState(true); // Add a loading state
+  // const [loading, setLoading] = useState(true); // Add a loading state
 
   useForeground(() => {
     if (Platform.OS === "android" || Platform.OS === "ios") {
@@ -100,219 +89,35 @@ export default function Achievements() {
     }
   });
 
-  const getProfileData = async function () {
-    setLoading(true);
-    const user = await getUserSession();
+  // const getProfileData = async function () {
+  //   setLoading(true);
+  //   const user = await getUserSession();
+  //   setLoading(false);
+  // };
 
-    if (user) {
-      const userProfile = await lookUpUserProfile(user.id);
-      if (userProfile) {
-        setAchievements(userProfile.achievements || []);
-        setAchievementScore(userProfile.achievementScore || 0);
-        setBronzeCount(userProfile.bronzeCount || 0);
-        setSilverCount(userProfile.silverCount || 0);
-        setGoldCount(userProfile.goldCount || 0);
-        setReaderTag(userProfile.username || "");
-        setReadCount(userProfile.readCount);
-        setSubscribedCount(userProfile.subscribedCount);
-        await calculateInProgressAchievements();
-        setLoading(false);
-      }
-    }
-  };
-
-  useEffect(() => {
-    getProfileData();
-  }, []);
-
-  useEffect(() => {
-    const calculateAchievements = async () => {
-      await calculateInProgressAchievements();
-    };
-    calculateAchievements();
-  }, [achievements, achievementScore, readCount, subscribedCount]);
-
-  const calculateInProgressAchievements = async () => {
-    let inProgressAchievements = [];
-    let inProgress;
-
-    if (readCount === 0) {
-    } else if (readCount < 10) {
-      const progress = (readCount / 10) * 100;
-      const achievement = await fetchAchievementByDescription(
-        "Read 10 extracts"
-      );
-      inProgress = { ...achievement, achievementProgress: progress };
-    } else if (readCount < 25) {
-      const progress = (readCount / 25) * 100;
-      const achievement = await fetchAchievementByDescription(
-        "Read 25 extracts"
-      );
-      inProgress = { ...achievement, progress };
-    } else if (readCount < 50) {
-      const progress = (readCount / 50) * 100;
-      const achievement = await fetchAchievementByDescription(
-        "Read 50 extracts"
-      );
-      inProgress = { ...achievement, achievementProgress: progress };
-    } else if (readCount < 100) {
-      const progress = readCount;
-      const achievement = await fetchAchievementByDescription(
-        "Read 100 extracts"
-      );
-      inProgress = { ...achievement, achievementProgress: progress };
-    } else if (readCount < 200) {
-      const progress = (readCount / 200) * 100;
-      const achievement = await fetchAchievementByDescription(
-        "Read 200 extracts"
-      );
-      inProgress = { ...achievement, achievementProgress: progress };
-    }
-
-    if (subscribedCount === 0) {
-    } else if (subscribedCount < 10) {
-      const progress = (subscribedCount / 10) * 100;
-      const achievement = await fetchAchievementByDescription(
-        "Subscribe to 10 series"
-      );
-      inProgress = { ...achievement, achievementProgress: progress };
-    } else if (subscribedCount < 25) {
-      const progress = (subscribedCount / 25) * 100;
-      const achievement = await fetchAchievementByDescription(
-        "Subscribe to 25 series"
-      );
-      inProgress = { ...achievement, achievementProgress: progress };
-    } else if (subscribedCount < 50) {
-      const progress = (subscribedCount / 50) * 100;
-      const achievement = await fetchAchievementByDescription(
-        "Subscribe to 50 series"
-      );
-      inProgress = { ...achievement, achievementProgress: progress };
-    } else if (subscribedCount < 100) {
-      const progress = subscribedCount;
-      const achievement = await fetchAchievementByDescription(
-        "Subscribe to 100 series"
-      );
-      inProgress = { ...achievement, achievementProgress: progress };
-    } else if (subscribedCount < 200) {
-      const progress = (subscribedCount / 200) * 100;
-      const achievement = await fetchAchievementByDescription(
-        "Subscribe to 200 series"
-      );
-      inProgress = { ...achievement, achievementProgress: progress };
-    }
-
-    if (inProgress) {
-      inProgressAchievements.push(inProgress);
-    }
-    setPendingAchievements(inProgressAchievements);
-  };
+  // useEffect(() => {
+  //   getProfileData();
+  // }, []);
 
   return (
-    <>
-      <ScrollView
-        contentContainerStyle={styles.achievementsContentContainer}
-        style={styles.container}
-        refreshControl={
-          <RefreshControl
-            refreshing={loading}
-            onRefresh={getProfileData}
-            tintColor="#F6F7EB"
-          />
-        }
-      >
-        {loading ? null : (
-          <View style={styles.achievementHeader}>
-            <Text style={styles.header}>Sumi</Text>
-            <Text style={styles.tagline}>Just One More Chapter</Text>
-          </View>
-        )}
-
-        {!loading && (
-          <View style={styles.achievementsWrapper}>
-            <View style={styles.nameAndScoreContainer}>
-              <Text style={styles.readerTag}>ReaderTag: {readerTag}</Text>
-              <View style={styles.scoreContainer}>
-                <Text style={styles.score}>Score: {achievementScore}</Text>
-              </View>
-              <View style={styles.medalContainer}>
-                <View style={styles.medalCountContainer}>
-                  <BounceView>
-                    <View style={styles.bronzeMedal}></View>
-                  </BounceView>
-                  <Text style={styles.score}>{bronzeCount}</Text>
-                </View>
-                <View style={styles.medalCountContainer}>
-                  <BounceView>
-                    <View style={styles.silverMedal}></View>
-                  </BounceView>
-                  <Text style={styles.score}>{silverCount}</Text>
-                </View>
-                <View style={styles.medalCountContainer}>
-                  <BounceView>
-                    <View style={styles.goldMedal}></View>
-                  </BounceView>
-                  <Text style={styles.score}>{goldCount}</Text>
-                </View>
-              </View>
-            </View>
-            <View style={styles.completedAchievementsHeader}>
-              <Text style={styles.completedAchievementText}>
-                Completed Achievements
-              </Text>
-              <Ionicons name="trophy" size={20} color={"#393E41"} />
-            </View>
-            <View style={styles.completedAchievementsContainer}>
-              {achievements.length > 0 ? (
-                achievements.map((row: AchievementTypeClient) => (
-                  <Achievement
-                    id={row.id}
-                    key={row.id}
-                    title={row.title}
-                    description={row.description}
-                    score={row.score}
-                    date={row.date}
-                    icon={row.icon}
-                    tier={row.tier}
-                  />
-                ))
-              ) : (
-                <Text style={styles.score}>No achievements unlocked.</Text>
-              )}
-            </View>
-            <View style={styles.completedAchievementsHeader}>
-              <Text style={styles.completedAchievementText}>
-                Pending Achievements
-              </Text>
-              <Ionicons name="trophy-outline" size={20} color={"#393E41"} />
-            </View>
-            <View style={styles.pendingAchievementsContainer}>
-              {pendingAchievements.length > 0 ? (
-                pendingAchievements.map((row: PendingAchievementType) => (
-                  <PendingAchievement
-                    id={row.id}
-                    key={row.id}
-                    title={row.title}
-                    description={row.description}
-                    score={row.score}
-                    icon={row.icon}
-                    achievementProgress={row.achievementProgress}
-                  />
-                ))
-              ) : (
-                <Text style={styles.score}>No pending achievements.</Text>
-              )}
-            </View>
-          </View>
-        )}
-      </ScrollView>
-      <BannerAd
-        key={`ad-achievements`}
-        ref={bannerRef}
-        unitId={adUnitId}
-        size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-      />
-    </>
+    <ScrollView
+      contentContainerStyle={styles.achievementsContentContainer}
+      style={styles.container}
+      // refreshControl={
+      // <RefreshControl
+      //   refreshing={loading}
+      //   onRefresh={getProfileData}
+      //   tintColor="#F6F7EB"
+      // />
+      // }
+    >
+      {/* {loading ? null : (
+        <View style={styles.achievementHeader}>
+          <Text style={styles.header}>Sumi</Text>
+          <Text style={styles.tagline}>Just One More Chapter</Text>
+        </View>
+      )} */}
+    </ScrollView>
   );
 }
 

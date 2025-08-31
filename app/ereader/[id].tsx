@@ -27,6 +27,8 @@ import {
   createSubscription,
   activateSubscription,
   deactivateSubscription,
+  createNewInstalment,
+  checkForInstalments,
 } from "../../supabase_queries/subscriptions";
 import { awardAchievement } from "../../supabase_queries/achievements";
 import {
@@ -124,6 +126,7 @@ export default function EReader() {
     coverartArtist: "",
     coverartYear: 0,
     coverartTitle: "",
+    totalchapters: 0,
   });
 
   const [loading, setLoading] = useState(true);
@@ -262,16 +265,6 @@ export default function EReader() {
       extract.textid
     );
 
-    const profile = await lookUpUserProfile(userId);
-
-    if (profile) {
-      if (profile.subscriptioninterval) {
-        setDue(new Date().getTime() + 30000);
-      } else {
-        setDue(new Date().getTime() + 604800000);
-      }
-    }
-
     if (existingSubscription) {
       if (
         existingSubscription.active &&
@@ -290,6 +283,22 @@ export default function EReader() {
         extract.title,
         extract.author
       );
+
+      const instalment = await createNewInstalment(
+        userId,
+        extract.title,
+        extract.author,
+        newSubscription.id,
+        extract.subscribeart,
+        [extract],
+        1,
+        extract.totalchapters,
+        due
+      );
+
+      if (!instalment) {
+        console.error("Error creating instalment:", instalment);
+      }
 
       if (newSubscription) {
         setSubid(newSubscription.id);
@@ -317,7 +326,6 @@ export default function EReader() {
         setExtract(extract);
 
         await checkForActiveSubscription(user.id, extract);
-        await setInitialReadStatus(user.id, extract);
       } else {
         router.push("/");
       }
@@ -352,7 +360,7 @@ export default function EReader() {
     }
 
     if (subscribed) {
-      await deactivateSubscription(subid, userid, 1);
+      await deactivateSubscription(subid);
     } else {
       await activateSubscription(
         subid,
@@ -739,41 +747,6 @@ export default function EReader() {
                 >
                   {extract.fulltext}
                 </Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.markAsReadContainer}>
-              <TouchableOpacity
-                style={
-                  read
-                    ? warmth === 4
-                      ? styles.markAsUnreadDarkMode
-                      : styles.markAsUnread
-                    : warmth === 4
-                    ? styles.buttonPrimaryDarkMode
-                    : styles.buttonPrimary
-                }
-                onPress={toggleReadStatus}
-              >
-                {read ? (
-                  <Text
-                    style={[
-                      styles.markAsUnreadText,
-                      warmth === 4 && { color: "#F6F7EB" },
-                    ]}
-                  >
-                    Mark as Unread
-                  </Text>
-                ) : (
-                  <Text
-                    style={[
-                      styles.markAsReadText,
-                      warmth === 4 && { color: "#393E41" },
-                    ]}
-                  >
-                    Mark as Read
-                  </Text>
-                )}
               </TouchableOpacity>
             </View>
             <View style={styles.engagementButtons}>

@@ -18,77 +18,25 @@ export async function createSubscription(userId: string, textId: number, chapter
 }
 
 export async function activateSubscription(id: number, chapter: number, userId: string, due: number){
-  const { data: profile, error: subscriptionUpdateError } = await supabase.from('subscriptions').update({active: true, chapter: chapter, due: due }).eq('id', id).select();
+  const { data, error: subscriptionUpdateError } = await supabase.from('subscriptions').update({active: true, chapter: chapter, due: due }).eq('id', id).select();
 
   if(subscriptionUpdateError){
     console.error("Error activating subscription:", subscriptionUpdateError);
     return null;
   }
 
-  const { data: profileData, error: profileFetchError } = await supabase
-  .from('profiles')
-  .select('subscribedCount')
-  .eq('user_id', userId)
-  .select()
-  .single();
-
-  if(profileFetchError){
-    console.error("Error fetching profile data:", profileFetchError);
-  } else {
-    const currentCount = profileData.subscribedCount || 0;
-    const newCount = currentCount + 1;
-
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ subscribedCount: newCount })
-      .eq('user_id', userId);
-    
-    if(updateError){
-      console.error("Error updating subscription count:", updateError);
-      return null;
-    }
-  }
+  return data;
 }
 
-export async function deactivateSubscription(id: number, userId: string, chapter: number){
-  const { error: subscriptionDeactivateError } = await supabase.from('subscriptions').update({active: false, chapter: chapter}).eq('id', id).select();
+export async function deactivateSubscription(id: number){
+  const { data, error: subscriptionDeactivateError } = await supabase.from('subscriptions').update({active: false}).eq('id', id).select();
 
   if(subscriptionDeactivateError){
     console.error("Error deactivating subscription:", subscriptionDeactivateError);
     return null;
   }
 
-  const { data: profileData, error: profileFetchError } = await supabase
-  .from('profiles')
-  .select('subscribedCount')
-  .eq('user_id', userId)
-  .select()
-  .single();
-
-  if(profileFetchError){
-    console.error("Error fetching profile data:", profileFetchError);
-  } else {
-    const currentCount = profileData.subscribedCount || 0;
-    const newCount = currentCount - 1;
-
-    const {data: countUpdate, error: updateError } = await supabase
-      .from('profiles')
-      .update({ subscribedCount: newCount })
-      .eq('user_id', userId);
-    
-    console.log("Updated subscription count:", countUpdate);
-
-    if(updateError){
-      console.error("Error updating subscription count:", updateError);
-      return null;
-    }
-
-    const { data, error: instalmentDeleteError } = await supabase.from('instalments').delete().match({userid: userId, subscriptionid: id}).select();
-    if(instalmentDeleteError){
-      console.error("Error deleting instalments:", instalmentDeleteError);
-      return null;
-    }
-  }
+  return data;
 }
 
 export async function checkForSubscription(userId: string, textId: number){
@@ -160,6 +108,77 @@ export async function getExtractByTextIdChapter(textId: number, chapter: number)
       return null;
     }
     return extract;
+}
+
+export async function checkForInstalments(userId: string, subscriptionId: number) {
+  if (!userId || !subscriptionId) {
+    throw new Error("Missing required parameters");
+  }
+
+  const { data: instalments, error } = await supabase
+    .from('instalments')
+    .select()
+    .match({ userid: userId, subscriptionid: subscriptionId });
+
+  if (error) {
+    console.error("Error fetching instalments:", error);
+    return null;
+  }
+
+  return instalments;
+}
+
+export async function createNewInstalment(userId: string, title: string, author: string, subscriptionid: number, subscribeart: string, extracts: any[], earnedchapters: number, totalchapters: number, sequeldue?: number) {
+    if (!userId || !title || !author || !subscriptionid || !subscribeart || !extracts || earnedchapters === undefined || totalchapters === undefined) {
+    throw new Error("Missing required parameters");
+  }
+  const { data: instalment, error } = await supabase
+    .from('instalments')
+    .insert({ userid: userId, title: title, author: author, subscriptionid: subscriptionid, subscribeart: subscribeart, extracts: extracts, earnedchapters: earnedchapters, totalchapters: totalchapters, sequeldue: sequeldue })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error creating instalment:", error);
+    return null;
+  }
+
+  return instalment;
+}
+
+export async function addExtractToInstalment(userid: string, subscriptionid: number, extract: any, sequeldue: number){
+  if(!userid || !subscriptionid){
+    throw new Error("Missing required parameters");
+  }
+
+   const { data: currentInstalment, error: cantFindRow } = await supabase
+     .from("instalments")
+     .select("*")
+     .match({ userid: userid, subscriptionid: subscriptionid })
+     .single();
+
+     if(cantFindRow){
+       console.error("Error finding instalment row:", cantFindRow);
+       return null;
+     }
+
+     const currentExtracts = currentInstalment?.extracts || [];
+
+     const updatedExtracts = [...currentExtracts, extract];
+
+  const { data: updatedInstalments, error } = await supabase
+    .from("instalments")
+    .update({ extracts: updatedExtracts, earnedchapters: currentInstalment?.earnedchapters + 1, sequeldue: sequeldue })
+    .match({ userid: userid, subscriptionid: subscriptionid })
+    .select()
+    .single();
+
+  if(error){
+    console.error("Error adding extract to instalment:", error);
+    return null;
+  }
+
+  return updatedInstalments
 }
 
 export async function createInstalment(userId: string, extractId: number, chapter: number, title: string, author: string, subscriptionId: number, subscribeart: string, sequeldue?: number){
