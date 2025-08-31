@@ -8,11 +8,9 @@ import {
   RefreshControl,
   TouchableOpacity,
   Image,
-  Easing,
   Platform,
 } from "react-native";
 import React, { useEffect, useRef, useState } from "react";
-import type { PropsWithChildren } from "react";
 import {
   BannerAd,
   BannerAdSize,

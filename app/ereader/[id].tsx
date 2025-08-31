@@ -32,12 +32,6 @@ import {
   hideSeries,
   checkForSeries,
 } from "../../supabase_queries/subscriptions";
-import { awardAchievement } from "../../supabase_queries/achievements";
-import {
-  markAsRead,
-  markAsUnread,
-  checkReadStatus,
-} from "../../supabase_queries/profiles";
 import { getUserSession } from "../../supabase_queries/auth.js";
 import supabase from "../../lib/supabase.js";
 import { lookUpUserProfile } from "../../supabase_queries/auth";
@@ -358,9 +352,7 @@ export default function EReader() {
   }
 
   const bounceRef = useRef<any>(null);
-  const heartRef = useRef<any>(null);
   const cartRef = useRef<any>(null);
-  const clipRef = useRef<any>(null);
 
   async function subscribe() {
     if (bounceRef.current) {
@@ -375,14 +367,6 @@ export default function EReader() {
       await activateSubscription(subid);
 
       await unhideSeries(userid, subid);
-    }
-  }
-
-  async function toggleReadStatus() {
-    if (read) {
-      await markAsUnread(userid, extract);
-    } else {
-      await markAsRead(userid, extract);
     }
   }
 
@@ -404,19 +388,6 @@ export default function EReader() {
         }
       )
       .subscribe();
-
-    const addAchievementToProfile = async (userid: string, title: string) => {
-      const achievementAdded = await awardAchievement(userid, title);
-      return achievementAdded;
-    };
-
-    const displayToast = (message: string) => {
-      Toast.show({
-        type: "achievementUnlocked",
-        text1: "Achievement Unlocked",
-        text2: message,
-      });
-    };
 
     // const popNotification = (title: string, body: string) => {
     //   if (Platform.OS === "android") {

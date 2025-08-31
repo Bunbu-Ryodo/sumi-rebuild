@@ -24,7 +24,6 @@ import {
   getAllDueSubscriptions,
   getExtractByTextIdChapter,
   updateSubscription,
-  deactivateSubscription,
   appendExtractToSeries,
 } from "../../supabase_queries/subscriptions";
 import { ExtractType } from "../../types/types.js";
