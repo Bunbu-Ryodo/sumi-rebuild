@@ -179,67 +179,6 @@ export default function Subscriptions() {
                   ))
                 : null}
             </View>
-            {/* <View style={styles.artworksHeader}>
-              <Text style={styles.yourArtworks}>
-                {artworks.length > 0 ? "Your Artworks" : "Save Some Artworks!"}
-              </Text>
-              <View style={styles.headerIconContainer}>
-                <Ionicons name="color-palette" size={24} color={"#393E41"} />
-              </View>
-            </View> */}
-            {/* {artworks && artworks.length > 0 ? (
-              <View
-                style={{
-                  flex: 1,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginTop: 24,
-                }}
-              >
-                <Carousel
-                  ref={ref}
-                  width={width}
-                  height={310}
-                  data={artworks}
-                  onProgressChange={progress}
-                  renderItem={(artwork) => {
-                    return (
-                      <TouchableOpacity
-                        style={styles.thumbnailContainer}
-                        onPress={() => handleNavigation(artwork.item.id)}
-                      >
-                        <Image
-                          source={{ uri: artwork.item.url }}
-                          style={styles.thumbnail}
-                        />
-                        <View style={styles.artworkDetailsContainer}>
-                          <Text style={styles.artworkTitle}>
-                            {artwork.item.title}
-                          </Text>
-                          <Text style={styles.artworkDetails}>
-                            {artwork.item.artist}
-                          </Text>
-                          <Text style={styles.artworkDetails}>
-                            {artwork.item.year}
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-                    );
-                  }}
-                />
-
-                <Pagination.Basic
-                  progress={progress}
-                  data={artworks}
-                  dotStyle={{
-                    backgroundColor: "rgba(57,62,65,0.2)",
-                    borderRadius: 50,
-                  }}
-                  containerStyle={{ gap: 5, marginTop: 10 }}
-                  onPress={onPressPagination}
-                />
-              </View>
-            ) : null} */}
           </View>
         )}
       </ScrollView>

@@ -54,12 +54,12 @@ export default function TabLayout() {
           }}
         ></Tabs.Screen>
         <Tabs.Screen
-          name="achievements"
+          name="artworks"
           options={{
-            title: "Achievements",
+            title: "Artworks",
             tabBarIcon: ({ color, focused }) => (
               <Ionicons
-                name={focused ? "trophy" : "trophy-outline"}
+                name={focused ? "color-palette" : "color-palette-outline"}
                 size={24}
                 color={color}
               />
