@@ -27,10 +27,9 @@ import {
   createSubscription,
   activateSubscription,
   deactivateSubscription,
-  createNewInstalment,
-  checkForInstalments,
-  unhideInstalment,
-  hideInstalment,
+  createSeries,
+  unhideSeries,
+  hideSeries,
 } from "../../supabase_queries/subscriptions";
 import { awardAchievement } from "../../supabase_queries/achievements";
 import {
@@ -296,7 +295,7 @@ export default function EReader() {
         extract.author
       );
 
-      const instalment = await createNewInstalment(
+      const instalment = await createSeries(
         userId,
         extract.title,
         extract.author,
@@ -317,17 +316,6 @@ export default function EReader() {
       }
     }
   };
-
-  const setInitialReadStatus = async (userId: string, extract: ExtractType) => {
-    await checkForActiveSubscription(userId, extract);
-
-    const readStatus = await checkReadStatus(userId, extract.id);
-
-    if (readStatus) {
-      setRead(true);
-    }
-  };
-
   const fetchExtract = async () => {
     const user = await getUserSession();
     if (user) {
@@ -374,11 +362,11 @@ export default function EReader() {
     if (subscribed) {
       await deactivateSubscription(subid);
 
-      await hideInstalment(userid, subid);
+      await hideSeries(userid, subid);
     } else {
       await activateSubscription(subid);
 
-      await unhideInstalment(userid, subid);
+      await unhideSeries(userid, subid);
     }
   }
 

@@ -22,12 +22,10 @@ import {
 import { getExtracts } from "../../supabase_queries/feed";
 import {
   getAllDueSubscriptions,
-  deletePreviousInstalments,
   getExtractByTextIdChapter,
-  createInstalment,
   updateSubscription,
   deactivateSubscription,
-  addExtractToInstalment,
+  appendExtractToSeries,
 } from "../../supabase_queries/subscriptions";
 import { ExtractType } from "../../types/types.js";
 import Extract from "../../components/extract";
@@ -177,7 +175,7 @@ export default function FeedScreen() {
         // interval = new Date().getTime() + 1000;
 
         if (extract) {
-          const newInstalment = await addExtractToInstalment(
+          const newInstalment = await appendExtractToSeries(
             userId,
             subscriptions[i].id,
             extract,

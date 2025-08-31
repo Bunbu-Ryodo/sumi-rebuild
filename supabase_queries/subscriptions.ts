@@ -110,86 +110,68 @@ export async function getExtractByTextIdChapter(textId: number, chapter: number)
     return extract;
 }
 
-export async function checkForInstalments(userId: string, subscriptionId: number) {
-  if (!userId || !subscriptionId) {
-    throw new Error("Missing required parameters");
-  }
-
-  const { data: instalments, error } = await supabase
-    .from('instalments')
-    .select()
-    .match({ userid: userId, subscriptionid: subscriptionId });
-
-  if (error) {
-    console.error("Error fetching instalments:", error);
-    return null;
-  }
-
-  return instalments;
-}
-
-export async function unhideInstalment(userId: string, subscriptionid: number){
+export async function unhideSeries(userId: string, subscriptionid: number){
   if(!userId || !subscriptionid){
     throw new Error("Missing required parameters");
   }
 
-  const { data: updatedInstalment, error: updateError } = await supabase
-    .from("instalments")
+  const { data: updatedSeries, error: updateError } = await supabase
+    .from("series")
     .update({ hidden: false })
     .match({ userid: userId, subscriptionid: subscriptionid });
 
   if (updateError) {
-    console.error("Error unhiding instalment:", updateError);
+    console.error("Error unhiding series:", updateError);
     return null;
   }
 
-  return updatedInstalment;
+  return updatedSeries;
 }
 
-export async function hideInstalment(userId: string, subscriptionid: number){
+export async function hideSeries(userId: string, subscriptionid: number){
   if(!userId || !subscriptionid){
     throw new Error("Missing required parameters");
   }
 
-  const { data: updatedInstalment, error: updateError } = await supabase
-    .from("instalments")
+  const { data: updatedSeries, error: updateError } = await supabase
+    .from("series")
     .update({ hidden: true })
     .match({ userid: userId, subscriptionid: subscriptionid });
 
   if (updateError) {
-    console.error("Error hiding instalment:", updateError);
+    console.error("Error hiding series:", updateError);
     return null;
   }
 
-  return updatedInstalment;
+  return updatedSeries;
 }
 
 
-export async function createNewInstalment(userId: string, title: string, author: string, subscriptionid: number, subscribeart: string, extracts: any[], earnedchapters: number, totalchapters: number, sequeldue?: number) {
+export async function createSeries(userId: string, title: string, author: string, subscriptionid: number, subscribeart: string, extracts: any[], earnedchapters: number, totalchapters: number, sequeldue?: number) {
     if (!userId || !title || !author || !subscriptionid || !subscribeart || !extracts || earnedchapters === undefined || totalchapters === undefined) {
     throw new Error("Missing required parameters");
   }
   const { data: instalment, error } = await supabase
-    .from('instalments')
+    .from('series')
     .insert({ userid: userId, title: title, author: author, subscriptionid: subscriptionid, subscribeart: subscribeart, extracts: extracts, earnedchapters: earnedchapters, totalchapters: totalchapters, sequeldue: sequeldue })
     .select()
     .single();
 
   if (error) {
-    console.error("Error creating instalment:", error);
+    console.error("Error creating series:", error);
     return null;
   }
 
   return instalment;
 }
 
-export async function addExtractToInstalment(userid: string, subscriptionid: number, extract: any, sequeldue: number){
+export async function appendExtractToSeries(userid: string, subscriptionid: number, extract: any, sequeldue: number){
   if(!userid || !subscriptionid){
     throw new Error("Missing required parameters");
   }
 
-   const { data: currentInstalment, error: cantFindRow } = await supabase
-     .from("instalments")
+   const { data: currentSeries, error: cantFindRow } = await supabase
+     .from("series")
      .select("*")
      .match({ userid: userid, subscriptionid: subscriptionid })
      .single();
@@ -199,13 +181,13 @@ export async function addExtractToInstalment(userid: string, subscriptionid: num
        return null;
      }
 
-     const currentExtracts = currentInstalment?.extracts || [];
+     const currentExtracts = currentSeries?.extracts || [];
 
      const updatedExtracts = [...currentExtracts, extract];
 
-  const { data: updatedInstalments, error } = await supabase
-    .from("instalments")
-    .update({ extracts: updatedExtracts, earnedchapters: currentInstalment?.earnedchapters + 1, sequeldue: sequeldue })
+  const { data: updatedSeries, error } = await supabase
+    .from("series")
+    .update({ extracts: updatedExtracts, earnedchapters: currentSeries?.earnedchapters + 1, sequeldue: sequeldue })
     .match({ userid: userid, subscriptionid: subscriptionid })
     .select()
     .single();
@@ -215,46 +197,7 @@ export async function addExtractToInstalment(userid: string, subscriptionid: num
     return null;
   }
 
-  return updatedInstalments
-}
-
-export async function createInstalment(userId: string, extractId: number, chapter: number, title: string, author: string, subscriptionId: number, subscribeart: string, sequeldue?: number){
-  if(!userId || !extractId || !chapter || !title || !author){
-    throw new Error("Missing required parameters");
-  }
-
-  const { data: instalment, error } = await supabase
-    .from('instalments')
-    .insert({ userid: userId, extractid: extractId, chapter: chapter, title: title, author: author, subscriptionid: subscriptionId, subscribeart: subscribeart, sequeldue: sequeldue })
-    .select()
-    .single();
-
-    if(error){
-      console.error("Error creating instalment:", error);
-      return null;
-
-    }
-
-    return instalment;
-}
-
-export async function deletePreviousInstalments(userId: string, title: string){
-  if(!userId || !title){
-    throw new Error("Missing required parameters");
-  }
-
-  const { data: deletedInstalments, error } = await supabase
-    .from('instalments')
-    .delete()
-    .match({ userid: userId, title: title })
-    .select();
-
-  if(error){
-    console.error("Error deleting previous instalments:", error);
-    return null;
-  }
-
-  return deletedInstalments;
+  return updatedSeries
 }
 
 export async function updateSubscription(subscriptionId: number, chapter: number, due: number){
@@ -277,40 +220,21 @@ export async function updateSubscription(subscriptionId: number, chapter: number
     return updatedSubscription;
 }
 
-export async function getAllInstalments(userId: string){
+export async function getAllSeries(userId: string){
   if(!userId){
     throw new Error("Missing required parameters");
   }
 
-  const { data: instalments, error } = await supabase
-    .from('instalments')
+  const { data: series, error } = await supabase
+    .from('series')
     .select()
     .match({ userid: userId, hidden: false })
     .select();
 
     if(error){
-      console.error("Error fetching instalments:", error);
+      console.error("Error fetching series:", error);
       return null;
     }
 
-    return instalments;
-}
-
-export async function getHiddenInstalments(userId: string){
-  if(!userId){
-    throw new Error("Missing required parameters");
-  }
-
-  const { data: instalments, error } = await supabase
-    .from('instalments')
-    .select()
-    .match({ userid: userId, hidden: true })
-    .select();
-
-    if(error){
-      console.error("Error fetching instalments:", error);
-      return null;
-    }
-
-    return instalments;
+    return series;
 }

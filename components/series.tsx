@@ -6,9 +6,9 @@ import {
   Easing,
   ViewStyle,
 } from "react-native";
-import { InstalmentType } from "../types/types.js";
+import { SeriesType } from "../types/types.js";
 import { useRouter } from "expo-router";
-import Chapter from "./chapter";
+import Chapter from "./chapter.js";
 import type { PropsWithChildren } from "react";
 import { useRef, useEffect } from "react";
 
@@ -44,18 +44,14 @@ const LoadingView: React.FC<LoadingProps> = (props) => {
   );
 };
 
-export default function Book({
-  id,
-  subscriptionid,
+export default function Series({
   title,
   author,
   extracts,
-  subscribeart,
   sequeldue,
   earnedchapters,
   totalchapters,
-  hidden,
-}: InstalmentType) {
+}: SeriesType) {
   const router = useRouter();
 
   return (

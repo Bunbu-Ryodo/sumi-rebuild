@@ -72,7 +72,7 @@ export type SubscriptionTypeClient = {
     subscribeart: string;
 }
 
-export type InstalmentType = {
+export type SeriesType = {
     id: number;
     userid: string;
     subscriptionid: number;
