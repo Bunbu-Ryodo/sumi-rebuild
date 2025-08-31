@@ -59,7 +59,8 @@ export default function Subscriptions() {
     setLoading(true);
     const user = await getUserSession();
     if (user) {
-      await getAllSeries(user.id);
+      const series = await getAllSeries(user.id);
+      setSeries(series || []);
       setLoading(false);
     }
   };

@@ -8,10 +8,10 @@ import {
 } from "react-native";
 import { SeriesType } from "../types/types.js";
 import { useRouter } from "expo-router";
-import Chapter from "./chapter.js";
+import Chapter from "./chapter";
 import type { PropsWithChildren } from "react";
 import { useRef, useEffect } from "react";
-
+5;
 type LoadingProps = PropsWithChildren<{
   style?: ViewStyle;
   progressBar: number;
@@ -79,6 +79,8 @@ export default function Series({
             progressBar={
               (earnedchapters / totalchapters) * 250 < 15
                 ? 15
+                : (earnedchapters / totalchapters) * 250 >= 250
+                ? 248
                 : (earnedchapters / totalchapters) * 250
             }
           >

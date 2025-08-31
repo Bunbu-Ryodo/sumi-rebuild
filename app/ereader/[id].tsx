@@ -30,6 +30,7 @@ import {
   createSeries,
   unhideSeries,
   hideSeries,
+  checkForSeries,
 } from "../../supabase_queries/subscriptions";
 import { awardAchievement } from "../../supabase_queries/achievements";
 import {
@@ -285,6 +286,9 @@ export default function EReader() {
         duedate = new Date().getTime() + 7 * 86400000;
       }
 
+      //instant due date for testing
+      // let duedate = new Date().getTime();
+
       const newSubscription = await createSubscription(
         userId,
         extract.textid,
@@ -295,20 +299,24 @@ export default function EReader() {
         extract.author
       );
 
-      const instalment = await createSeries(
-        userId,
-        extract.title,
-        extract.author,
-        newSubscription.id,
-        extract.subscribeart,
-        [extract],
-        1,
-        extract.totalchapters,
-        duedate
-      );
+      const existingSeries = await checkForSeries(userId, newSubscription.id);
 
-      if (!instalment) {
-        console.error("Error creating instalment:", instalment);
+      if (!existingSeries) {
+        const series = await createSeries(
+          userId,
+          extract.title,
+          extract.author,
+          newSubscription.id,
+          extract.subscribeart,
+          [extract],
+          1,
+          extract.totalchapters,
+          duedate
+        );
+
+        if (!series) {
+          console.error("Error creating series:", series);
+        }
       }
 
       if (newSubscription) {
@@ -421,167 +429,6 @@ export default function EReader() {
     //     });
     //   }
     // };
-
-    const readListener = supabase
-      .channel("update-read-status")
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "profiles",
-          filter: `user_id=eq.${userid}`,
-        },
-        (payload) => {
-          const currentReadExtracts = payload.new.readExtracts || [];
-          const isRead = currentReadExtracts.some(
-            (item: ExtractType) => item.id === extract.id
-          );
-          setRead(isRead);
-
-          const checkForAchievement = async () => {
-            if (payload.new.readCount !== payload.old.readCount) {
-              if (payload.new.readCount === 1) {
-                const achievementAdded = await addAchievementToProfile(
-                  userid,
-                  "Scroll Smarter"
-                );
-                if (Platform.OS === "android" || Platform.OS === "ios") {
-                  if (achievementAdded) {
-                    displayToast("Scroll Smarter +20000xp");
-                  }
-                }
-              } else if (payload.new.readCount === 10) {
-                const achievementAdded = await addAchievementToProfile(
-                  userid,
-                  "Bookworm"
-                );
-                if (Platform.OS === "android" || Platform.OS === "ios") {
-                  if (achievementAdded) {
-                    displayToast("Bookworm +100xp");
-                  }
-                }
-              } else if (payload.new.readCount === 25) {
-                const achievementAdded = await addAchievementToProfile(
-                  userid,
-                  "Bibliophile"
-                );
-                if (Platform.OS === "android" || Platform.OS === "ios") {
-                  if (achievementAdded) {
-                    displayToast("Bibliophile +250xp");
-                  }
-                }
-              } else if (payload.new.readCount === 50) {
-                const achievementAdded = await addAchievementToProfile(
-                  userid,
-                  "Book Enjoyer"
-                );
-                if (Platform.OS === "android" || Platform.OS === "ios") {
-                  if (achievementAdded) {
-                    displayToast("Book Enjoyer +500xp");
-                  }
-                }
-              } else if (payload.new.readCount === 100) {
-                const achievementAdded = await addAchievementToProfile(
-                  userid,
-                  "Voracious Reader"
-                );
-                if (Platform.OS === "android" || Platform.OS === "ios") {
-                  if (achievementAdded) {
-                    displayToast("Voracious Reader +1000xp");
-                  }
-                }
-              } else if (payload.new.readCount === 200) {
-                const achievementAdded = await addAchievementToProfile(
-                  userid,
-                  "We are not the same"
-                );
-                if (Platform.OS === "android" || Platform.OS === "ios") {
-                  if (achievementAdded) {
-                    displayToast("We are Not the Same +2000xp");
-                  }
-                }
-              }
-            }
-
-            if (payload.new.subscribedCount !== payload.old.subscribedCount) {
-              if (payload.new.subscribedCount === 1) {
-                const achievementAdded = await addAchievementToProfile(
-                  userid,
-                  "This looks nice"
-                );
-                if (Platform.OS === "android" || Platform.OS === "ios") {
-                  if (achievementAdded) {
-                    displayToast("This looks nice +20000xp");
-                  }
-                }
-                //10
-              } else if (payload.new.subscribedCount === 10) {
-                const achievementAdded = await addAchievementToProfile(
-                  userid,
-                  "Magpie"
-                );
-                if (Platform.OS === "android" || Platform.OS === "ios") {
-                  if (achievementAdded) {
-                    displayToast("Magpie +100xp");
-                  }
-                }
-                //25
-              } else if (payload.new.subscribedCount === 25) {
-                const achievementAdded = await addAchievementToProfile(
-                  userid,
-                  "Collector"
-                );
-                if (Platform.OS === "android" || Platform.OS === "ios") {
-                  if (achievementAdded) {
-                    displayToast("Collector +250xp");
-                  }
-                }
-                //50
-              } else if (payload.new.subscribedCount === 50) {
-                const achievementAdded = await addAchievementToProfile(
-                  userid,
-                  "Archivist"
-                );
-                if (Platform.OS === "android" || Platform.OS === "ios") {
-                  if (achievementAdded) {
-                    displayToast("Archivist +500xp");
-                  }
-                }
-                //100
-              } else if (payload.new.subscribedCount === 100) {
-                const achievementAdded = await addAchievementToProfile(
-                  userid,
-                  "Book Otaku"
-                );
-                if (Platform.OS === "android" || Platform.OS === "ios") {
-                  if (achievementAdded) {
-                    displayToast("Book Otaku +1000xp");
-                  }
-                }
-                //200
-              } else if (payload.new.subscribedCount === 200) {
-                const achievementAdded = await addAchievementToProfile(
-                  userid,
-                  "Hoarder"
-                );
-                if (Platform.OS === "android" || Platform.OS === "ios") {
-                  if (achievementAdded) {
-                    displayToast("Hoarder +2000xp");
-                  }
-                }
-              }
-            }
-          };
-          checkForAchievement();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(updateListener);
-      supabase.removeChannel(readListener);
-    };
   }, [subid]);
 
   return (

@@ -159,7 +159,6 @@ export default function FeedScreen() {
         );
 
         if (!extract) {
-          await deactivateSubscription(subscriptions[i].id);
           continue;
         }
 
@@ -171,8 +170,8 @@ export default function FeedScreen() {
         } else {
           duedate = new Date().getTime() + 7 * 86400000;
         }
-        //For testing
-        // interval = new Date().getTime() + 1000;
+        // For testing
+        // let duedate = new Date().getTime() + 1000;
 
         if (extract) {
           const newInstalment = await appendExtractToSeries(
@@ -183,8 +182,6 @@ export default function FeedScreen() {
           );
 
           if (newInstalment) {
-            //All that is needed here is find instalment, update the array to contain the latest extract, then the rest of the logic can remain the same
-
             const updatedSubscription = await updateSubscription(
               subscriptions[i].id,
               subscriptions[i].chapter + 1,
@@ -230,7 +227,6 @@ export default function FeedScreen() {
 
   //Refresh data is for testing, should only processSubscriptions on initial load on login
   // const refreshData = async () => {
-  //   setInstalmentCount(0);
   //   setRefreshing(true);
   //   const user = await getUserSession();
   //   if (user) {

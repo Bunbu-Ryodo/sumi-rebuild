@@ -147,6 +147,20 @@ export async function hideSeries(userId: string, subscriptionid: number){
 }
 
 
+export async function checkForSeries(userId: string, subscriptionid: number){
+  if(!userId || !subscriptionid){
+    throw new Error("Missing required parameters");
+  }
+
+  const { data: existingSeries } = await supabase
+    .from('series')
+    .select()
+    .match({ userid: userId, subscriptionid: subscriptionid })
+    .single();
+
+  return existingSeries;
+}
+
 export async function createSeries(userId: string, title: string, author: string, subscriptionid: number, subscribeart: string, extracts: any[], earnedchapters: number, totalchapters: number, sequeldue?: number) {
     if (!userId || !title || !author || !subscriptionid || !subscribeart || !extracts || earnedchapters === undefined || totalchapters === undefined) {
     throw new Error("Missing required parameters");

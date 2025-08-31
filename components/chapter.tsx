@@ -20,7 +20,7 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
   },
-  subscriptionWrapper: { width: "33.33%", marginBottom: 12 },
+  subscriptionWrapper: { width: "25%", marginBottom: 12 },
   chapter: {
     fontSize: 16,
     fontFamily: "QuicksandReg",
@@ -32,8 +32,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   imageIcons: {
-    height: 81,
-    width: 81,
+    height: 60,
+    width: 60,
     borderRadius: 8,
     margin: 8,
   },
