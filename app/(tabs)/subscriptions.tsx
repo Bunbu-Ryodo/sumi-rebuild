@@ -10,7 +10,7 @@ import {
   Image,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import Instalment from "../../components/instalment";
+import Instalment from "../../components/chapter";
 
 import { useEffect, useState } from "react";
 import { getUserSession } from "../../supabase_queries/auth.js";
@@ -37,6 +37,7 @@ import Carousel, {
   Pagination,
 } from "react-native-reanimated-carousel";
 import { useRouter } from "expo-router";
+import Book from "../../components/book";
 
 let adUnitId = "";
 
@@ -56,20 +57,20 @@ export default function Subscriptions() {
   const [artworks, setArtworks] = useState<ArtworkType[]>([]);
   const bannerRef = useRef<BannerAd>(null);
 
-  const ref = React.useRef<ICarouselInstance>(null);
-  const progress = useSharedValue<number>(0);
-  const width = Dimensions.get("window").width;
+  // const ref = React.useRef<ICarouselInstance>(null);
+  // const progress = useSharedValue<number>(0);
+  // const width = Dimensions.get("window").width;
 
-  const onPressPagination = (index: number) => {
-    ref.current?.scrollTo({
-      /**
-       * Calculate the difference between the current index and the target index
-       * to ensure that the carousel scrolls to the nearest index
-       */
-      count: index - progress.value,
-      animated: true,
-    });
-  };
+  // const onPressPagination = (index: number) => {
+  //   ref.current?.scrollTo({
+  //     /**
+  //      * Calculate the difference between the current index and the target index
+  //      * to ensure that the carousel scrolls to the nearest index
+  //      */
+  //     count: index - progress.value,
+  //     animated: true,
+  //   });
+  // };
 
   useForeground(() => {
     if (Platform.OS === "android" || Platform.OS === "ios") {
@@ -88,39 +89,39 @@ export default function Subscriptions() {
     }
   };
 
-  const fetchUserArtworks = async (userid: string) => {
-    if (userid) {
-      const art = await getUserArtworks(userid);
-      if (art && art.length > 0) {
-        setArtworks(art);
-      }
-    }
-  };
+  // const fetchUserArtworks = async (userid: string) => {
+  //   if (userid) {
+  //     const art = await getUserArtworks(userid);
+  //     if (art && art.length > 0) {
+  //       setArtworks(art);
+  //     }
+  //   }
+  // };
 
-  const handleNavigation = (id: number) => {
-    router.push({
-      pathname: "/view_artwork/[id]",
-      params: { id: id }, // Assuming 'new' is the ID for creating a new artwork
-    });
-  };
+  // const handleNavigation = (id: number) => {
+  //   router.push({
+  //     pathname: "/view_artwork/[id]",
+  //     params: { id: id }, // Assuming 'new' is the ID for creating a new artwork
+  //   });
+  // };
 
-  const fetchSubscriptions = async (userid: string) => {
-    if (userid) {
-      const upcomingSubscriptions = await getAllUpcomingSubscriptions(userid);
+  // const fetchSubscriptions = async (userid: string) => {
+  //   if (userid) {
+  //     const upcomingSubscriptions = await getAllUpcomingSubscriptions(userid);
 
-      if (upcomingSubscriptions && upcomingSubscriptions.length > 0) {
-        populateSubscriptions(upcomingSubscriptions);
-      }
-    }
-  };
+  //     if (upcomingSubscriptions && upcomingSubscriptions.length > 0) {
+  //       populateSubscriptions(upcomingSubscriptions);
+  //     }
+  //   }
+  // };
 
   const fetchSubscriptionData = async () => {
     setLoading(true);
     const user = await getUserSession();
     if (user) {
       await fetchInstalments(user.id);
-      await fetchSubscriptions(user.id);
-      await fetchUserArtworks(user.id);
+      // await fetchSubscriptions(user.id);
+      // await fetchUserArtworks(user.id);
       setLoading(false);
     }
   };
@@ -135,17 +136,17 @@ export default function Subscriptions() {
     });
   }
 
-  async function populateSubscriptions(subscriptions: SubscriptionType[]) {
-    setActiveSubscriptions(() => {
-      return subscriptions || [];
-    });
-  }
+  // async function populateSubscriptions(subscriptions: SubscriptionType[]) {
+  //   setActiveSubscriptions(() => {
+  //     return subscriptions || [];
+  //   });
+  // }
 
   const [instalments, setInstalments] = useState<InstalmentType[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeSubscriptions, setActiveSubscriptions] = useState<
-    SubscriptionType[]
-  >([]);
+  // const [activeSubscriptions, setActiveSubscriptions] = useState<
+  //   SubscriptionType[]
+  // >([]);
   return (
     <>
       <ScrollView
@@ -164,7 +165,7 @@ export default function Subscriptions() {
             <View style={styles.subscriptionsHeader}>
               <Text style={styles.newInstallmentsHeader}>
                 {instalments.length > 0
-                  ? "Your Instalments"
+                  ? "Your Subscriptions"
                   : "Subscribe To A Series!"}
               </Text>
               <View style={styles.headerIconContainer}>
@@ -172,30 +173,21 @@ export default function Subscriptions() {
               </View>
             </View>
             <View style={styles.subscriptionSection}>
-              {instalments.length > 0
-                ? instalments.map((instalment, index) => (
-                    <Instalment
-                      key={index}
-                      id={instalment.id}
-                      extractid={instalment.extractid}
-                      title={instalment.title}
-                      author={instalment.author}
-                      chapter={instalment.chapter}
-                      subscribeart={instalment.subscribeart}
-                      sequeldue={instalment.sequeldue}
-                    />
+              {instalments
+                ? instalments.map((instalment) => (
+                    <Book key={instalment.id} {...instalment} />
                   ))
                 : null}
             </View>
-            <View style={styles.artworksHeader}>
+            {/* <View style={styles.artworksHeader}>
               <Text style={styles.yourArtworks}>
                 {artworks.length > 0 ? "Your Artworks" : "Save Some Artworks!"}
               </Text>
               <View style={styles.headerIconContainer}>
                 <Ionicons name="color-palette" size={24} color={"#393E41"} />
               </View>
-            </View>
-            {artworks && artworks.length > 0 ? (
+            </View> */}
+            {/* {artworks && artworks.length > 0 ? (
               <View
                 style={{
                   flex: 1,
@@ -247,7 +239,7 @@ export default function Subscriptions() {
                   onPress={onPressPagination}
                 />
               </View>
-            ) : null}
+            ) : null} */}
           </View>
         )}
       </ScrollView>

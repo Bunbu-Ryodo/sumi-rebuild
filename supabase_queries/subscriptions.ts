@@ -17,8 +17,8 @@ export async function createSubscription(userId: string, textId: number, chapter
   return newSubscription;
 }
 
-export async function activateSubscription(id: number, chapter: number, userId: string, due: number){
-  const { data, error: subscriptionUpdateError } = await supabase.from('subscriptions').update({active: true, chapter: chapter, due: due }).eq('id', id).select();
+export async function activateSubscription(id: number){
+  const { data, error: subscriptionUpdateError } = await supabase.from('subscriptions').update({active: true }).eq('id', id).select();
 
   if(subscriptionUpdateError){
     console.error("Error activating subscription:", subscriptionUpdateError);
@@ -127,6 +127,43 @@ export async function checkForInstalments(userId: string, subscriptionId: number
 
   return instalments;
 }
+
+export async function unhideInstalment(userId: string, subscriptionid: number){
+  if(!userId || !subscriptionid){
+    throw new Error("Missing required parameters");
+  }
+
+  const { data: updatedInstalment, error: updateError } = await supabase
+    .from("instalments")
+    .update({ hidden: false })
+    .match({ userid: userId, subscriptionid: subscriptionid });
+
+  if (updateError) {
+    console.error("Error unhiding instalment:", updateError);
+    return null;
+  }
+
+  return updatedInstalment;
+}
+
+export async function hideInstalment(userId: string, subscriptionid: number){
+  if(!userId || !subscriptionid){
+    throw new Error("Missing required parameters");
+  }
+
+  const { data: updatedInstalment, error: updateError } = await supabase
+    .from("instalments")
+    .update({ hidden: true })
+    .match({ userid: userId, subscriptionid: subscriptionid });
+
+  if (updateError) {
+    console.error("Error hiding instalment:", updateError);
+    return null;
+  }
+
+  return updatedInstalment;
+}
+
 
 export async function createNewInstalment(userId: string, title: string, author: string, subscriptionid: number, subscribeart: string, extracts: any[], earnedchapters: number, totalchapters: number, sequeldue?: number) {
     if (!userId || !title || !author || !subscriptionid || !subscribeart || !extracts || earnedchapters === undefined || totalchapters === undefined) {
@@ -248,7 +285,26 @@ export async function getAllInstalments(userId: string){
   const { data: instalments, error } = await supabase
     .from('instalments')
     .select()
-    .match({ userid: userId })
+    .match({ userid: userId, hidden: false })
+    .select();
+
+    if(error){
+      console.error("Error fetching instalments:", error);
+      return null;
+    }
+
+    return instalments;
+}
+
+export async function getHiddenInstalments(userId: string){
+  if(!userId){
+    throw new Error("Missing required parameters");
+  }
+
+  const { data: instalments, error } = await supabase
+    .from('instalments')
+    .select()
+    .match({ userid: userId, hidden: true })
     .select();
 
     if(error){

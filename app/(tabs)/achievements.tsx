@@ -8,19 +8,7 @@ import {
   Easing,
   Platform,
 } from "react-native";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useEffect, useRef, useState } from "react";
-import {
-  getUserSession,
-  lookUpUserProfile,
-} from "../../supabase_queries/auth.js";
-import Achievement from "../../components/achievement";
-import PendingAchievement from "../../components/pendingAchievement";
-import {
-  AchievementTypeClient,
-  PendingAchievementType,
-} from "../../types/types.js";
-import { fetchAchievementByDescription } from "../../supabase_queries/achievements";
 import type { PropsWithChildren } from "react";
 import {
   BannerAd,
@@ -28,10 +16,13 @@ import {
   TestIds,
   useForeground,
 } from "react-native-google-mobile-ads";
+import { ArtworkType } from "../../types/types";
+import { getUserArtworks } from "../../supabase_queries/artworks";
+import { getUserSession } from "../../supabase_queries/auth.js";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 let adUnitId = "";
 
-// Use test ads when in dev mode OR when EXPO_PUBLIC_USE_TEST_ADS is set
 const useTestAds = __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
 
 if (useTestAds) {
@@ -42,46 +33,10 @@ if (useTestAds) {
   adUnitId = "ca-app-pub-5850018728161057/3269917700";
 }
 
-type BounceInProps = PropsWithChildren<{}>;
-
-const BounceView: React.FC<BounceInProps> = (props) => {
-  const scale = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.sequence([
-      Animated.timing(scale, {
-        toValue: 1.3333,
-        duration: 300,
-        easing: Easing.in(Easing.ease),
-        useNativeDriver: true,
-      }),
-      Animated.timing(scale, {
-        toValue: 1,
-        duration: 200,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
-
-  return (
-    <Animated.View
-      style={{
-        transform: [{ scale }],
-        opacity: scale.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0, 1],
-        }),
-      }}
-    >
-      {props.children}
-    </Animated.View>
-  );
-};
-
-export default function Achievements() {
+export default function Artwork() {
   const bannerRef = useRef<BannerAd>(null);
-  // const [loading, setLoading] = useState(true); // Add a loading state
+  const [artworks, setArtworks] = useState<ArtworkType[]>([]);
+  const [loading, setLoading] = useState(true); // Add a loading state
 
   useForeground(() => {
     if (Platform.OS === "android" || Platform.OS === "ios") {
@@ -89,34 +44,44 @@ export default function Achievements() {
     }
   });
 
-  // const getProfileData = async function () {
-  //   setLoading(true);
-  //   const user = await getUserSession();
-  //   setLoading(false);
-  // };
+  useEffect(() => {
+    fetchArtworkData();
+  }, []);
 
-  // useEffect(() => {
-  //   getProfileData();
-  // }, []);
+  const fetchArtworkData = async () => {
+    setLoading(true);
+    const user = await getUserSession();
+    if (user) {
+      await getUserArtworks(user.id);
+      console.log("Artworks found");
+    }
+    setLoading(false);
+  };
 
   return (
     <ScrollView
-      contentContainerStyle={styles.achievementsContentContainer}
+      contentContainerStyle={styles.artworksWrapper}
       style={styles.container}
-      // refreshControl={
-      // <RefreshControl
-      //   refreshing={loading}
-      //   onRefresh={getProfileData}
-      //   tintColor="#F6F7EB"
-      // />
-      // }
+      refreshControl={
+        <RefreshControl
+          refreshing={loading}
+          onRefresh={fetchArtworkData}
+          tintColor="#F6F7EB"
+        />
+      }
     >
-      {/* {loading ? null : (
-        <View style={styles.achievementHeader}>
-          <Text style={styles.header}>Sumi</Text>
-          <Text style={styles.tagline}>Just One More Chapter</Text>
+      {!loading && (
+        <View style={styles.artWrapper}>
+          <View style={styles.artworksHeader}>
+            <Text style={styles.yourArtworks}>
+              {artworks.length > 0 ? "Your Artworks" : "Save Some Artworks!"}
+            </Text>
+            <View style={styles.headerIconContainer}>
+              <Ionicons name="color-palette" size={24} color={"#393E41"} />
+            </View>
+          </View>
         </View>
-      )} */}
+      )}
     </ScrollView>
   );
 }
@@ -126,10 +91,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "100%",
     padding: 16,
-  },
-  container: {
-    backgroundColor: "#F6F7EB",
-    flex: 1,
   },
   achievementHeader: {
     justifyContent: "center",
@@ -232,5 +193,59 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  medalCountContainer: {},
+  thumbnailContainer: {
+    alignItems: "center",
+    width: "100%",
+  },
+  artworkTitle: {
+    fontFamily: "EBGaramondItalic",
+    fontSize: 16,
+    color: "#393E41",
+    textAlign: "center",
+  },
+  artworkDetails: {
+    fontFamily: "EBGaramond",
+    fontSize: 16,
+    color: "#393E41",
+    textAlign: "center",
+  },
+  thumbnail: {
+    width: 200,
+    height: 220,
+    cursor: "pointer",
+    textAlign: "center",
+    borderRadius: 8,
+  },
+  artworkDetailsContainer: {
+    marginTop: 8,
+  },
+  headerIconContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 8,
+  },
+  artworksHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  yourArtworks: {
+    fontFamily: "QuicksandReg",
+    fontSize: 20,
+    color: "#393E41",
+  },
+  artworksWrapper: {
+    width: "100%",
+    alignItems: "center",
+    backgroundColor: "#F6F7EB",
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "#F6F7EB",
+  },
+  artWrapper: {
+    padding: 16,
+    marginTop: 24,
+    width: "100%",
+  },
 });

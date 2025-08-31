@@ -29,6 +29,8 @@ import {
   deactivateSubscription,
   createNewInstalment,
   checkForInstalments,
+  unhideInstalment,
+  hideInstalment,
 } from "../../supabase_queries/subscriptions";
 import { awardAchievement } from "../../supabase_queries/achievements";
 import {
@@ -274,11 +276,21 @@ export default function EReader() {
       }
       setSubid(existingSubscription.id);
     } else {
+      const userProfile = await lookUpUserProfile(userId);
+
+      let duedate;
+      if (userProfile.subscriptioninterval) {
+        duedate =
+          new Date().getTime() + userProfile.subscriptioninterval * 86400000;
+      } else {
+        duedate = new Date().getTime() + 7 * 86400000;
+      }
+
       const newSubscription = await createSubscription(
         userId,
         extract.textid,
         extract.chapter + 1,
-        due,
+        duedate,
         extract.subscribeart,
         extract.title,
         extract.author
@@ -293,7 +305,7 @@ export default function EReader() {
         [extract],
         1,
         extract.totalchapters,
-        due
+        duedate
       );
 
       if (!instalment) {
@@ -361,13 +373,12 @@ export default function EReader() {
 
     if (subscribed) {
       await deactivateSubscription(subid);
+
+      await hideInstalment(userid, subid);
     } else {
-      await activateSubscription(
-        subid,
-        extract.chapter + 1,
-        userid,
-        new Date().getTime()
-      );
+      await activateSubscription(subid);
+
+      await unhideInstalment(userid, subid);
     }
   }
 

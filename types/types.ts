@@ -74,25 +74,16 @@ export type SubscriptionTypeClient = {
 
 export type InstalmentType = {
     id: number;
-    extractid: number;
     userid: string;
-    title: string;   
+    subscriptionid: number;
+    title: string;
     author: string;
-    chapter: string;
-    subscriptionid: number;   
+    extracts: ExtractType[];
     subscribeart: string;
     sequeldue: number;
-}
-
-export type InstalmentTypeClient = {
-    id: number;
-    extractid: number;
-    title: string;   
-    author: string;
-    chapter: string;
-    subscribeart: string;
-    sequeldue: number;
-    onLongPress?: () => void;
+    earnedchapters: number;
+    totalchapters: number;
+    hidden: boolean;
 }
 
 export type AchievementType = {
