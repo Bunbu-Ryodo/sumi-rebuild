@@ -43,8 +43,8 @@ import {
 } from "react-native-google-mobile-ads";
 import { useFocusEffect } from "expo-router";
 
-import Toast from "react-native-toast-message";
 import type { PropsWithChildren } from "react";
+
 // import OpenAI from "openai";
 
 // const client = new OpenAI({
@@ -53,7 +53,6 @@ import type { PropsWithChildren } from "react";
 
 let adUnitId = "";
 
-// Use test ads when in dev mode OR when EXPO_PUBLIC_USE_TEST_ADS is set
 const useTestAds = __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
 
 if (useTestAds) {
@@ -106,7 +105,9 @@ export default function EReader() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useForeground(() => {
-    Platform.OS === "android" && bannerRef.current?.load();
+    if (Platform.OS === "android" || Platform.OS === "ios") {
+      bannerRef.current?.load();
+    }
   });
 
   const [extract, setExtract] = useState<ExtractType>({
@@ -293,7 +294,7 @@ export default function EReader() {
         duedate = new Date().getTime() + 7 * 86400000;
       }
 
-      //instant due date for testing
+      // Comment 289-295 and uncomment 298 for testing.
       // let duedate = new Date().getTime();
 
       const newSubscription = await createSubscription(
@@ -349,15 +350,6 @@ export default function EReader() {
     }
   };
 
-  // const copyToClipboard = async () => {
-  //   if (clipRef.current) {
-  //     clipRef.current.bounce();
-  //   }
-
-  //   const link = `http://localhost:8081/share_text/${extract.id}`;
-  //   await Clipboard.setStringAsync(link);
-  // };
-
   function shop() {
     if (cartRef.current) {
       cartRef.current.bounce();
@@ -393,7 +385,7 @@ export default function EReader() {
     if (!subid || subid === 0) return;
 
     console.log("Setting up listener for subscription:", subid);
-    const updateListener = supabase
+    supabase
       .channel(`subscription-updates-${subid}`)
       .on(
         "postgres_changes",
@@ -410,19 +402,12 @@ export default function EReader() {
         }
       )
       .subscribe();
-
-    // return () => {
-    //   console.log("Cleaning up listener for subscription:", subid);
-    //   supabase.removeChannel(updateListener);
-    // };
   }, [subid]);
 
   useFocusEffect(
     React.useCallback(() => {
       return () => {
-        // This runs when navigating away from the screen
         console.log("Screen unfocused, cleaning up any active listeners");
-        // Force cleanup of any active channels
         supabase.getChannels().forEach((channel) => {
           if (channel.topic.includes("subscription-updates")) {
             console.log("Force cleaning up channel:", channel.topic);

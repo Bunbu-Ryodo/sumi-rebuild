@@ -23,7 +23,6 @@ import Series from "../../components/series";
 
 let adUnitId = "";
 
-// Use test ads when in dev mode OR when EXPO_PUBLIC_USE_TEST_ADS is set
 const useTestAds = __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
 
 if (useTestAds) {
@@ -39,20 +38,9 @@ export default function Subscriptions() {
 
   useForeground(() => {
     if (Platform.OS === "android" || Platform.OS === "ios") {
-      5;
       bannerRef.current?.load();
     }
   });
-
-  const fetchSeries = async (userid: string) => {
-    if (userid) {
-      const series = await getAllSeries(userid);
-
-      if (series && series.length > 0) {
-        populateSeries(series);
-      }
-    }
-  };
 
   const fetchSubscriptionData = async () => {
     setLoading(true);
@@ -67,12 +55,6 @@ export default function Subscriptions() {
   useEffect(() => {
     fetchSubscriptionData();
   }, []);
-
-  async function populateSeries(series: SeriesType[]) {
-    setSeries(() => {
-      return series || [];
-    });
-  }
 
   const [series, setSeries] = useState<SeriesType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -170,7 +152,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     padding: 8,
     width: "100%",
-    backgroundColor: "lightblue", // debug
+    backgroundColor: "lightblue",
   },
   noInstalmentsText: {
     fontFamily: "QuicksandReg",

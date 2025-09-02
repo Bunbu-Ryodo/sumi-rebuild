@@ -22,7 +22,6 @@ import { useRouter } from "expo-router";
 
 let adUnitId = "";
 
-// Use test ads when in dev mode OR when EXPO_PUBLIC_USE_TEST_ADS is set
 const useTestAds = __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
 
 if (useTestAds) {
@@ -38,10 +37,6 @@ export default function ViewArtwork() {
   let { id } = useLocalSearchParams();
   const [artwork, setArtwork] = useState<ArtworkType | null>(null);
   const [loading, setLoading] = useState(true);
-  const [imgDimensions, setImgDimensions] = useState<{
-    width: number;
-    height: number;
-  } | null>(null);
 
   const fetchArtwork = async () => {
     setLoading(true);
@@ -54,23 +49,7 @@ export default function ViewArtwork() {
     fetchArtwork();
   }, []);
 
-  useEffect(() => {
-    if (artwork && artwork.url) {
-      Image.getSize(
-        artwork.url,
-        (width, height) => setImgDimensions({ width, height }),
-        (error) => console.log("Failed to get image size", error)
-      );
-      setLoading(false);
-    }
-  }, [artwork]);
-
   const screenWidth = Dimensions.get("window").width - 20;
-  // let imageHeight = 200;
-
-  // if (imgDimensions) {
-  //   imageHeight = (screenWidth * imgDimensions.height) / imgDimensions.width;
-  // }
 
   const deleteArtwork = async () => {
     if (artwork) {
