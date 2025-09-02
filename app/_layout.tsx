@@ -48,59 +48,6 @@ export default function RootLayout() {
   }
 
   const toastConfig = {
-    achievementUnlocked: ({
-      text1,
-      text2,
-    }: {
-      text1?: string;
-      text2?: string;
-    }) => (
-      <View
-        style={{
-          width: "85%",
-          borderRadius: 8,
-          backgroundColor: "#F6F7EB",
-          borderWidth: 1,
-          borderColor: "#393E41",
-          padding: 12,
-          flexDirection: "row",
-        }}
-      >
-        <View
-          style={{
-            height: 44,
-            width: 44,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: "#393E41",
-            borderRadius: 8,
-            marginRight: 8,
-          }}
-        >
-          <Ionicons name="star" size={24} color="#F6F7EB"></Ionicons>
-        </View>
-        <View>
-          <Text
-            style={{
-              fontFamily: "QuicksandReg",
-              fontSize: 16,
-              color: "#393E41",
-            }}
-          >
-            {text1 ?? ""}
-          </Text>
-          <Text
-            style={{
-              fontFamily: "QuicksandReg",
-              fontSize: 12,
-              color: "#393E41",
-            }}
-          >
-            {text2 ?? ""}
-          </Text>
-        </View>
-      </View>
-    ),
     settingsUpdateError: ({ text1 }: { text1?: string }) => (
       <View
         style={{
@@ -220,10 +167,7 @@ export default function RootLayout() {
   return (
     <SupabaseContext.Provider value={supabase}>
       <GestureHandlerRootView>
-        <StatusBar
-          backgroundColor="#393E41" // Match the header background color
-          barStyle="light-content" // Light icons for dark background
-        />
+        <StatusBar backgroundColor="#393E41" barStyle="light-content" />
         <Stack>
           <Stack.Screen
             name="index"

@@ -1,5 +1,4 @@
 import {
-  Animated,
   Dimensions,
   View,
   Text,
@@ -44,7 +43,7 @@ export default function Artwork() {
   const router = useRouter();
   const bannerRef = useRef<BannerAd>(null);
   const [artworks, setArtworks] = useState<ArtworkType[]>([]);
-  const [loading, setLoading] = useState(true); // Add a loading state
+  const [loading, setLoading] = useState(true);
 
   const ref = React.useRef<ICarouselInstance>(null);
   const progress = useSharedValue<number>(0);
@@ -52,10 +51,6 @@ export default function Artwork() {
 
   const onPressPagination = (index: number) => {
     ref.current?.scrollTo({
-      /**
-       * Calculate the difference between the current index and the target index
-       * to ensure that the carousel scrolls to the nearest index
-       */
       count: index - progress.value,
       animated: true,
     });
@@ -64,7 +59,7 @@ export default function Artwork() {
   const handleNavigation = (id: number) => {
     router.push({
       pathname: "/view_artwork/[id]",
-      params: { id: id }, // Assuming 'new' is the ID for creating a new artwork
+      params: { id: id },
     });
   };
 

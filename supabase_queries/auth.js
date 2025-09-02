@@ -35,8 +35,6 @@ export async function lookUpUserProfile(user_id){
   return userProfile;
 }
 
-//setLastLogin
-
 export async function setLoginDateTime(user_id, lastLogin){
 
     const { data, error: updateError } = await supabase

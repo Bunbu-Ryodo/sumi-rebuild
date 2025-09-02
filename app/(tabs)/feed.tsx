@@ -41,7 +41,6 @@ import { AdsConsent, AdsConsentStatus } from "react-native-google-mobile-ads";
 
 let adUnitId = "";
 
-// Use test ads when in dev mode OR when EXPO_PUBLIC_USE_TEST_ADS is set
 const useTestAds = __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
 
 if (useTestAds) {
@@ -85,7 +84,6 @@ export default function FeedScreen() {
 
   useFocusEffect(
     React.useCallback(() => {
-      // Close all swipeables
       Object.values(swipeableRefs.current).forEach((ref) => {
         if (ref.current && typeof ref.current.close === "function") {
           ref.current.close();
@@ -169,7 +167,8 @@ export default function FeedScreen() {
         } else {
           duedate = new Date().getTime() + 7 * 86400000;
         }
-        // For testing
+
+        // Comment 162-169, and uncomment 173 for testing
         // let duedate = new Date().getTime() + 1000;
 
         if (extract) {
@@ -224,7 +223,7 @@ export default function FeedScreen() {
     setRefreshing(false);
   };
 
-  //Refresh data is for testing, should only processSubscriptions on initial load on login
+  // Refresh data is for testing, should only processSubscriptions on initial load on login
   // const refreshData = async () => {
   //   setRefreshing(true);
   //   const user = await getUserSession();

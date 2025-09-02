@@ -7,11 +7,9 @@ import {
   ViewStyle,
 } from "react-native";
 import { SeriesType } from "../types/types.js";
-import { useRouter } from "expo-router";
 import Chapter from "./chapter";
 import type { PropsWithChildren } from "react";
-import { useRef, useEffect } from "react";
-5;
+import { useRef, useEffect, useState } from "react";
 type LoadingProps = PropsWithChildren<{
   style?: ViewStyle;
   progressBar: number;
@@ -22,10 +20,10 @@ const LoadingView: React.FC<LoadingProps> = (props) => {
 
   useEffect(() => {
     Animated.timing(progressAnim, {
-      toValue: 1, // animate to 100%
-      duration: 400, // 0.8 seconds
+      toValue: 1,
+      duration: 400,
       easing: Easing.out(Easing.ease),
-      useNativeDriver: false, // width cannot use native driver
+      useNativeDriver: false,
     }).start();
   }, []);
 
@@ -52,7 +50,20 @@ export default function Series({
   earnedchapters,
   totalchapters,
 }: SeriesType) {
-  const router = useRouter();
+  const progressBarRef = useRef<View>(null);
+  const [progressBarWidth, setProgressBarWidth] = useState(250);
+
+  useEffect(() => {
+    setTimeout(() => {
+      if (progressBarRef.current) {
+        progressBarRef.current.measure((x, y, width, height) => {
+          setProgressBarWidth(width);
+        });
+      }
+    }, 100);
+  }, []);
+
+  const progress = (earnedchapters / totalchapters) * progressBarWidth;
 
   return (
     <View style={styles.bookWrapper}>
@@ -60,28 +71,19 @@ export default function Series({
         <Text style={styles.bookTextTitle}>{title}</Text>
         <Text style={styles.bookText}>by {author}</Text>
       </View>
-      <Text style={styles.dueText}>
-        Next Chapter:{" "}
-        {new Date(sequeldue).toLocaleDateString("en-GB", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        })}
-      </Text>
+
       <Text style={styles.progressText}>
-        Progress: {earnedchapters} out of {totalchapters} chapters
+        {earnedchapters} out of {totalchapters} instalments
       </Text>
       <View style={styles.progressBarContainer}>
-        <View style={styles.progressBar}>
+        <View ref={progressBarRef} style={styles.progressBar}>
           <LoadingView
             progressBar={
-              (earnedchapters / totalchapters) * 250 < 15
+              progress < 15
                 ? 15
-                : (earnedchapters / totalchapters) * 250 >= 250
-                ? 248
-                : (earnedchapters / totalchapters) * 250
+                : progress >= progressBarWidth
+                ? progress - 2
+                : progress
             }
           >
             <View style={[styles.progress]}></View>
@@ -93,6 +95,16 @@ export default function Series({
           <Chapter key={`${title}-${index}`} {...extract} />
         ))}
       </View>
+      <Text style={styles.dueText}>
+        Next Chapter:{" "}
+        {new Date(sequeldue).toLocaleDateString("en-GB", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })}
+      </Text>
     </View>
   );
 }
@@ -134,9 +146,8 @@ const styles = StyleSheet.create({
     color: "#393E41",
   },
   progressText: {
-    marginTop: 8,
     fontFamily: "QuicksandReg",
-    fontSize: 14,
+    fontSize: 16,
     color: "#393E41",
   },
   progressBar: {
@@ -145,7 +156,7 @@ const styles = StyleSheet.create({
     borderColor: "#393E41",
     borderRadius: 40,
     height: 14,
-    width: 250,
+    width: "100%",
     justifyContent: "center",
   },
   progress: {

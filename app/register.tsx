@@ -63,7 +63,7 @@ export default function Register() {
         email: email,
         password: password,
       })
-      .then(({ data, error }) => {
+      .then(({ error }) => {
         if (error) {
           setRegisterError("Error registering, please try again");
           return;

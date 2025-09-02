@@ -7,13 +7,11 @@ import {
   Animated,
   Easing,
 } from "react-native";
-import { Link } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import React, {
   useImperativeHandle,
   forwardRef,
   useRef,
-  useEffect,
   useState,
 } from "react";
 import type { PropsWithChildren } from "react";
@@ -71,10 +69,8 @@ export default function Extract({
   coverartArtist,
   coverartYear,
   coverartTitle,
-  textid,
   userid,
 }: ExtractComponent) {
-  const [like, setLike] = useState(false);
   const [preview, setPreview] = useState(fulltext.slice(0, 420));
   const [saved, setSaved] = useState(false);
   const router = useRouter();
@@ -86,9 +82,6 @@ export default function Extract({
     });
   };
 
-  useEffect(() => {}, []);
-
-  const clipRef = useRef<any>(null);
   const saveRef = useRef<any>(null);
 
   const saveArtwork = async () => {
@@ -114,11 +107,10 @@ export default function Extract({
         );
         if (artwork) {
           setSaved(true);
-          console.log("Artwork saved to scrapbook");
         }
       } else {
         setSaved(true);
-        console.log("Artwork already exists in scrapbook");
+        console.log("Artwork already saved");
       }
     }
   };
