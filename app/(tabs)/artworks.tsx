@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     backgroundColor: "#F6F7EB",
-    flexGrow: 1, // Allow the content to expand and enable centering
+    flexGrow: 1,
   },
   container: {
     flex: 1,
