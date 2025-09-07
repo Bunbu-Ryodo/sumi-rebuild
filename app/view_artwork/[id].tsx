@@ -43,6 +43,7 @@ export default function ViewArtwork() {
     const artworkId = Array.isArray(id) ? id[0] : id;
     const artwork = await getUserArtworkById(artworkId);
     setArtwork(artwork);
+    setLoading(false);
   };
 
   useEffect(() => {

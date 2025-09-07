@@ -128,8 +128,10 @@ export default function FeedScreen() {
   const checkUserProfileStatus = async function (userId: string) {
     const userProfile = await lookUpUserProfile(userId);
     if (!userProfile) {
+      console.log("Profile not found, creating new profile");
       await createNewProfile(userId, new Date());
     } else if (userProfile) {
+      console.log("Profile found, setting login date and time");
       await setLoginDateTime(userId, new Date());
     }
   };
@@ -146,7 +148,8 @@ export default function FeedScreen() {
   const processSubscriptions = async function (userId: string) {
     const user = await getUserSession();
     const subscriptions = await getAllDueSubscriptions(userId);
-    if (user && subscriptions) {
+    if (user && subscriptions?.length) {
+      console.log("User has subscriptions due");
       let count = 0;
 
       for (let i = 0; i < subscriptions.length; i++) {
@@ -156,6 +159,7 @@ export default function FeedScreen() {
         );
 
         if (!extract) {
+          console.log("No extract found, possibly end of the text");
           continue;
         }
 
@@ -172,6 +176,7 @@ export default function FeedScreen() {
         // let duedate = new Date().getTime() + 1000;
 
         if (extract) {
+          console.log("Creating new instalment");
           const newInstalment = await appendExtractToSeries(
             userId,
             subscriptions[i].id,
@@ -180,6 +185,7 @@ export default function FeedScreen() {
           );
 
           if (newInstalment) {
+            console.log("Updating subscription to track next due instalment");
             const updatedSubscription = await updateSubscription(
               subscriptions[i].id,
               subscriptions[i].chapter + 1,
@@ -215,9 +221,11 @@ export default function FeedScreen() {
 
     const extracts = await getExtracts();
     if (extracts) {
+      console.log("Extracts found");
       const shuffledExtracts = shuffle(extracts);
       setExtracts(shuffledExtracts);
     } else {
+      console.log("No extracts found");
       setExtracts([]);
     }
     setRefreshing(false);

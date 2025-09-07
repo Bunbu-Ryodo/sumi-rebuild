@@ -113,6 +113,7 @@ export default function Artwork() {
                   alignItems: "center",
                   justifyContent: "center",
                   marginTop: 24,
+                  minHeight: 400,
                 }}
               >
                 <Carousel
@@ -323,6 +324,7 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     backgroundColor: "#F6F7EB",
+    flexGrow: 1,
   },
   container: {
     flex: 1,
