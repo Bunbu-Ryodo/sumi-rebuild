@@ -27,8 +27,8 @@ export async function lookUpUserProfile(user_id){
     .eq('user_id', user_id)
     .single();
 
-  if(error){
-    console.error('Error fetching user profile:', error.message);
+  if (error) {
+    console.error('Error looking up user profile:', error);
     return null;
   }
 
