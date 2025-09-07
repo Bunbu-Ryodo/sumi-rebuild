@@ -113,7 +113,7 @@ export default function Artwork() {
                   alignItems: "center",
                   justifyContent: "center",
                   marginTop: 24,
-                  minHeight: 400, // Ensure minimum height for centering
+                  minHeight: 400,
                 }}
               >
                 <Carousel
