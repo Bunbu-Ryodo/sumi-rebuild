@@ -637,11 +637,6 @@ export default function EReader() {
                   Buy Full Text [Coming Soon]
                 </Text>
               </View>
-              {/* <TouchableOpacity onPress={copyToClipboard}>
-                <BounceView ref={clipRef}>
-                  <Ionicons name="clipboard" size={24} color="#8980F5" />
-                </BounceView>
-              </TouchableOpacity> */}
             </View>
             <View></View>
           </View>

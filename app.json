@@ -21,7 +21,8 @@
         "foregroundImage": "./assets/images/sumi-android-icon.png",
         "backgroundColor": "#F6F7EB"
       },
-      "package": "com.anonymous.sumisupabase"
+      "package": "com.anonymous.sumisupabase",
+      "versionCode": 5
     },
     "web": {
       "bundler": "metro",
