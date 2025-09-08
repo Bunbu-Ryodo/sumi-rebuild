@@ -566,21 +566,18 @@ export default function EReader() {
               ) : (
                 <></>
               )}
-
-              <TouchableOpacity>
-                <Text
-                  style={[
-                    styles.extractText,
-                    { fontSize },
-                    warmth === 4 && {
-                      color: "#F6F7EB",
-                      borderBottomColor: "#F6F7EB",
-                    },
-                  ]}
-                >
-                  {extract.fulltext}
-                </Text>
-              </TouchableOpacity>
+              <Text
+                style={[
+                  styles.extractText,
+                  { fontSize },
+                  warmth === 4 && {
+                    color: "#F6F7EB",
+                    borderBottomColor: "#F6F7EB",
+                  },
+                ]}
+              >
+                {extract.fulltext}
+              </Text>
             </View>
             <View style={styles.engagementButtons}>
               {/* <TouchableOpacity onPress={toggleLike}>
@@ -677,6 +674,7 @@ const styles = StyleSheet.create({
     fontFamily: "EBGaramondItalic",
     fontSize: 24,
     marginBottom: 8,
+    marginTop: 16,
   },
   chapter: {
     fontFamily: "EBGaramond",
