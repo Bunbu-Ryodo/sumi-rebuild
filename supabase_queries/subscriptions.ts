@@ -13,9 +13,8 @@ export async function createSubscription(userId: string, textId: number, chapter
 }
 
 export async function activateSubscription(id: number, due: number){
-
-  if(!due){
-    due = new Date().getTime()
+  if(!id || !due){
+    throw new Error("Missing required parameters");
   }
 
   const { data, error: subscriptionUpdateError } = await supabase.from('subscriptions').update({active: true, due: due }).eq('id', id).select();
@@ -59,7 +58,7 @@ export async function getAllDueSubscriptions(userId: string) {
     throw new Error("Missing required parameters");
   }
 
-  
+
   const { data: subscriptions, error } = await supabase
     .from('subscriptions')
     .select()
