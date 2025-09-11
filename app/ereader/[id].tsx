@@ -31,6 +31,7 @@ import {
   unhideSeries,
   hideSeries,
   checkForSeries,
+  updateSeriesDueDate,
 } from "../../supabase_queries/subscriptions";
 import { getUserSession } from "../../supabase_queries/auth.js";
 import supabase from "../../lib/supabase.js";
@@ -134,10 +135,12 @@ export default function EReader() {
   const [userid, setUserid] = useState("");
   const [fontSize, setFontSize] = useState(18);
   const [warmth, setWarmth] = useState(0);
-  const [due, setDue] = useState(new Date().getTime());
   const [argument, setArgument] = useState("");
   const [thinking, setThinking] = useState(false);
   const [creditsLeft, setCreditsLeft] = useState(0);
+
+  // Add a ref to store the current due date immediately
+  const currentDue = useRef(new Date().getTime());
 
   const router = useRouter();
 
@@ -263,6 +266,21 @@ export default function EReader() {
       extract.textid
     );
 
+    const userProfile = await lookUpUserProfile(userId);
+
+    let duedate;
+    if (userProfile.subscriptioninterval) {
+      duedate =
+        new Date().getTime() + userProfile.subscriptioninterval * 86400000;
+    } else {
+      duedate = new Date().getTime() + 86400000;
+    }
+
+    const preciseDate = new Date(duedate);
+    const setToMidnight = preciseDate.setHours(0, 0, 0, 0);
+
+    currentDue.current = setToMidnight;
+
     if (existingSubscription) {
       const isActive =
         existingSubscription.active &&
@@ -270,8 +288,6 @@ export default function EReader() {
       setSubscribed(isActive);
       setSubid(existingSubscription.id);
     } else {
-      const userProfile = await lookUpUserProfile(userId);
-
       const doubleCheckSubscription = await checkForSubscription(
         userId,
         extract.textid
@@ -284,14 +300,6 @@ export default function EReader() {
           setSubscribed(true);
         }
         return;
-      }
-
-      let duedate;
-      if (userProfile.subscriptioninterval) {
-        duedate =
-          new Date().getTime() + userProfile.subscriptioninterval * 86400000;
-      } else {
-        duedate = new Date().getTime() + 7 * 86400000;
       }
 
       // Comment 289-295 and uncomment 298 for testing.
@@ -364,6 +372,10 @@ export default function EReader() {
       bounceRef.current.bounce();
     }
 
+    // Use the ref value which is updated immediately
+    const dueToUse = currentDue.current;
+    console.log(new Date(dueToUse).toLocaleDateString(), "Due date");
+
     if (subscribed) {
       console.log("Subscription deactivated", subid);
       await deactivateSubscription(subid);
@@ -371,7 +383,8 @@ export default function EReader() {
       await hideSeries(userid, subid);
     } else {
       console.log("Subscription activated", subid);
-      await activateSubscription(subid);
+      await activateSubscription(subid, dueToUse);
+      await updateSeriesDueDate(userid, subid, dueToUse);
 
       await unhideSeries(userid, subid);
     }

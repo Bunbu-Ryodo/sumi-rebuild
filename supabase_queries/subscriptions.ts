@@ -12,8 +12,12 @@ export async function createSubscription(userId: string, textId: number, chapter
   return newSubscription;
 }
 
-export async function activateSubscription(id: number){
-  const { data, error: subscriptionUpdateError } = await supabase.from('subscriptions').update({active: true }).eq('id', id).select();
+export async function activateSubscription(id: number, due: number){
+  if(!id || !due){
+    throw new Error("Missing required parameters");
+  }
+
+  const { data, error: subscriptionUpdateError } = await supabase.from('subscriptions').update({active: true, due: due }).eq('id', id).select();
 
   if(subscriptionUpdateError){
     console.error("Error activating subscription:", subscriptionUpdateError);
@@ -53,6 +57,7 @@ export async function getAllDueSubscriptions(userId: string) {
   if(!userId){
     throw new Error("Missing required parameters");
   }
+
 
   const { data: subscriptions, error } = await supabase
     .from('subscriptions')
@@ -207,6 +212,26 @@ export async function appendExtractToSeries(userid: string, subscriptionid: numb
   }
 
   return updatedSeries
+}
+
+export async function updateSeriesDueDate(userId: string, subscriptionid: number, sequeldue: number){
+  if(!userId || !subscriptionid || !sequeldue){
+    throw new Error("Missing required parameters");
+  }
+
+  const { data: updatedSeries, error } = await supabase
+    .from('series')
+    .update({ sequeldue: sequeldue })
+    .match({ userid: userId, subscriptionid: subscriptionid })
+    .select()
+    .single();
+
+  if(error){
+    console.error("Error updating series due date:", error);
+    return null;
+  }
+
+  return updatedSeries;
 }
 
 export async function updateSubscription(subscriptionId: number, chapter: number, due: number){
