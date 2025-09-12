@@ -172,7 +172,7 @@ export default function EReader() {
     //   setArgument(response.output_text);
     // } else {
     setArgument(
-      "You must become a paying member [coming soon] to get generate AI summaries."
+      "You must become a paying member (coming soon) to generate AI summaries."
     );
     setThinking(false);
     // }
@@ -195,7 +195,7 @@ export default function EReader() {
     //   setArgument(response.output_text);
     // } else {
     setArgument(
-      "You must become a paying member [coming soon] to get generate AI summaries."
+      "You must become a paying member (coming soon) to get generate AI summaries."
     );
     setThinking(false);
     // }
@@ -217,7 +217,7 @@ export default function EReader() {
     //   setArgument(response.output_text);
     // } else {
     setArgument(
-      "You must become a paying member [coming soon] to get generate AI summaries."
+      "You must become a paying member (coming soon) to generate AI summaries."
     );
     setThinking(false);
     // }
@@ -647,7 +647,7 @@ export default function EReader() {
                     warmth === 4 && { color: "#F6F7EB" },
                   ]}
                 >
-                  Buy Full Text [Coming Soon]
+                  Buy Full Text (Coming Soon)
                 </Text>
               </View>
             </View>

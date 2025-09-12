@@ -9,8 +9,7 @@ import {
   Image,
   Dimensions,
 } from "react-native";
-import { useState, useEffect } from "react";
-import { TestIds } from "react-native-google-mobile-ads";
+import { useState, useRef, useEffect } from "react";
 import { ArtworkType } from "@/types/types";
 import { useLocalSearchParams } from "expo-router";
 import {
@@ -19,6 +18,12 @@ import {
 } from "../../supabase_queries/artworks";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
+import {
+  BannerAd,
+  BannerAdSize,
+  TestIds,
+  useForeground,
+} from "react-native-google-mobile-ads";
 
 let adUnitId = "";
 
@@ -37,6 +42,14 @@ export default function ViewArtwork() {
   let { id } = useLocalSearchParams();
   const [artwork, setArtwork] = useState<ArtworkType | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const bannerRef = useRef<BannerAd>(null);
+
+  useForeground(() => {
+    if (Platform.OS === "android" || Platform.OS === "ios") {
+      bannerRef.current?.load();
+    }
+  });
 
   const fetchArtwork = async () => {
     setLoading(true);
@@ -62,41 +75,52 @@ export default function ViewArtwork() {
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.postArtworkWrapper}
-      style={styles.container}
-    >
-      {loading ? (
-        <ActivityIndicator size="large" color="#393E41" />
-      ) : (
-        <View style={styles.frameButtonsSection}>
-          {artwork && artwork.url ? (
-            <Image
-              source={{ uri: artwork.url }}
-              style={{
-                width: screenWidth,
-                height: 400,
-                marginBottom: 16,
-                borderRadius: 8,
-              }}
-            />
-          ) : (
-            <Text>No artwork found.</Text>
-          )}
-          <View>
-            <Text style={styles.artworkTitle}>{artwork?.title}</Text>
-            <Text style={styles.artworkDetails}>{artwork?.artist}</Text>
-            <Text style={styles.artworkDetails}>{artwork?.year}</Text>
+    <>
+      <ScrollView
+        contentContainerStyle={styles.postArtworkWrapper}
+        style={styles.container}
+      >
+        {loading ? (
+          <ActivityIndicator size="large" color="#393E41" />
+        ) : (
+          <View style={styles.frameButtonsSection}>
+            {artwork && artwork.url ? (
+              <Image
+                source={{ uri: artwork.url }}
+                style={{
+                  width: screenWidth,
+                  height: 400,
+                  marginBottom: 16,
+                  borderRadius: 8,
+                }}
+              />
+            ) : (
+              <Text>No artwork found.</Text>
+            )}
+            <View>
+              <Text style={styles.artworkTitle}>{artwork?.title}</Text>
+              <Text style={styles.artworkDetails}>{artwork?.artist}</Text>
+              <Text style={styles.artworkDetails}>{artwork?.year}</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={deleteArtwork}
+            >
+              <Ionicons name="trash" size={24} color="#393E41" />
+              <Text style={styles.buttonText}>
+                Delete Artwork from My Collection
+              </Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity style={styles.deleteButton} onPress={deleteArtwork}>
-            <Ionicons name="trash" size={24} color="#393E41" />
-            <Text style={styles.buttonText}>
-              Delete Artwork from My Collection
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </ScrollView>
+        )}
+      </ScrollView>
+      <BannerAd
+        key={`ad-${id}`}
+        ref={bannerRef}
+        unitId={adUnitId}
+        size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+      />
+    </>
   );
 }
 
