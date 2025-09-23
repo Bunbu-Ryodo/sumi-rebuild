@@ -9,9 +9,19 @@
       "distribution": "internal"
     },
     "testing": {
-          "distribution": "internal",
+      "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_USE_TEST_ADS": "true"
+      }
+    },
+    "beta": {
+      "distribution": "internal",
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_USE_TEST_ADS": "true"
+      },
+      "android": {
+        "buildType": "app-bundle"
       }
     },
     "preview": {

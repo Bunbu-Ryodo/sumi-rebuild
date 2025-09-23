@@ -152,32 +152,34 @@ export default function EReader() {
     setThinking(true);
     setArgument("");
 
-    try {
-      const { data: session } = await supabase.auth.getSession();
+    // try {
+    //   const { data: session } = await supabase.auth.getSession();
 
-      if (!session?.session?.access_token) {
-        throw new Error("No valid session");
-      }
+    //   if (!session?.session?.access_token) {
+    //     throw new Error("No valid session");
+    //   }
 
-      const { data, error } = await supabase.functions.invoke("ai-summary", {
-        body: {
-          text: extract.fulltext,
-          type: type,
-        },
-        headers: {
-          Authorization: `Bearer ${session.session.access_token}`,
-        },
-      });
+    //   const { data, error } = await supabase.functions.invoke("ai-summary", {
+    //     body: {
+    //       text: extract.fulltext,
+    //       type: type,
+    //     },
+    //     headers: {
+    //       Authorization: `Bearer ${session.session.access_token}`,
+    //     },
+    //   });
 
-      if (error) throw error;
+    //   if (error) throw error;
 
-      setArgument(data.result || "Error generating summary");
-    } catch (error) {
-      console.error("AI Error:", error);
-      setArgument("Error generating summary. Please try again.");
-    } finally {
-      setThinking(false);
-    }
+    //   setArgument(data.result || "Error generating summary");
+    // } catch (error) {
+    //   console.error("AI Error:", error);
+    //   setArgument("Error generating summary. Please try again.");
+    // } finally {
+    //   setThinking(false);
+    // }
+    setArgument("Unable to generate AI summary. Please try again later");
+    setThinking(false);
   };
 
   const generateChapterArgument = () => callGrok("argument");

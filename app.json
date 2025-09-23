@@ -22,7 +22,7 @@
         "backgroundColor": "#F6F7EB"
       },
       "package": "com.anonymous.sumisupabase",
-      "versionCode": 5
+      "versionCode": 7
     },
     "web": {
       "bundler": "metro",
