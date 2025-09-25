@@ -178,7 +178,6 @@ export default function EReader() {
     } finally {
       setThinking(false);
     }
-    setThinking(false);
   };
 
   const generateChapterArgument = () => callGrok("argument");
