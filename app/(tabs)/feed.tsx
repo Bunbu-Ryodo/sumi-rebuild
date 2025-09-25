@@ -175,13 +175,18 @@ export default function FeedScreen() {
         // Comment 162-169, and uncomment 173 for testing
         // let duedate = new Date().getTime() + 1000;
 
+        const preciseDate = new Date(duedate);
+        const dueDateMidnight = preciseDate.setHours(0, 0, 0, 0);
+
+        console.log(new Date(dueDateMidnight).toString(), "Next due date");
+
         if (extract) {
           console.log("Creating new instalment");
           const newInstalment = await appendExtractToSeries(
             userId,
             subscriptions[i].id,
             extract,
-            duedate
+            dueDateMidnight
           );
 
           if (newInstalment) {
@@ -189,7 +194,7 @@ export default function FeedScreen() {
             const updatedSubscription = await updateSubscription(
               subscriptions[i].id,
               subscriptions[i].chapter + 1,
-              duedate
+              dueDateMidnight
             );
             if (updatedSubscription) {
               count++;
