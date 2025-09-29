@@ -52,7 +52,7 @@ export async function setLoginDateTime(user_id, lastLogin){
 
 export async function resetPassword(email){
   await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: 'http://localhost:8081/changepassword',
+    redirectTo: 'sumirebuild:///changepassword',
   })
 }
 
