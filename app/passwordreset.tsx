@@ -83,10 +83,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   errorText: {
-    color: "#FE7F2D",
+    color: "#83F65E",
     marginTop: 12,
     fontSize: 16,
     fontFamily: "QuicksandReg",
-    alignSelf: "center",
   },
 });
