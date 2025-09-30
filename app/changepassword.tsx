@@ -6,11 +6,30 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { updatePassword } from "../supabase_queries/auth.js";
 import Toast from "react-native-toast-message";
+import { makeRedirectUri } from "expo-auth-session";
+import * as QueryParams from "expo-auth-session/build/QueryParams";
+import * as Linking from "expo-linking";
+import supabase from "../lib/supabase";
 
 export default function ChangePassword() {
+  const createSessionFromUrl = async (url: string) => {
+    const { params, errorCode } = QueryParams.getQueryParams(url);
+    if (errorCode) throw new Error(errorCode);
+    const { access_token, refresh_token } = params;
+    if (!access_token) return;
+    const { data, error } = await supabase.auth.setSession({
+      access_token,
+      refresh_token,
+    });
+    if (error) throw error;
+    return data.session;
+  };
+  const url = Linking.useLinkingURL();
+  if (url) createSessionFromUrl(url);
+
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -42,11 +61,13 @@ export default function ChangePassword() {
         <Text style={styles.formLabel}>Create new password</Text>
         <TextInput
           style={styles.formInput}
+          secureTextEntry={true}
           onChangeText={setPassword}
         ></TextInput>
         <Text style={styles.formLabel}>Confirm new password</Text>
         <TextInput
           style={styles.formInput}
+          secureTextEntry={true}
           onChangeText={setConfirmPassword}
         ></TextInput>
         {errorMessage ? (
@@ -56,7 +77,7 @@ export default function ChangePassword() {
           style={styles.passwordResetButton}
           onPress={handlePasswordReset}
         >
-          <Text style={styles.passwordResetButtonText}>Send Reset Link</Text>
+          <Text style={styles.passwordResetButtonText}>Set New Password</Text>
         </TouchableOpacity>
       </View>
     </View>
