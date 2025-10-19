@@ -45,6 +45,8 @@ import {
 import { useFocusEffect } from "expo-router";
 import type { PropsWithChildren } from "react";
 import { WebView } from "react-native-webview";
+import { saveUserQuote } from "../../supabase_queries/quotes";
+import Toast from "react-native-toast-message";
 
 let adUnitId = "";
 
@@ -177,8 +179,22 @@ export default function EReader() {
 
     try {
       console.log("Saving quote:", selectedText);
-      // Add your quote saving logic here
-      alert("Quote saved successfully!");
+
+      const quote = await saveUserQuote(
+        userid,          // userid: string
+        selectedText,    // quote: string  
+        extract.title,   // title: string
+        extract.author,  // author: string
+        extract.textid   // textid: number
+      );
+
+      if (quote) {
+        Toast.show({
+          type: "savedQuote",
+          text1: "Quote saved successfully",
+        });
+      }
+
       setSelectedText(""); // Clear selection after saving
     } catch (error) {
       console.error("Error saving quote:", error);
@@ -655,7 +671,7 @@ export default function EReader() {
                     onPress={saveQuote}
                   >
                     <Ionicons
-                      name="bookmark"
+                      name="chatbubble-ellipses"
                       size={20}
                       color={warmth === 4 ? "#393E41" : "#F6F7EB"}
                     />
