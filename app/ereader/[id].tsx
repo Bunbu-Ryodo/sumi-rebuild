@@ -44,6 +44,7 @@ import {
 } from "react-native-google-mobile-ads";
 import { useFocusEffect } from "expo-router";
 import type { PropsWithChildren } from "react";
+import { WebView } from "react-native-webview";
 
 let adUnitId = "";
 
@@ -131,6 +132,59 @@ export default function EReader() {
   const [argument, setArgument] = useState("");
   const [thinking, setThinking] = useState(false);
   const [creditsLeft, setCreditsLeft] = useState(0);
+  const [selectedText, setSelectedText] = useState("");
+
+  const injectedJavaScript = `
+  (function() {
+    function handleSelectionChange() {
+      const selection = window.getSelection();
+      const selectedText = selection.toString().trim();
+      
+      if (selectedText && selectedText.length > 0) {
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'textSelected',
+          text: selectedText
+        }));
+      } else {
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'textDeselected'
+        }));
+      }
+    }
+    
+    document.addEventListener('selectionchange', handleSelectionChange);
+    
+    true; // Required for injected JavaScript
+  })();
+`;
+
+  const handleWebViewMessage = (event: any) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data);
+
+      if (data.type === "textSelected") {
+        setSelectedText(data.text);
+      } else if (data.type === "textDeselected") {
+        setSelectedText("");
+      }
+    } catch (error) {
+      console.log("Error parsing WebView message:", error);
+    }
+  };
+
+  const saveQuote = async () => {
+    if (!selectedText) return;
+
+    try {
+      console.log("Saving quote:", selectedText);
+      // Add your quote saving logic here
+      alert("Quote saved successfully!");
+      setSelectedText(""); // Clear selection after saving
+    } catch (error) {
+      console.error("Error saving quote:", error);
+      alert("Error saving quote. Please try again.");
+    }
+  };
 
   // Add a ref to store the current due date immediately
   const currentDue = useRef(new Date().getTime());
@@ -540,18 +594,86 @@ export default function EReader() {
               ) : (
                 <></>
               )}
-              <Text
-                style={[
-                  styles.extractText,
-                  { fontSize },
-                  warmth === 4 && {
-                    color: "#F6F7EB",
-                    borderBottomColor: "#F6F7EB",
-                  },
-                ]}
-              >
-                {extract.fulltext}
-              </Text>
+              <View style={{ width: "100%" }}>
+                <WebView
+                  style={styles.webView}
+                  originWhitelist={["*"]}
+                  source={{
+                    html: `
+                      <html>
+                        <head>
+                          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                          <style>
+                            body {
+                              font-family: 'Georgia', serif;
+                              font-size: ${fontSize}px;
+                              line-height: 1.6;
+                              margin: 8px;
+                              background-color: ${brightnessHex[warmth]};
+                              color: ${warmth === 4 ? "#F6F7EB" : "#393E41"};
+                            }
+                            h1 {
+                              font-size: 24px;
+                              margin-bottom: 16px;
+                            }
+                            p {
+                              margin-bottom: 12px;
+                            }
+                          </style>
+                        </head>
+                        <body>
+                          <div>
+                            ${
+                              extract.fulltext ||
+                              "<h1>This is a static HTML source!</h1><p>Loading content...</p>"
+                            }
+                          </div>
+                        </body>
+                      </html>
+                    `,
+                  }}
+                  javaScriptEnabled={true}
+                  domStorageEnabled={true}
+                  startInLoadingState={true}
+                  scalesPageToFit={false}
+                  showsVerticalScrollIndicator={false}
+                  injectedJavaScript={injectedJavaScript}
+                  onMessage={handleWebViewMessage}
+                  onError={(event) =>
+                    console.log("WebView error:", event.nativeEvent)
+                  }
+                  onLoad={() => console.log("WebView loaded successfully")}
+                />
+
+                {/* Add the Save Quote button outside the WebView */}
+                {selectedText && (
+                  <TouchableOpacity
+                    style={[
+                      styles.saveQuoteButton,
+                      warmth === 4 && { backgroundColor: "#F6F7EB" },
+                    ]}
+                    onPress={saveQuote}
+                  >
+                    <Ionicons
+                      name="bookmark"
+                      size={20}
+                      color={warmth === 4 ? "#393E41" : "#F6F7EB"}
+                    />
+                    <Text
+                      style={[
+                        styles.saveQuoteText,
+                        warmth === 4 && { color: "#393E41" },
+                      ]}
+                    >
+                      Save Quote: "
+                      {selectedText.length > 50
+                        ? selectedText.substring(0, 50) + "..."
+                        : selectedText}
+                      "
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
             <View style={styles.engagementButtons}>
               {/* <TouchableOpacity onPress={toggleLike}>
@@ -839,5 +961,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#F6F7EB",
     padding: 8,
+  },
+  webView: {
+    minHeight: 420,
+    width: "100%",
+    backgroundColor: "transparent",
+  },
+  saveQuoteButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FE7F2D",
+    padding: 12,
+    marginVertical: 8,
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  saveQuoteText: {
+    color: "#F6F7EB",
+    fontFamily: "QuicksandReg",
+    fontSize: 14,
+    marginLeft: 8,
+    flex: 1,
   },
 });
