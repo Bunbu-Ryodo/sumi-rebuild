@@ -56,7 +56,7 @@ export default function TabLayout() {
             title: "Artworks",
             tabBarIcon: ({ color, focused }) => (
               <Ionicons
-                name={focused ? "color-palette" : "color-palette-outline"}
+                name={(focused ? "heart" : "heart-outline") as any}
                 size={24}
                 color={color}
               />

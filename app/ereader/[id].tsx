@@ -180,12 +180,17 @@ export default function EReader() {
     try {
       console.log("Saving quote:", selectedText);
 
+      console.log(extract.id, "Extract ID for quote");
+      console.log(extract.portrait, "Extract portrait for quote");
+
       const quote = await saveUserQuote(
-        userid,          // userid: string
-        selectedText,    // quote: string  
-        extract.title,   // title: string
-        extract.author,  // author: string
-        extract.textid   // textid: number
+        userid, // userid: string
+        selectedText, // quote: string
+        extract.title, // title: string
+        extract.author, // author: string
+        extract.textid, // textid: number
+        extract.id, // extractid: number
+        extract.portrait // portrait: string
       );
 
       if (quote) {

@@ -247,6 +247,22 @@ export default function RootLayout() {
               headerShadowVisible: false,
             }}
           ></Stack.Screen>
+          <Stack.Screen
+            name="view_quote/[id]"
+            options={{
+              headerShown: true,
+              title: "View Quote",
+              headerStyle: {
+                backgroundColor: "#393E41",
+              },
+              headerTitleStyle: {
+                fontFamily: "QuicksandReg",
+                color: "#F6F7EB",
+              },
+              headerTintColor: "#F6F7EB",
+              headerShadowVisible: false,
+            }}
+          ></Stack.Screen>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         </Stack>
         <Toast config={toastConfig} />

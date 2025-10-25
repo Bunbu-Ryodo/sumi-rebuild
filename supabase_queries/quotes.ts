@@ -1,7 +1,7 @@
 import supabase from "../lib/supabase";
 
-export async function saveUserQuote(userid: string, quote: string, title: string, author: string, textid: number){
-    if(!quote||!userid||!title || !author|| !textid){
+export async function saveUserQuote(userid: string, quote: string, title: string, author: string, textid: number, extractid: number, portrait: string){
+    if(!quote||!userid||!title || !author|| !textid || !portrait || !extractid){
         throw new Error("Missing required fields to save quote");
     }
 
@@ -13,7 +13,9 @@ export async function saveUserQuote(userid: string, quote: string, title: string
         userid,
         title,
         author,
-        textid
+        textid,
+        extractid,
+        portrait
       }
     ])
     .select()
@@ -22,6 +24,50 @@ export async function saveUserQuote(userid: string, quote: string, title: string
   if (error) {
     console.error("Error saving quote:", error);
     throw error;
+  }
+
+  return data;
+}
+
+export async function getUserQuotes(userid: string) {
+  const { data, error } = await supabase
+    .from("userquotes")
+    .select("*")
+    .eq("userid", userid);
+
+  if (error) {
+    console.error("Error fetching user quotes:", error);
+    throw error;
+  }
+
+  return data;
+}
+
+export async function getQuoteById(id: number){
+  const { data, error } = await supabase
+    .from("userquotes")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+    if(error){  
+      console.error("Error fetching quote by id:", error);
+      throw error;
+    }
+
+    return data;
+}
+
+export async function deleteUserQuote(quoteId: number, userid: string) {
+  const { data, error } = await supabase
+    .from("userquotes")
+    .delete()
+    .eq("id", quoteId)
+    .eq("userid", userid);
+
+  if (error) {
+    console.error("Error deleting user quote:", error);
+    return null;
   }
 
   return data;
