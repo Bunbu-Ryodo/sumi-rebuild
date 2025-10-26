@@ -121,11 +121,16 @@ export default function Artwork() {
         {!loading && (
           <View style={styles.artWrapper}>
             <View style={styles.artworksHeader}>
-              <Text style={styles.yourArtworks}>
-                {artworks.length > 0 ? "Your Artworks" : "Save Some Artworks!"}
-              </Text>
+              <Text style={styles.yourArtworks}>{"Artworks and Quotes"}</Text>
               <View style={styles.headerIconContainer}>
-                <Ionicons name="color-palette" size={24} color={"#393E41"} />
+                <View style={styles.iconContainer}>
+                  <Ionicons name="color-palette" size={24} color={"#393E41"} />
+                  <Ionicons
+                    name="chatbubble-ellipses"
+                    size={24}
+                    color={"#393E41"}
+                  />
+                </View>
               </View>
             </View>
             {artworks && artworks.length > 0 ? (
@@ -182,23 +187,13 @@ export default function Artwork() {
               </View>
             ) : null}
             <View style={styles.artworksHeader}>
-              <Text style={styles.yourArtworks}>
-                {artworks.length > 0 ? "Your Quotes" : "Save Some Quotes!"}
-              </Text>
-              <View style={styles.headerIconContainer}>
-                <Ionicons
-                  name="chatbubble-ellipses"
-                  size={24}
-                  color={"#393E41"}
-                />
-              </View>
+              <View style={styles.headerIconContainer}></View>
             </View>
             {quotes && quotes.length > 0 ? (
               <View
                 style={{
                   flex: 1,
                   alignItems: "center",
-                  marginTop: 24,
                 }}
               >
                 <Carousel
@@ -214,13 +209,31 @@ export default function Artwork() {
                         style={styles.quoteContainer}
                         onPress={() => redirectToQuote(quote.item.id)}
                       >
-                        <Text></Text>
+                        <View style={styles.quoteHeader}>
+                          <View style={styles.quoteDetails}>
+                            <Text style={styles.quoteText}>
+                              {quote.item.author}
+                            </Text>
+                            <Text style={styles.quoteText}>
+                              {quote.item.title}
+                            </Text>
+                            <Text style={styles.quoteText}>
+                              {quote.item.year}
+                            </Text>
+                            <Text style={styles.quoteText}>
+                              Chapter {quote.item.chapter}
+                            </Text>
+                          </View>
+                          <View style={styles.artContainer}>
+                            <Image
+                              source={{ uri: quote.item.coverart }}
+                              style={styles.coverart}
+                            />
+                          </View>
+                        </View>
                         <Text style={styles.quoteText}>
                           {quotePreview}
                           {quote.item.quote.length > 420 ? "..." : ""}
-                        </Text>
-                        <Text style={styles.quoteText}>
-                          - {quote.item.author}, {quote.item.title}
                         </Text>
                       </TouchableOpacity>
                     );
@@ -356,7 +369,6 @@ const styles = StyleSheet.create({
   quoteText: {
     fontFamily: "EBGaramond",
     fontSize: 18,
-    textAlign: "center",
   },
   achievementsWrapper: {
     width: "100%",
@@ -368,7 +380,6 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   quoteContainer: {
-    alignItems: "center",
     padding: 12,
     width: "100%",
     height: "auto",
@@ -425,5 +436,32 @@ const styles = StyleSheet.create({
     marginTop: 24,
     width: "100%",
     height: "100%",
+  },
+  coverart: {
+    borderRadius: 8,
+    height: 100,
+    width: 100,
+  },
+  quoteDetails: {
+    flex: 1,
+    marginBottom: 8,
+    marginRight: 12,
+    padding: 8,
+  },
+  quoteHeader: {
+    flexDirection: "row",
+    width: "100%",
+    height: "auto",
+    alignItems: "flex-start",
+    borderColor: "#393E41",
+    borderBottomWidth: 1,
+    borderStyle: "dotted",
+  },
+  artContainer: {
+    width: 100,
+    height: 100,
+  },
+  iconContainer: {
+    flexDirection: "row",
   },
 });

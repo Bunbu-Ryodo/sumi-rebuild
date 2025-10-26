@@ -34,6 +34,9 @@ export type QuoteType = {
     textid: number;
     extractid: number; 
     portrait: string; 
+    chapter: number;
+    year: string;
+    coverart: string;
 }
 
 export type ArtworkPostType = {

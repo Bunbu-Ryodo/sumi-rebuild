@@ -53,7 +53,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="artworks"
           options={{
-            title: "Artworks",
+            title: "Artworks & Quotes",
             tabBarIcon: ({ color, focused }) => (
               <Ionicons
                 name={(focused ? "heart" : "heart-outline") as any}

@@ -81,6 +81,22 @@ export default function ViewQuote() {
           <View style={styles.frameButtonsSection}>
             {quote ? (
               <>
+                <View style={styles.quoteHeader}>
+                  <View style={styles.quoteDetails}>
+                    <Text style={styles.quoteText}>{quote.author}</Text>
+                    <Text style={styles.quoteText}>{quote.title}</Text>
+                    <Text style={styles.quoteText}>{quote.year}</Text>
+                    <Text style={styles.quoteText}>
+                      Chapter {quote.chapter}
+                    </Text>
+                  </View>
+                  <View style={styles.artContainer}>
+                    <Image
+                      source={{ uri: quote.coverart }}
+                      style={styles.coverart}
+                    />
+                  </View>
+                </View>
                 <Text style={styles.quoteText}>{quote.quote}</Text>
                 {/* <Image
                   source={{ uri: quote.portrait }}
@@ -116,7 +132,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     width: "100%",
     alignItems: "center",
-    justifyContent: "center",
     backgroundColor: "#F6F7EB",
     paddingVertical: 20,
   },
@@ -129,7 +144,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     alignItems: "center",
-    justifyContent: "center",
     flex: 1,
   },
   postButton: {
@@ -175,6 +189,30 @@ const styles = StyleSheet.create({
   quoteText: {
     fontFamily: "EBGaramond",
     fontSize: 18,
-    textAlign: "center",
+  },
+  coverart: {
+    borderRadius: 8,
+    height: 100,
+    width: 100,
+  },
+  quoteDetails: {
+    flex: 1,
+    marginBottom: 8,
+    marginRight: 12,
+
+    padding: 8,
+  },
+  quoteHeader: {
+    flexDirection: "row",
+    width: "100%",
+    height: "auto",
+    alignItems: "flex-start",
+    borderColor: "#393E41",
+    borderBottomWidth: 1,
+    borderStyle: "dotted",
+  },
+  artContainer: {
+    width: 100,
+    height: 100,
   },
 });

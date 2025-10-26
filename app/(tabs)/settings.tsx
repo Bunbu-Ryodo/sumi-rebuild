@@ -6,6 +6,8 @@ import {
   ActivityIndicator,
   StyleSheet,
   TouchableOpacity,
+  Modal,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useState, useEffect } from "react";
@@ -28,6 +30,13 @@ export default function Settings() {
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [passwordChangeError, setPasswordChangeError] = useState("");
   const [interval, setInterval] = useState<number | null>(null);
+
+  // Feedback form states
+  const [feedbackName, setFeedbackName] = useState("");
+  const [feedbackEmail, setFeedbackEmail] = useState("");
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
 
   const displayToast = (message: string) => {
     Toast.show({
@@ -117,6 +126,45 @@ export default function Settings() {
     }
   };
 
+  const sendFeedback = async () => {
+    if (
+      !feedbackName.trim() ||
+      !feedbackEmail.trim() ||
+      !feedbackMessage.trim()
+    ) {
+      Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
+
+    if (!feedbackEmail.includes("@")) {
+      Alert.alert("Error", "Please enter a valid email address");
+      return;
+    }
+
+    setFeedbackLoading(true);
+    try {
+      // Here you would typically send the feedback to your backend or email service
+      // For now, we'll simulate the sending process
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate API call
+
+      setShowFeedbackModal(true);
+      setFeedbackName("");
+      setFeedbackEmail("");
+      setFeedbackMessage("");
+
+      displayToast("Feedback sent successfully!");
+    } catch (error) {
+      console.error("Error sending feedback:", error);
+      displayErrorToast("Failed to send feedback. Please try again.");
+    } finally {
+      setFeedbackLoading(false);
+    }
+  };
+
+  const closeFeedbackModal = () => {
+    setShowFeedbackModal(false);
+  };
+
   const intervals = [
     { label: "Daily", value: 1 },
     { label: "Every few days", value: 3 },
@@ -125,88 +173,170 @@ export default function Settings() {
   ];
 
   return (
-    <ScrollView style={styles.settingsWrapper}>
-      {loading ? (
-        <ActivityIndicator size="large" color="#F6F7EB" />
-      ) : (
-        <View style={styles.form}>
-          <Text style={styles.formLabel}>Change ReaderTag</Text>
-          <TextInput
-            defaultValue={username}
-            style={styles.formInput}
-            onChangeText={setReaderTag}
-          ></TextInput>
-          <TouchableOpacity
-            style={styles.changeReaderTagButton}
-            onPress={updateReaderTag}
-          >
-            <Text style={styles.changeReaderTagButtonText}>
-              Change ReaderTag
-            </Text>
-          </TouchableOpacity>
-          <Text style={styles.formLabel}>Change Password</Text>
-          <TextInput
-            secureTextEntry={true}
-            style={[
-              styles.formInput,
-              passwordChangeError ? styles.errorInput : null,
-            ]}
-            onChangeText={setNewPassword}
-          ></TextInput>
-          <Text style={styles.formLabel}>Confirm New Password</Text>
-          <TextInput
-            secureTextEntry={true}
-            style={[
-              styles.formInput,
-              passwordChangeError ? styles.errorInput : null,
-            ]}
-            onChangeText={setConfirmNewPassword}
-            onBlur={checkPasswordMatch}
-          ></TextInput>
-          {passwordChangeError ? (
-            <Text style={styles.errorText}>{passwordChangeError}</Text>
-          ) : null}
-          <TouchableOpacity
-            style={styles.changePasswordButton}
-            onPress={changePassword}
-          >
-            <Text style={styles.changePasswordButtonText}>Change Password</Text>
-          </TouchableOpacity>
+    <>
+      <ScrollView style={styles.settingsWrapper}>
+        {loading ? (
+          <ActivityIndicator size="large" color="#F6F7EB" />
+        ) : (
+          <View style={styles.form}>
+            <Text style={styles.formLabel}>Change ReaderTag</Text>
+            <TextInput
+              defaultValue={username}
+              style={styles.formInput}
+              onChangeText={setReaderTag}
+            ></TextInput>
+            <TouchableOpacity
+              style={styles.changeReaderTagButton}
+              onPress={updateReaderTag}
+            >
+              <Text style={styles.changeReaderTagButtonText}>
+                Change ReaderTag
+              </Text>
+            </TouchableOpacity>
+            <Text style={styles.formLabel}>Change Password</Text>
+            <TextInput
+              secureTextEntry={true}
+              style={[
+                styles.formInput,
+                passwordChangeError ? styles.errorInput : null,
+              ]}
+              onChangeText={setNewPassword}
+            ></TextInput>
+            <Text style={styles.formLabel}>Confirm New Password</Text>
+            <TextInput
+              secureTextEntry={true}
+              style={[
+                styles.formInput,
+                passwordChangeError ? styles.errorInput : null,
+              ]}
+              onChangeText={setConfirmNewPassword}
+              onBlur={checkPasswordMatch}
+            ></TextInput>
+            {passwordChangeError ? (
+              <Text style={styles.errorText}>{passwordChangeError}</Text>
+            ) : null}
+            <TouchableOpacity
+              style={styles.changePasswordButton}
+              onPress={changePassword}
+            >
+              <Text style={styles.changePasswordButtonText}>
+                Change Password
+              </Text>
+            </TouchableOpacity>
 
-          <Text style={styles.subscriptionFrequencyLabel}>
-            Set Subscription Frequency
-          </Text>
-          <View style={styles.intervalDropdown}>
-            {intervals.map((option) => (
-              <TouchableOpacity
-                key={option.value}
-                style={styles.radioButtonContainer}
-                onPress={() => changeSubscriptionInterval(option.value)}
-              >
-                <View
-                  style={[
-                    styles.radioButton,
-                    interval === option.value && styles.radioButtonSelected,
-                  ]}
-                />
-                <Text style={styles.radioButtonLabel}>{option.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          <TouchableOpacity
-            style={styles.privacyButton}
-            onPress={handleConsent}
-          >
-            <Text style={styles.privacyButtonText}>
-              Manage Privacy Settings
+            <Text style={styles.subscriptionFrequencyLabel}>
+              Set Subscription Frequency
             </Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.logoutButton} onPress={Logout}>
-            <Text style={styles.logoutButtonText}>Logout</Text>
-          </TouchableOpacity>
+            <View style={styles.intervalDropdown}>
+              {intervals.map((option) => (
+                <TouchableOpacity
+                  key={option.value}
+                  style={styles.radioButtonContainer}
+                  onPress={() => changeSubscriptionInterval(option.value)}
+                >
+                  <View
+                    style={[
+                      styles.radioButton,
+                      interval === option.value && styles.radioButtonSelected,
+                    ]}
+                  />
+                  <Text style={styles.radioButtonLabel}>{option.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TouchableOpacity
+              style={styles.privacyButton}
+              onPress={handleConsent}
+            >
+              <Text style={styles.privacyButtonText}>
+                Manage Privacy Settings
+              </Text>
+            </TouchableOpacity>
+
+            {/* Feedback Form */}
+            {/* <Text style={styles.feedbackSectionTitle}>Send Feedback</Text>
+            <Text style={styles.feedbackDescription}>
+              Help us improve by sending your feedback to support@sumi.club
+            </Text>
+
+            <Text style={styles.formLabel}>Your Name</Text>
+            <TextInput
+              style={styles.formInput}
+              value={feedbackName}
+              onChangeText={setFeedbackName}
+              placeholder="Enter your name"
+              placeholderTextColor="#B0B0B0"
+            />
+
+            <Text style={styles.formLabel}>Email Address</Text>
+            <TextInput
+              style={styles.formInput}
+              value={feedbackEmail}
+              onChangeText={setFeedbackEmail}
+              placeholder="Enter your email address"
+              placeholderTextColor="#B0B0B0"
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+
+            <Text style={styles.formLabel}>Message</Text>
+            <TextInput
+              style={[styles.formInput, styles.feedbackTextarea]}
+              value={feedbackMessage}
+              onChangeText={setFeedbackMessage}
+              placeholder="Tell us what you think, report bugs, or suggest improvements..."
+              placeholderTextColor="#B0B0B0"
+              multiline={true}
+              numberOfLines={6}
+              textAlignVertical="top"
+            />
+
+            <TouchableOpacity
+              style={[
+                styles.feedbackButton,
+                feedbackLoading && styles.disabledButton,
+              ]}
+              onPress={sendFeedback}
+              disabled={feedbackLoading}
+            >
+              {feedbackLoading ? (
+                <ActivityIndicator size="small" color="#393E41" />
+              ) : (
+                <Text style={styles.feedbackButtonText}>Send Feedback</Text>
+              )}
+            </TouchableOpacity> */}
+
+            <TouchableOpacity style={styles.logoutButton} onPress={Logout}>
+              <Text style={styles.logoutButtonText}>Logout</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </ScrollView>
+
+      {/* Success Modal */}
+      {/* <Modal
+        animationType="fade"
+        transparent={true}
+        visible={showFeedbackModal}
+        onRequestClose={closeFeedbackModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Feedback Sent!</Text>
+            <Text style={styles.modalMessage}>
+              Thank you for your feedback. We'll review it and get back to you
+              at the email address you provided.
+            </Text>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={closeFeedbackModal}
+            >
+              <Text style={styles.modalButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      )}
-    </ScrollView>
+      </Modal> */}
+    </>
   );
 }
 
@@ -437,5 +567,88 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontFamily: "QuicksandReg",
     fontSize: 16,
+  },
+  // Feedback form styles
+  feedbackSectionTitle: {
+    fontSize: 20,
+    fontFamily: "QuicksandReg",
+    color: "#F6F7EB",
+    marginTop: 24,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  feedbackDescription: {
+    fontSize: 14,
+    fontFamily: "QuicksandReg",
+    color: "#B0B0B0",
+    marginBottom: 16,
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  feedbackTextarea: {
+    height: 120,
+    paddingTop: 12,
+  },
+  feedbackButton: {
+    backgroundColor: "#FE7F2D",
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    width: "100%",
+    marginTop: 16,
+  },
+  feedbackButtonText: {
+    color: "#F6F7EB",
+    fontFamily: "QuicksandReg",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  disabledButton: {
+    opacity: 0.6,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContainer: {
+    width: "90%",
+    maxWidth: 400,
+    backgroundColor: "#F6F7EB",
+    borderRadius: 12,
+    padding: 24,
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontFamily: "QuicksandReg",
+    color: "#393E41",
+    marginBottom: 16,
+    textAlign: "center",
+    fontWeight: "bold",
+  },
+  modalMessage: {
+    fontSize: 16,
+    fontFamily: "QuicksandReg",
+    color: "#393E41",
+    textAlign: "center",
+    lineHeight: 24,
+    marginBottom: 24,
+  },
+  modalButton: {
+    backgroundColor: "#FE7F2D",
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  modalButtonText: {
+    color: "#F6F7EB",
+    fontFamily: "QuicksandReg",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
