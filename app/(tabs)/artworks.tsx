@@ -16,7 +16,7 @@ import {
   TestIds,
   useForeground,
 } from "react-native-google-mobile-ads";
-import { ArtworkType } from "../../types/types";
+import { ArtworkType, QuoteType } from "../../types/types";
 import { getUserArtworks } from "../../supabase_queries/artworks";
 import { getUserSession } from "../../supabase_queries/auth.js";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -26,6 +26,7 @@ import Carousel, {
 } from "react-native-reanimated-carousel";
 import { useSharedValue } from "react-native-reanimated";
 import { useRouter } from "expo-router";
+import { getUserQuotes } from "../../supabase_queries/quotes";
 
 let adUnitId = "";
 
@@ -43,15 +44,27 @@ export default function Artwork() {
   const router = useRouter();
   const bannerRef = useRef<BannerAd>(null);
   const [artworks, setArtworks] = useState<ArtworkType[]>([]);
+  const [quotes, setQuotes] = useState<QuoteType[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const ref = React.useRef<ICarouselInstance>(null);
-  const progress = useSharedValue<number>(0);
+  const artworkCarousel = React.useRef<ICarouselInstance>(null);
+  const quoteCarousel = React.useRef<ICarouselInstance>(null);
+
+  const artworkProgress = useSharedValue<number>(0);
+  const quoteProgress = useSharedValue<number>(0);
+
   const width = Dimensions.get("window").width;
 
-  const onPressPagination = (index: number) => {
-    ref.current?.scrollTo({
-      count: index - progress.value,
+  const onPressPaginationArtworks = (index: number) => {
+    artworkCarousel.current?.scrollTo({
+      count: index - artworkProgress.value,
+      animated: true,
+    });
+  };
+
+  const onPressPaginationQuotes = (index: number) => {
+    quoteCarousel.current?.scrollTo({
+      count: index - quoteProgress.value,
       animated: true,
     });
   };
@@ -63,6 +76,13 @@ export default function Artwork() {
     });
   };
 
+  const redirectToQuote = (id: number) => {
+    router.push({
+      pathname: "/view_quote/[id]",
+      params: { id: id },
+    });
+  };
+
   useForeground(() => {
     if (Platform.OS === "android" || Platform.OS === "ios") {
       bannerRef.current?.load();
@@ -70,15 +90,17 @@ export default function Artwork() {
   });
 
   useEffect(() => {
-    fetchArtworkData();
+    fetchData();
   }, []);
 
-  const fetchArtworkData = async () => {
+  const fetchData = async () => {
     setLoading(true);
     const user = await getUserSession();
     if (user) {
       const artworks = await getUserArtworks(user.id);
+      const quotes = await getUserQuotes(user.id);
       setArtworks(artworks);
+      setQuotes(quotes);
     }
     setLoading(false);
   };
@@ -91,7 +113,7 @@ export default function Artwork() {
         refreshControl={
           <RefreshControl
             refreshing={loading}
-            onRefresh={fetchArtworkData}
+            onRefresh={fetchData}
             tintColor="#F6F7EB"
           />
         }
@@ -99,11 +121,16 @@ export default function Artwork() {
         {!loading && (
           <View style={styles.artWrapper}>
             <View style={styles.artworksHeader}>
-              <Text style={styles.yourArtworks}>
-                {artworks.length > 0 ? "Your Artworks" : "Save Some Artworks!"}
-              </Text>
+              <Text style={styles.yourArtworks}>{"Artworks and Quotes"}</Text>
               <View style={styles.headerIconContainer}>
-                <Ionicons name="color-palette" size={24} color={"#393E41"} />
+                <View style={styles.iconContainer}>
+                  <Ionicons name="color-palette" size={24} color={"#393E41"} />
+                  <Ionicons
+                    name="chatbubble-ellipses"
+                    size={24}
+                    color={"#393E41"}
+                  />
+                </View>
               </View>
             </View>
             {artworks && artworks.length > 0 ? (
@@ -113,15 +140,15 @@ export default function Artwork() {
                   alignItems: "center",
                   justifyContent: "center",
                   marginTop: 24,
-                  minHeight: 400,
+                  minHeight: 500,
                 }}
               >
                 <Carousel
-                  ref={ref}
+                  ref={artworkCarousel}
                   width={width}
                   height={310}
                   data={artworks}
-                  onProgressChange={progress}
+                  onProgressChange={artworkProgress}
                   renderItem={(artwork) => {
                     return (
                       <TouchableOpacity
@@ -148,14 +175,79 @@ export default function Artwork() {
                   }}
                 />
                 <Pagination.Basic
-                  progress={progress}
+                  progress={artworkProgress}
                   data={artworks}
                   dotStyle={{
                     backgroundColor: "rgba(57,62,65,0.2)",
                     borderRadius: 50,
                   }}
                   containerStyle={{ gap: 5, marginTop: 10 }}
-                  onPress={onPressPagination}
+                  onPress={onPressPaginationArtworks}
+                />
+              </View>
+            ) : null}
+            <View style={styles.artworksHeader}>
+              <View style={styles.headerIconContainer}></View>
+            </View>
+            {quotes && quotes.length > 0 ? (
+              <View
+                style={{
+                  flex: 1,
+                  alignItems: "center",
+                }}
+              >
+                <Carousel
+                  ref={quoteCarousel}
+                  width={width}
+                  height={300}
+                  data={quotes}
+                  onProgressChange={quoteProgress}
+                  renderItem={(quote) => {
+                    const quotePreview = quote.item.quote.slice(0, 420);
+                    return (
+                      <TouchableOpacity
+                        style={styles.quoteContainer}
+                        onPress={() => redirectToQuote(quote.item.id)}
+                      >
+                        <View style={styles.quoteHeader}>
+                          <View style={styles.quoteDetails}>
+                            <Text style={styles.quoteText}>
+                              {quote.item.author}
+                            </Text>
+                            <Text style={styles.quoteText}>
+                              {quote.item.title}
+                            </Text>
+                            <Text style={styles.quoteText}>
+                              {quote.item.year}
+                            </Text>
+                            <Text style={styles.quoteText}>
+                              Chapter {quote.item.chapter}
+                            </Text>
+                          </View>
+                          <View style={styles.artContainer}>
+                            <Image
+                              source={{ uri: quote.item.coverart }}
+                              style={styles.coverart}
+                            />
+                          </View>
+                        </View>
+                        <Text style={styles.quoteText}>
+                          {quotePreview}
+                          {quote.item.quote.length > 420 ? "..." : ""}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  }}
+                />
+                <Pagination.Basic
+                  progress={quoteProgress}
+                  data={quotes}
+                  dotStyle={{
+                    backgroundColor: "rgba(57,62,65,0.2)",
+                    borderRadius: 50,
+                  }}
+                  containerStyle={{ gap: 5, marginTop: 10 }}
+                  onPress={onPressPaginationArtworks}
                 />
               </View>
             ) : null}
@@ -274,6 +366,10 @@ const styles = StyleSheet.create({
     fontFamily: "QuicksandReg",
     fontSize: 16,
   },
+  quoteText: {
+    fontFamily: "EBGaramond",
+    fontSize: 18,
+  },
   achievementsWrapper: {
     width: "100%",
     justifyContent: "center",
@@ -282,6 +378,11 @@ const styles = StyleSheet.create({
   thumbnailContainer: {
     alignItems: "center",
     width: "100%",
+  },
+  quoteContainer: {
+    padding: 12,
+    width: "100%",
+    height: "auto",
   },
   artworkTitle: {
     fontFamily: "EBGaramondItalic",
@@ -335,5 +436,32 @@ const styles = StyleSheet.create({
     marginTop: 24,
     width: "100%",
     height: "100%",
+  },
+  coverart: {
+    borderRadius: 8,
+    height: 100,
+    width: 100,
+  },
+  quoteDetails: {
+    flex: 1,
+    marginBottom: 8,
+    marginRight: 12,
+    padding: 8,
+  },
+  quoteHeader: {
+    flexDirection: "row",
+    width: "100%",
+    height: "auto",
+    alignItems: "flex-start",
+    borderColor: "#393E41",
+    borderBottomWidth: 1,
+    borderStyle: "dotted",
+  },
+  artContainer: {
+    width: 100,
+    height: 100,
+  },
+  iconContainer: {
+    flexDirection: "row",
   },
 });

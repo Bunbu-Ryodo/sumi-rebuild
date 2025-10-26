@@ -8,6 +8,9 @@ import {
   ActivityIndicator,
   Animated,
   Easing,
+  Modal,
+  TextInput,
+  Alert,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams } from "expo-router";
@@ -21,7 +24,7 @@ import React, {
 } from "react";
 import { useRouter } from "expo-router";
 import { getExtract } from "../../supabase_queries/extracts";
-import { ExtractType } from "../../types/types";
+import { ExtractType, QuoteType } from "../../types/types";
 import {
   checkForSubscription,
   createSubscription,
@@ -44,6 +47,16 @@ import {
 } from "react-native-google-mobile-ads";
 import { useFocusEffect } from "expo-router";
 import type { PropsWithChildren } from "react";
+import { WebView } from "react-native-webview";
+import {
+  saveUserQuote,
+  getQuoteByUserAndExtract,
+} from "../../supabase_queries/quotes";
+import {
+  getMarginaliaByExtractAndUser,
+  saveMarginalia,
+} from "../../supabase_queries/marginalia";
+import Toast from "react-native-toast-message";
 
 let adUnitId = "";
 
@@ -97,6 +110,8 @@ export default function EReader() {
   let { id } = useLocalSearchParams();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const modalOpacity = useRef(new Animated.Value(0)).current;
+  const modalScale = useRef(new Animated.Value(0.8)).current;
 
   useForeground(() => {
     if (Platform.OS === "android" || Platform.OS === "ios") {
@@ -124,13 +139,213 @@ export default function EReader() {
   const [loading, setLoading] = useState(true);
   const [subscribed, setSubscribed] = useState(false);
   const [subid, setSubid] = useState(0);
-  const [read, setRead] = useState(false);
+  // const [read, setRead] = useState(false);
   const [userid, setUserid] = useState("");
   const [fontSize, setFontSize] = useState(18);
   const [warmth, setWarmth] = useState(0);
   const [argument, setArgument] = useState("");
   const [thinking, setThinking] = useState(false);
-  const [creditsLeft, setCreditsLeft] = useState(0);
+  // const [creditsLeft, setCreditsLeft] = useState(0);
+  const [selectedText, setSelectedText] = useState("");
+  const [quotes, setQuotes] = useState<QuoteType[]>([]);
+  const [showMarginaliaModal, setShowMarginaliaModal] = useState(false);
+  const [marginaliaText, setMarginaliaText] = useState("");
+  const [marginaliaLoading, setMarginaliaLoading] = useState(false);
+
+  const injectedJavaScript = `
+  (function() {
+    function handleSelectionChange() {
+      const selection = window.getSelection();
+      const selectedText = selection.toString().trim();
+      
+      if (selectedText && selectedText.length > 0) {
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'textSelected',
+          text: selectedText
+        }));
+      } else {
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'textDeselected'
+        }));
+      }
+    }
+    
+    document.addEventListener('selectionchange', handleSelectionChange);
+    
+    true; // Required for injected JavaScript
+  })();
+`;
+
+  const handleWebViewMessage = (event: any) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data);
+
+      if (data.type === "textSelected") {
+        setSelectedText(data.text);
+      } else if (data.type === "textDeselected") {
+        setSelectedText("");
+      }
+    } catch (error) {
+      console.log("Error parsing WebView message:", error);
+    }
+  };
+
+  // Function to highlight saved quotes in the text
+  const highlightSavedQuotes = (
+    fulltext: string,
+    savedQuotes: QuoteType[],
+    warmthLevel: number
+  ) => {
+    if (!savedQuotes || savedQuotes.length === 0) return fulltext;
+
+    let highlightedText = fulltext;
+
+    // Sort quotes by length (longest first) to avoid partial replacements
+    const sortedQuotes = savedQuotes.sort(
+      (a, b) => b.quote.length - a.quote.length
+    );
+
+    // Dynamic styling based on warmth level
+    const highlightStyles =
+      warmthLevel === 4
+        ? "background-color: #F6F7EB; color: #393E41; padding: 2px 4px; border-radius: 3px; font-weight: bold; border: 1px solid #393E41;"
+        : "background-color: #393E41; color: white; padding: 2px 4px; border-radius: 3px; font-weight: bold; box-shadow: 0 1px 3px rgba(0,0,0,0.2);";
+
+    sortedQuotes.forEach((quote) => {
+      // Escape special regex characters in the quote
+      const escapedQuote = quote.quote.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(escapedQuote, "gi");
+
+      // Replace with highlighted version using dynamic styles
+      highlightedText = highlightedText.replace(regex, (match) => {
+        return `<mark style="${highlightStyles}">${match}</mark>`;
+      });
+    });
+
+    return highlightedText;
+  };
+
+  const saveQuote = async () => {
+    if (!selectedText) return;
+
+    try {
+      console.log("Saving quote:", selectedText);
+
+      console.log(extract.id, "Extract ID for quote");
+      console.log(extract.portrait, "Extract portrait for quote");
+
+      const quote = await saveUserQuote(
+        userid,
+        selectedText,
+        extract.title,
+        extract.author,
+        extract.textid,
+        extract.id,
+        extract.portrait,
+        extract.chapter,
+        extract.year,
+        extract.coverart
+      );
+
+      if (quote) {
+        Toast.show({
+          type: "savedQuote",
+          text1: "Quote saved successfully",
+        });
+
+        // Refresh quotes to show the new highlight
+        const extractQuotes = await getQuoteByUserAndExtract(
+          userid,
+          extract.id
+        );
+        setQuotes(extractQuotes || []);
+      }
+
+      setSelectedText(""); // Clear selection after saving
+    } catch (error) {
+      console.error("Error saving quote:", error);
+    }
+  };
+
+  // Marginalia functions
+  const openMarginaliaModal = async () => {
+    setMarginaliaLoading(true);
+    setShowMarginaliaModal(true);
+
+    // Start fade-in animation
+    modalOpacity.setValue(0);
+    modalScale.setValue(0.8);
+
+    Animated.parallel([
+      Animated.timing(modalOpacity, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.spring(modalScale, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    try {
+      const existingMarginalia = await getMarginaliaByExtractAndUser(
+        extract.id,
+        userid
+      );
+      setMarginaliaText(existingMarginalia?.text || "");
+    } catch (error) {
+      console.error("Error fetching marginalia:", error);
+      setMarginaliaText("");
+    } finally {
+      setMarginaliaLoading(false);
+    }
+  };
+
+  const saveMarginaliaText = async () => {
+    if (!marginaliaText.trim()) {
+      Alert.alert("Error", "Please enter some text for your marginalia.");
+      return;
+    }
+
+    setMarginaliaLoading(true);
+    try {
+      await saveMarginalia(extract.id, userid, marginaliaText.trim());
+
+      Toast.show({
+        type: "success",
+        text1: "Marginalia saved successfully",
+      });
+
+      closeMarginaliaModal();
+    } catch (error) {
+      console.error("Error saving marginalia:", error);
+    } finally {
+      setMarginaliaLoading(false);
+    }
+  };
+
+  const closeMarginaliaModal = () => {
+    // Start fade-out animation
+    Animated.parallel([
+      Animated.timing(modalOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(modalScale, {
+        toValue: 0.8,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      // Hide modal after animation completes
+      setShowMarginaliaModal(false);
+      setMarginaliaText("");
+    });
+  };
 
   // Add a ref to store the current due date immediately
   const currentDue = useRef(new Date().getTime());
@@ -315,6 +530,9 @@ export default function EReader() {
         router.push("/");
       }
 
+      const extractQuotes = await getQuoteByUserAndExtract(user.id, extract.id);
+      setQuotes(extractQuotes || []);
+
       setLoading(false);
     }
   };
@@ -465,6 +683,19 @@ export default function EReader() {
                     color="#393E41"
                   ></Ionicons>
                 </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.summary,
+                    warmth === 4 && { backgroundColor: "#F6F7EB" },
+                  ]}
+                  onPress={openMarginaliaModal}
+                >
+                  <Ionicons
+                    name="create-outline"
+                    size={18}
+                    color="#393E41"
+                  ></Ionicons>
+                </TouchableOpacity>
               </View>
               <View style={styles.titleBar}>
                 <Text
@@ -540,18 +771,105 @@ export default function EReader() {
               ) : (
                 <></>
               )}
-              <Text
-                style={[
-                  styles.extractText,
-                  { fontSize },
-                  warmth === 4 && {
-                    color: "#F6F7EB",
-                    borderBottomColor: "#F6F7EB",
-                  },
-                ]}
-              >
-                {extract.fulltext}
-              </Text>
+              <View style={{ width: "100%" }}>
+                <WebView
+                  style={styles.webView}
+                  originWhitelist={["*"]}
+                  source={{
+                    html: `
+                      <html>
+                        <head>
+                          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                          <style>
+                            body {
+                              font-family: 'Georgia', serif;
+                              font-size: ${fontSize}px;
+                              line-height: 1.6;
+                              margin: 8px;
+                              background-color: ${brightnessHex[warmth]};
+                              color: ${warmth === 4 ? "#F6F7EB" : "#393E41"};
+                            }
+                            h1 {
+                              font-size: 24px;
+                              margin-bottom: 16px;
+                            }
+                            p {
+                              margin-bottom: 12px;
+                            }
+                            mark {
+                              padding: 2px 4px;
+                              border-radius: 3px;
+                              font-weight: bold;
+                              /* Default styles - will be overridden by inline styles */
+                            }
+                            ::selection {
+                              background-color: #8980F5;
+                              color: white;
+                            }
+                            ::-moz-selection {
+                              background-color: #8980F5;
+                              color: white;
+                            }
+                          </style>
+                        </head>
+                        <body>
+                          <div>
+                            ${
+                              extract.fulltext
+                                ? highlightSavedQuotes(
+                                    extract.fulltext,
+                                    quotes,
+                                    warmth
+                                  )
+                                : "<h1>This is a static HTML source!</h1><p>Loading content...</p>"
+                            }
+                          </div>
+                        </body>
+                      </html>
+                    `,
+                  }}
+                  javaScriptEnabled={true}
+                  domStorageEnabled={true}
+                  startInLoadingState={true}
+                  scalesPageToFit={false}
+                  showsVerticalScrollIndicator={false}
+                  injectedJavaScript={injectedJavaScript}
+                  onMessage={handleWebViewMessage}
+                  onError={(event) =>
+                    console.log("WebView error:", event.nativeEvent)
+                  }
+                  onLoad={() => console.log("WebView loaded successfully")}
+                />
+
+                {/* Add the Save Quote button outside the WebView */}
+                {selectedText && (
+                  <TouchableOpacity
+                    style={[
+                      styles.saveQuoteButton,
+                      warmth === 4 && { backgroundColor: "#F6F7EB" },
+                    ]}
+                    onPress={saveQuote}
+                  >
+                    <Ionicons
+                      name="chatbubble-ellipses"
+                      size={20}
+                      color={warmth === 4 ? "#393E41" : "#F6F7EB"}
+                    />
+                    <Text
+                      style={[
+                        styles.saveQuoteText,
+                        warmth === 4 && { color: "#393E41" },
+                      ]}
+                    >
+                      Save Quote: "
+                      {selectedText.length > 50
+                        ? selectedText.substring(0, 50) + "..."
+                        : selectedText}
+                      "
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
             <View style={styles.engagementButtons}>
               {/* <TouchableOpacity onPress={toggleLike}>
@@ -608,7 +926,7 @@ export default function EReader() {
                     warmth === 4 && { color: "#F6F7EB" },
                   ]}
                 >
-                  Buy Full Text (Coming Soon)
+                  Buy Book (Coming Soon)
                 </Text>
               </View>
             </View>
@@ -622,6 +940,110 @@ export default function EReader() {
         unitId={adUnitId}
         size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
       />
+
+      {/* Marginalia Modal */}
+      <Modal
+        animationType="none"
+        transparent={true}
+        visible={showMarginaliaModal}
+        onRequestClose={closeMarginaliaModal}
+      >
+        <Animated.View style={[styles.modalOverlay, { opacity: modalOpacity }]}>
+          <Animated.View
+            style={[
+              styles.modalContainer,
+              { backgroundColor: brightnessHex[warmth] },
+              {
+                opacity: modalOpacity,
+                transform: [{ scale: modalScale }],
+              },
+            ]}
+          >
+            <View style={styles.modalHeader}>
+              <Text
+                style={[
+                  styles.modalTitle,
+                  warmth === 4 && { color: "#F6F7EB" },
+                ]}
+              >
+                Reflections
+              </Text>
+              <TouchableOpacity
+                onPress={closeMarginaliaModal}
+                style={styles.closeButton}
+              >
+                <Ionicons
+                  name="close"
+                  size={24}
+                  color={warmth === 4 ? "#F6F7EB" : "#393E41"}
+                />
+              </TouchableOpacity>
+            </View>
+
+            <Text
+              style={[
+                styles.modalSubtitle,
+                warmth === 4 && { color: "#F6F7EB" },
+              ]}
+            >
+              {extract.title} - Chapter {extract.chapter}
+            </Text>
+
+            <TextInput
+              style={[
+                styles.marginaliaInput,
+                { fontSize },
+                warmth === 4 && {
+                  backgroundColor: "#393E41",
+                  color: "#F6F7EB",
+                  borderColor: "#F6F7EB",
+                },
+              ]}
+              multiline={true}
+              numberOfLines={8}
+              value={marginaliaText}
+              onChangeText={setMarginaliaText}
+              placeholder="Mark your extract, make it your own..."
+              placeholderTextColor={warmth === 4 ? "#B0B0B0" : "#666"}
+              textAlignVertical="top"
+            />
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                onPress={closeMarginaliaModal}
+                style={[
+                  styles.cancelButton,
+                  warmth === 4 && { borderColor: "#F6F7EB" },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.cancelButtonText,
+                    warmth === 4 && { color: "#F6F7EB" },
+                  ]}
+                >
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={saveMarginaliaText}
+                style={[
+                  styles.saveButton,
+                  marginaliaLoading && styles.disabledButton,
+                ]}
+                disabled={marginaliaLoading}
+              >
+                {marginaliaLoading ? (
+                  <ActivityIndicator size="small" color="#F6F7EB" />
+                ) : (
+                  <Text style={styles.saveButtonText}>Save Notes</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </Animated.View>
+      </Modal>
     </>
   );
 }
@@ -668,7 +1090,7 @@ const styles = StyleSheet.create({
     width: "100%",
     flexDirection: "row",
     justifyContent: "space-around",
-    alignItems: "flex-start",
+    alignItems: "center",
     height: 100,
   },
   subscribeContainer: {
@@ -839,5 +1261,114 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#F6F7EB",
     padding: 8,
+  },
+  webView: {
+    minHeight: 420,
+    width: "100%",
+    backgroundColor: "transparent",
+  },
+  saveQuoteButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FE7F2D",
+    padding: 12,
+    marginVertical: 8,
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  saveQuoteText: {
+    color: "#F6F7EB",
+    fontFamily: "QuicksandReg",
+    fontSize: 14,
+    marginLeft: 8,
+    flex: 1,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContainer: {
+    width: "100%",
+    maxWidth: 500,
+    backgroundColor: "#F6F7EB",
+    borderRadius: 12,
+    padding: 20,
+    maxHeight: "80%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontFamily: "EBGaramondItalic",
+    color: "#393E41",
+    flex: 1,
+  },
+  closeButton: {
+    padding: 5,
+  },
+  modalSubtitle: {
+    fontSize: 16,
+    fontFamily: "EBGaramond",
+    color: "#393E41",
+    marginBottom: 15,
+    textAlign: "center",
+  },
+  marginaliaInput: {
+    borderWidth: 1,
+    borderColor: "#393E41",
+    borderRadius: 8,
+    padding: 12,
+    fontFamily: "EBGaramond",
+    fontSize: 16,
+    backgroundColor: "#F6F7EB",
+    color: "#393E41",
+    minHeight: 150,
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  cancelButton: {
+    flex: 1,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#393E41",
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  cancelButtonText: {
+    fontFamily: "QuicksandReg",
+    fontSize: 16,
+    color: "#393E41",
+  },
+  saveButton: {
+    flex: 1,
+    padding: 12,
+    backgroundColor: "#FE7F2D",
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  saveButtonText: {
+    fontFamily: "QuicksandReg",
+    fontSize: 16,
+    color: "#F6F7EB",
+    fontWeight: "bold",
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
 });

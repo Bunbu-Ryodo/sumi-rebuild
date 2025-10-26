@@ -162,6 +162,48 @@ export default function RootLayout() {
         </View>
       </View>
     ),
+    savedQuote: ({ text1 }: { text1?: string }) => (
+      <View
+        style={{
+          width: "85%",
+          borderRadius: 8,
+          backgroundColor: "#F6F7EB",
+          borderWidth: 1,
+          borderColor: "#393E41",
+          padding: 12,
+          flexDirection: "row",
+        }}
+      >
+        <View
+          style={{
+            height: 44,
+            width: 44,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "#393E41",
+            borderRadius: 8,
+            marginRight: 8,
+          }}
+        >
+          <Ionicons
+            name="chatbubble-ellipses"
+            size={24}
+            color="#F6F7EB"
+          ></Ionicons>
+        </View>
+        <View style={{ alignContent: "center", justifyContent: "center" }}>
+          <Text
+            style={{
+              fontFamily: "QuicksandReg",
+              fontSize: 16,
+              color: "#393E41",
+            }}
+          >
+            {text1 ?? ""}
+          </Text>
+        </View>
+      </View>
+    ),
   };
 
   return (
@@ -194,6 +236,22 @@ export default function RootLayout() {
             options={{
               headerShown: true,
               title: "View Artwork",
+              headerStyle: {
+                backgroundColor: "#393E41",
+              },
+              headerTitleStyle: {
+                fontFamily: "QuicksandReg",
+                color: "#F6F7EB",
+              },
+              headerTintColor: "#F6F7EB",
+              headerShadowVisible: false,
+            }}
+          ></Stack.Screen>
+          <Stack.Screen
+            name="view_quote/[id]"
+            options={{
+              headerShown: true,
+              title: "View Quote",
               headerStyle: {
                 backgroundColor: "#393E41",
               },

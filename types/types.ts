@@ -25,6 +25,20 @@ export type ArtworkType = {
     posted: boolean;
 }
 
+export type QuoteType = {  
+    id: number;
+    userid: string;
+    quote: string;
+    title: string;
+    author: string; 
+    textid: number;
+    extractid: number; 
+    portrait: string; 
+    chapter: number;
+    year: string;
+    coverart: string;
+}
+
 export type ArtworkPostType = {
     id: number;
     username: string,
