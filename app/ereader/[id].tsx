@@ -11,6 +11,7 @@ import {
   Modal,
   TextInput,
   Alert,
+  KeyboardAvoidingView,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams } from "expo-router";
@@ -190,6 +191,29 @@ export default function EReader() {
     }
   };
 
+  const formatTextForHTML = (text: string) => {
+    if (!text) return text;
+
+    return (
+      text
+        // Convert \n to <br> tags for line breaks
+        .replace(/\n/g, "<br>")
+        // Convert \r\n (Windows line endings) to <br>
+        .replace(/\r\n/g, "<br>")
+        // Convert \r (old Mac line endings) to <br>
+        .replace(/\r/g, "<br>")
+        // Convert multiple consecutive <br> tags to paragraph breaks
+        .replace(/(<br>\s*){2,}/g, "</p><p>")
+        // Wrap the entire content in paragraphs if it doesn't start with a tag
+        .replace(/^(?!<)/, "<p>")
+        .replace(/(?!>)$/, "</p>")
+        // Clean up any empty paragraphs
+        .replace(/<p>\s*<\/p>/g, "")
+        // Fix any double paragraph issues
+        .replace(/<\/p><p>/g, "</p>\n<p>")
+    );
+  };
+
   // Function to highlight saved quotes in the text
   const highlightSavedQuotes = (
     fulltext: string,
@@ -258,6 +282,7 @@ export default function EReader() {
           userid,
           extract.id
         );
+
         setQuotes(extractQuotes || []);
       }
 
@@ -313,11 +338,6 @@ export default function EReader() {
     setMarginaliaLoading(true);
     try {
       await saveMarginalia(extract.id, userid, marginaliaText.trim());
-
-      Toast.show({
-        type: "success",
-        text1: "Marginalia saved successfully",
-      });
 
       closeMarginaliaModal();
     } catch (error) {
@@ -523,7 +543,12 @@ export default function EReader() {
       const extract = await getExtract(id);
 
       if (extract) {
-        setExtract(extract);
+        const formattedExtract = {
+          ...extract,
+          fulltext: formatTextForHTML(extract.fulltext),
+        };
+
+        setExtract(formattedExtract);
 
         await checkForActiveSubscription(user.id, extract);
       } else {
@@ -948,101 +973,109 @@ export default function EReader() {
         visible={showMarginaliaModal}
         onRequestClose={closeMarginaliaModal}
       >
-        <Animated.View style={[styles.modalOverlay, { opacity: modalOpacity }]}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+        >
           <Animated.View
-            style={[
-              styles.modalContainer,
-              { backgroundColor: brightnessHex[warmth] },
-              {
-                opacity: modalOpacity,
-                transform: [{ scale: modalScale }],
-              },
-            ]}
+            style={[styles.modalOverlay, { opacity: modalOpacity }]}
           >
-            <View style={styles.modalHeader}>
-              <Text
-                style={[
-                  styles.modalTitle,
-                  warmth === 4 && { color: "#F6F7EB" },
-                ]}
-              >
-                Reflections
-              </Text>
-              <TouchableOpacity
-                onPress={closeMarginaliaModal}
-                style={styles.closeButton}
-              >
-                <Ionicons
-                  name="close"
-                  size={24}
-                  color={warmth === 4 ? "#F6F7EB" : "#393E41"}
-                />
-              </TouchableOpacity>
-            </View>
-
-            <Text
+            <Animated.View
               style={[
-                styles.modalSubtitle,
-                warmth === 4 && { color: "#F6F7EB" },
-              ]}
-            >
-              {extract.title} - Chapter {extract.chapter}
-            </Text>
-
-            <TextInput
-              style={[
-                styles.marginaliaInput,
-                { fontSize },
-                warmth === 4 && {
-                  backgroundColor: "#393E41",
-                  color: "#F6F7EB",
-                  borderColor: "#F6F7EB",
+                styles.modalContainer,
+                { backgroundColor: brightnessHex[warmth] },
+                {
+                  opacity: modalOpacity,
+                  transform: [{ scale: modalScale }],
                 },
               ]}
-              multiline={true}
-              numberOfLines={8}
-              value={marginaliaText}
-              onChangeText={setMarginaliaText}
-              placeholder="Mark your extract, make it your own..."
-              placeholderTextColor={warmth === 4 ? "#B0B0B0" : "#666"}
-              textAlignVertical="top"
-            />
-
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                onPress={closeMarginaliaModal}
-                style={[
-                  styles.cancelButton,
-                  warmth === 4 && { borderColor: "#F6F7EB" },
-                ]}
-              >
+            >
+              <View style={styles.modalHeader}>
                 <Text
                   style={[
-                    styles.cancelButtonText,
+                    styles.modalTitle,
                     warmth === 4 && { color: "#F6F7EB" },
                   ]}
                 >
-                  Cancel
+                  Reflections
                 </Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={closeMarginaliaModal}
+                  style={styles.closeButton}
+                >
+                  <Ionicons
+                    name="close"
+                    size={24}
+                    color={warmth === 4 ? "#F6F7EB" : "#393E41"}
+                  />
+                </TouchableOpacity>
+              </View>
 
-              <TouchableOpacity
-                onPress={saveMarginaliaText}
+              <Text
                 style={[
-                  styles.saveButton,
-                  marginaliaLoading && styles.disabledButton,
+                  styles.modalSubtitle,
+                  warmth === 4 && { color: "#F6F7EB" },
                 ]}
-                disabled={marginaliaLoading}
               >
-                {marginaliaLoading ? (
-                  <ActivityIndicator size="small" color="#F6F7EB" />
-                ) : (
-                  <Text style={styles.saveButtonText}>Save Notes</Text>
-                )}
-              </TouchableOpacity>
-            </View>
+                {extract.title} - Chapter {extract.chapter}
+              </Text>
+
+              <TextInput
+                style={[
+                  styles.marginaliaInput,
+                  { fontSize },
+                  warmth === 4 && {
+                    backgroundColor: "#393E41",
+                    color: "#F6F7EB",
+                    borderColor: "#F6F7EB",
+                  },
+                ]}
+                multiline={true}
+                numberOfLines={8}
+                value={marginaliaText}
+                onChangeText={setMarginaliaText}
+                placeholder="Mark your extract, make it your own..."
+                placeholderTextColor={warmth === 4 ? "#B0B0B0" : "#666"}
+                textAlignVertical="top"
+              />
+
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  onPress={closeMarginaliaModal}
+                  style={[
+                    styles.cancelButton,
+                    warmth === 4 && { borderColor: "#F6F7EB" },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.cancelButtonText,
+                      warmth === 4 && { color: "#F6F7EB" },
+                    ]}
+                  >
+                    Cancel
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={saveMarginaliaText}
+                  style={[
+                    styles.saveButton,
+                    marginaliaLoading && styles.disabledButton,
+                  ]}
+                  disabled={marginaliaLoading}
+                >
+                  {marginaliaLoading ? (
+                    <ActivityIndicator size="small" color="#F6F7EB" />
+                  ) : (
+                    <Text style={styles.saveButtonText}>Save Notes</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </Animated.View>
           </Animated.View>
-        </Animated.View>
+        </KeyboardAvoidingView>
       </Modal>
     </>
   );
@@ -1291,7 +1324,7 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
+    justifyContent: "center", // Change from alignItems: center
     alignItems: "center",
     padding: 20,
   },
@@ -1301,7 +1334,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#F6F7EB",
     borderRadius: 12,
     padding: 20,
-    maxHeight: "80%",
+    maxHeight: "95%",
+    minHeight: 300,
+  },
+  modalScrollView: {
+    flex: 1,
   },
   modalHeader: {
     flexDirection: "row",
@@ -1334,13 +1371,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: "#F6F7EB",
     color: "#393E41",
-    minHeight: 150,
-    marginBottom: 20,
+    minHeight: 120, // Reduce from 150 to save space
+    maxHeight: 200, // Add max height to prevent overflow
+    marginBottom: 15, // Reduce from 20
   },
   modalButtons: {
     flexDirection: "row",
     justifyContent: "space-between",
     gap: 12,
+    paddingTop: 10, // Add padding to separate from scroll content
+    backgroundColor: "inherit", // Ensure buttons stay visible
   },
   cancelButton: {
     flex: 1,
@@ -1366,7 +1406,6 @@ const styles = StyleSheet.create({
     fontFamily: "QuicksandReg",
     fontSize: 16,
     color: "#F6F7EB",
-    fontWeight: "bold",
   },
   disabledButton: {
     opacity: 0.6,
