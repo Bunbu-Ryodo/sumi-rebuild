@@ -24,7 +24,12 @@ import React, {
   useState,
 } from "react";
 import { useRouter } from "expo-router";
-import { getExtract } from "../../supabase_queries/extracts";
+import {
+  getExtract,
+  checkForReadingProgress,
+  createReadingProgress,
+  updateReadingProgress,
+} from "../../supabase_queries/extracts";
 import { ExtractType, QuoteType } from "../../types/types";
 import {
   checkForSubscription,
@@ -140,18 +145,21 @@ export default function EReader() {
   const [loading, setLoading] = useState(true);
   const [subscribed, setSubscribed] = useState(false);
   const [subid, setSubid] = useState(0);
-  // const [read, setRead] = useState(false);
   const [userid, setUserid] = useState("");
   const [fontSize, setFontSize] = useState(18);
   const [warmth, setWarmth] = useState(0);
   const [argument, setArgument] = useState("");
   const [thinking, setThinking] = useState(false);
-  // const [creditsLeft, setCreditsLeft] = useState(0);
   const [selectedText, setSelectedText] = useState("");
   const [quotes, setQuotes] = useState<QuoteType[]>([]);
   const [showMarginaliaModal, setShowMarginaliaModal] = useState(false);
   const [marginaliaText, setMarginaliaText] = useState("");
   const [marginaliaLoading, setMarginaliaLoading] = useState(false);
+  const [readingProgress, setReadingProgress] = useState(0);
+  const [contentHeight, setContentHeight] = useState(0);
+  const [viewHeight, setViewHeight] = useState(0);
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const webViewRef = useRef<WebView>(null);
 
   const injectedJavaScript = `
   (function() {
@@ -170,8 +178,35 @@ export default function EReader() {
         }));
       }
     }
+
+    function handleScroll() {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = document.documentElement.clientHeight;
+      const maxScroll = Math.max(scrollHeight - 430, 0);
+      const progress = maxScroll > 0 ? (scrollTop / maxScroll) * 100 : 0;
+
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'scrollProgress',
+        maxScroll: Number(maxScroll),
+        progress: Number(progress),
+        scrollTop: Number(scrollTop),
+        scrollHeight: Number(scrollHeight),
+        clientHeight: Number(clientHeight)
+      }));
+    }
     
     document.addEventListener('selectionchange', handleSelectionChange);
+    document.addEventListener('scroll', handleScroll, { passive: true });
+
+    setTimeout(() => {
+      handleScroll();
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'contentLoaded',
+        scrollHeight: document.documentElement.scrollHeight,
+        clientHeight: document.documentElement.clientHeight
+      }));
+    }, 100);
     
     true; // Required for injected JavaScript
   })();
@@ -180,11 +215,42 @@ export default function EReader() {
   const handleWebViewMessage = (event: any) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
+      console.log(data, "Data from WebView");
 
-      if (data.type === "textSelected") {
-        setSelectedText(data.text);
-      } else if (data.type === "textDeselected") {
-        setSelectedText("");
+      switch (data.type) {
+        case "textSelected":
+          setSelectedText(data.text);
+          break;
+
+        case "textDeselected":
+          setSelectedText("");
+          break;
+
+        case "scrollProgress":
+          setReadingProgress(data.progress);
+          if (data.progress > readingProgress) {
+            setReadingProgress(Math.floor(data.progress));
+            setScrollPosition(Math.floor(data.scrollTop));
+          }
+          break;
+
+        case "contentLoaded":
+          console.log(
+            data.scrollHeight,
+            data.clientHeight,
+            "Content dimensions",
+          );
+          console.log(data.clientHeight, "View height");
+
+          setContentHeight(data.scrollHeight);
+          setViewHeight(data.clientHeight);
+
+          if (scrollPosition > 0) {
+            webViewRef.current?.injectJavaScript(
+              `window.scrollTo(0, ${scrollPosition}); true;`,
+            );
+          }
+          break;
       }
     } catch (error) {
       console.log("Error parsing WebView message:", error);
@@ -218,7 +284,7 @@ export default function EReader() {
   const highlightSavedQuotes = (
     fulltext: string,
     savedQuotes: QuoteType[],
-    warmthLevel: number
+    warmthLevel: number,
   ) => {
     if (!savedQuotes || savedQuotes.length === 0) return fulltext;
 
@@ -226,7 +292,7 @@ export default function EReader() {
 
     // Sort quotes by length (longest first) to avoid partial replacements
     const sortedQuotes = savedQuotes.sort(
-      (a, b) => b.quote.length - a.quote.length
+      (a, b) => b.quote.length - a.quote.length,
     );
 
     // Dynamic styling based on warmth level
@@ -268,7 +334,7 @@ export default function EReader() {
         extract.portrait,
         extract.chapter,
         extract.year,
-        extract.coverart
+        extract.coverart,
       );
 
       if (quote) {
@@ -280,7 +346,7 @@ export default function EReader() {
         // Refresh quotes to show the new highlight
         const extractQuotes = await getQuoteByUserAndExtract(
           userid,
-          extract.id
+          extract.id,
         );
 
         setQuotes(extractQuotes || []);
@@ -318,7 +384,7 @@ export default function EReader() {
     try {
       const existingMarginalia = await getMarginaliaByExtractAndUser(
         extract.id,
-        userid
+        userid,
       );
       setMarginaliaText(existingMarginalia?.text || "");
     } catch (error) {
@@ -419,7 +485,14 @@ export default function EReader() {
   const generateChapterBulletPoints = () => callGrok("bullets");
   const generateSynopsis = () => callGrok("synopsis");
 
-  const backToFeed = () => {
+  const backToFeed = async () => {
+    await updateReadingProgress(
+      userid,
+      extract.id,
+      Math.floor(readingProgress),
+      Math.floor(scrollPosition),
+    );
+
     router.push({
       pathname: "/feed",
     });
@@ -455,11 +528,11 @@ export default function EReader() {
 
   const checkForActiveSubscription = async (
     userId: string,
-    extract: ExtractType
+    extract: ExtractType,
   ) => {
     const existingSubscription = await checkForSubscription(
       userId,
-      extract.textid
+      extract.textid,
     );
 
     const userProfile = await lookUpUserProfile(userId);
@@ -486,7 +559,7 @@ export default function EReader() {
     } else {
       const doubleCheckSubscription = await checkForSubscription(
         userId,
-        extract.textid
+        extract.textid,
       );
 
       if (doubleCheckSubscription) {
@@ -508,7 +581,7 @@ export default function EReader() {
         duedate,
         extract.subscribeart,
         extract.title,
-        extract.author
+        extract.author,
       );
 
       const existingSeries = await checkForSeries(userId, newSubscription.id);
@@ -523,7 +596,7 @@ export default function EReader() {
           [extract],
           1,
           extract.totalchapters,
-          duedate
+          duedate,
         );
 
         if (!series) {
@@ -540,9 +613,24 @@ export default function EReader() {
     const user = await getUserSession();
     if (user) {
       setUserid(user.id);
+
       const extract = await getExtract(id);
 
       if (extract) {
+        const savedReadingProgress = await checkForReadingProgress(
+          user.id,
+          extract.id,
+        );
+
+        if (
+          savedReadingProgress &&
+          savedReadingProgress.furthest_scroll_position
+        ) {
+          setScrollPosition(savedReadingProgress.furthest_scroll_position);
+        } else if (!savedReadingProgress) {
+          await createReadingProgress(user.id, extract.id);
+        }
+
         const formattedExtract = {
           ...extract,
           fulltext: formatTextForHTML(extract.fulltext),
@@ -616,7 +704,7 @@ export default function EReader() {
           if (payload.new && "active" in payload.new) {
             setSubscribed(payload.new.active);
           }
-        }
+        },
       )
       .subscribe();
   }, [subid]);
@@ -632,7 +720,7 @@ export default function EReader() {
           }
         });
       };
-    }, [])
+    }, []),
   );
 
   return (
@@ -798,6 +886,7 @@ export default function EReader() {
               )}
               <View style={{ width: "100%" }}>
                 <WebView
+                  ref={webViewRef}
                   style={styles.webView}
                   originWhitelist={["*"]}
                   source={{
@@ -844,7 +933,7 @@ export default function EReader() {
                                 ? highlightSavedQuotes(
                                     extract.fulltext,
                                     quotes,
-                                    warmth
+                                    warmth,
                                   )
                                 : "<h1>This is a static HTML source!</h1><p>Loading content...</p>"
                             }
@@ -896,16 +985,12 @@ export default function EReader() {
                 )}
               </View>
             </View>
+            <View style={styles.readingProgressContainer}>
+              <Text style={styles.readingProgressText}>
+                {Math.floor(readingProgress)}% complete
+              </Text>
+            </View>
             <View style={styles.engagementButtons}>
-              {/* <TouchableOpacity onPress={toggleLike}>
-              <BounceView ref={heartRef}>
-                <Ionicons
-                  name={like ? "heart" : "heart-outline"}
-                  size={24}
-                  color="#D64045"
-                />
-              </BounceView>
-            </TouchableOpacity> */}
               <TouchableOpacity
                 style={styles.returnAnchor}
                 onPress={backToFeed}
@@ -1125,6 +1210,15 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     alignItems: "center",
     height: 100,
+  },
+  readingProgressContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+  },
+  readingProgressText: {
+    fontFamily: "EBGaramond",
+    fontSize: 18,
   },
   subscribeContainer: {
     alignItems: "center",
