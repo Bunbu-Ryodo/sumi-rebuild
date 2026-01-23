@@ -266,6 +266,10 @@ export default function RootLayout() {
             options={{ headerShown: false }}
           ></Stack.Screen>
           <Stack.Screen
+            name="leaderboards"
+            options={{ headerShown: false }}
+          ></Stack.Screen>
+          <Stack.Screen
             name="ereader/[id]"
             options={{ headerShown: false }}
           ></Stack.Screen>

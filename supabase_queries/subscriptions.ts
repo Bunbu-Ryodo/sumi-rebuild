@@ -14,14 +14,14 @@ export async function getStreak(userId: string){
     return streak;
 }
 
-export async function createStreak(userId: string){
+export async function createStreak(userId: string, username: string){
   if(!userId){
     throw new Error("Missing required parameters");
   } 
 
   const { data: newStreak, error } = await supabase
     .from('streaks')
-    .insert({ user_id: userId,  current_streak: 0, longest_streak: 0})
+    .insert({ user_id: userId,  current_streak: 0, longest_streak: 0, username: username})
     .select()
     .single();
     return newStreak;
@@ -45,6 +45,32 @@ export async function updateStreak(userId: string, newStreakCount: number){
   }
 
   return updatedStreaks;
+}
+
+export async function getLeaderBoard(){
+  const { data: leaderBoard, error } = await supabase
+    .from('streaks')
+    .select()
+    .order('current_streak', { ascending: false })
+
+  if(error){
+    console.error("Error fetching leaderboard:", error);
+    return null;
+  }
+
+  return leaderBoard;
+}
+
+export async function changeUserNameOnStreak(userId: string, newUsername: string){
+  if(!userId || !newUsername){  
+    throw new Error("Missing required parameters");
+  }
+  const { data: updatedStreaks, error } = await supabase
+    .from('streaks')
+    .update({ username: newUsername})
+    .eq('user_id', userId)
+    .select()
+    .single();
 }
 
 export async function resetStreak(userId: string, longest_streak: number){

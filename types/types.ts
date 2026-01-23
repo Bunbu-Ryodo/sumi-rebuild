@@ -27,6 +27,7 @@ export type StreakType = {
     userid: string;
     current_streak: number;
     longest_streak: number;
+    username: string;
 }
 
 export type ArtworkType = {

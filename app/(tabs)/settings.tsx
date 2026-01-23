@@ -16,6 +16,7 @@ import {
   updateUsername,
 } from "../../supabase_queries/settings";
 import { getUserSession, lookUpUserProfile } from "../../supabase_queries/auth";
+import { changeUserNameOnStreak } from "../../supabase_queries/subscriptions";
 import supabase from "../../lib/supabase.js";
 import { updateSubscriptionInterval } from "../../supabase_queries/profiles";
 import Toast from "react-native-toast-message";
@@ -83,6 +84,11 @@ export default function Settings() {
 
   const updateReaderTag = async () => {
     const updateReaderTag = await updateUsername(readerTag);
+    const user = await getUserSession();
+    if (user) {
+      await changeUserNameOnStreak(user.id, readerTag);
+    }
+
     if (updateReaderTag) {
       displayToast("ReaderTag updated successfully");
     }
