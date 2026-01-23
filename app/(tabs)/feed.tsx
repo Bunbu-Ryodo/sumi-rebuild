@@ -134,7 +134,7 @@ export default function FeedScreen() {
     const streak = await getStreak(userId);
     if (!streak) {
       console.log("Streak not found, creating new streak");
-      await createStreak(userId);
+      await createStreak(userId, userProfile?.username || "NewUser");
     }
     if (!userProfile) {
       console.log("Profile not found, creating new profile");

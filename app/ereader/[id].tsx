@@ -220,7 +220,6 @@ export default function EReader() {
   const handleWebViewMessage = (event: any) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
-      console.log(data, "Data from WebView");
 
       switch (data.type) {
         case "textSelected":
@@ -240,13 +239,6 @@ export default function EReader() {
           break;
 
         case "contentLoaded":
-          console.log(
-            data.scrollHeight,
-            data.clientHeight,
-            "Content dimensions",
-          );
-          console.log(data.clientHeight, "View height");
-
           setContentHeight(data.scrollHeight);
           setViewHeight(data.clientHeight);
 
@@ -325,9 +317,6 @@ export default function EReader() {
 
     try {
       console.log("Saving quote:", selectedText);
-
-      console.log(extract.id, "Extract ID for quote");
-      console.log(extract.portrait, "Extract portrait for quote");
 
       const quote = await saveUserQuote(
         userid,
@@ -693,7 +682,6 @@ export default function EReader() {
 
     // Use the ref value which is updated immediately
     const dueToUse = currentDue.current;
-    console.log(new Date(dueToUse).toLocaleDateString(), "Due date");
 
     if (subscribed) {
       console.log("Subscription deactivated", subid);

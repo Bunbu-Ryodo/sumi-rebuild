@@ -4,23 +4,20 @@ import {
   StyleSheet,
   ScrollView,
   RefreshControl,
-  Platform,
   TouchableOpacity,
+  Platform,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-
-import { useEffect, useState } from "react";
-import { getUserSession } from "../../supabase_queries/auth.js";
-import { getAllSeries, getStreak } from "../../supabase_queries/subscriptions";
-import { SeriesType, StreakType } from "../../types/types";
 import {
   BannerAd,
   BannerAdSize,
   TestIds,
   useForeground,
 } from "react-native-google-mobile-ads";
+import { useEffect, useState } from "react";
 import React, { useRef } from "react";
-import Series from "../../components/series";
+import { StreakType } from "../types/types";
+import { getLeaderBoard } from "../supabase_queries/subscriptions";
 import { Link } from "expo-router";
 
 let adUnitId = "";
@@ -35,10 +32,9 @@ if (useTestAds) {
   adUnitId = "ca-app-pub-5850018728161057/3269917700";
 }
 
-export default function Subscriptions() {
+export default function Leaderboards() {
   const bannerRef = useRef<BannerAd>(null);
-  const [series, setSeries] = useState<SeriesType[]>([]);
-  const [streak, setStreak] = useState<StreakType | null>(null);
+  const [leaderboard, setLeaderboard] = useState<StreakType[]>([]);
   const [loading, setLoading] = useState(true);
 
   useForeground(() => {
@@ -47,22 +43,17 @@ export default function Subscriptions() {
     }
   });
 
-  const fetchSubscriptionData = async () => {
+  const fetchLeaderboardData = async () => {
     setLoading(true);
-    const user = await getUserSession();
-    const streakData = await getStreak(user?.id || "");
-    if (streakData) {
-      setStreak(streakData);
-    }
-    if (user) {
-      const series = await getAllSeries(user.id);
-      setSeries(series || []);
+    const leaderboardData = await getLeaderBoard();
+    if (leaderboardData) {
+      setLeaderboard(leaderboardData || []);
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchSubscriptionData();
+    fetchLeaderboardData();
   }, []);
 
   return (
@@ -73,51 +64,72 @@ export default function Subscriptions() {
         refreshControl={
           <RefreshControl
             refreshing={loading}
-            onRefresh={fetchSubscriptionData}
+            onRefresh={fetchLeaderboardData}
             tintColor="#F6F7EB"
           />
         }
       >
-        {!loading && (
-          <View style={styles.extractWrapper}>
-            <View style={styles.subscriptionsHeader}>
-              <Text style={styles.newInstallmentsHeader}>
-                {series.length > 0
-                  ? "Your Subscriptions"
-                  : "Subscribe To A Series!"}
-              </Text>
-              <View style={styles.headerIconContainer}>
-                <Ionicons name="mail-unread" size={24} color={"#393E41"} />
-              </View>
-            </View>
-            <View style={styles.streakHeader}>
-              <Text style={styles.streakHeaderText}>
-                Current Login & Read Streak: {streak?.current_streak}
-              </Text>
-              <Text style={styles.streakHeaderText}>
-                Longest Streak: {streak?.longest_streak}
-              </Text>
-              <View style={styles.headerIconContainer}>
-                <Ionicons name="calendar" size={24} color={"#393E41"} />
-              </View>
-              <Link href="/leaderboards" asChild>
-                <TouchableOpacity style={styles.seeLeaderboardButton}>
-                  <Text style={styles.secondaryButtonText}>
-                    Global Leaderboard
-                  </Text>
-                </TouchableOpacity>
-              </Link>
-            </View>
-            <View style={styles.subscriptionSection}>
-              {series
-                ? series.map((series) => <Series key={series.id} {...series} />)
-                : null}
+        <View style={styles.streakWrapper}>
+          <View style={styles.leaderBoardHeader}>
+            <Text style={styles.newInstallmentsHeader}>Global Leaderboard</Text>
+            <View style={styles.headerIconContainer}>
+              <Ionicons name="trophy" size={24} color={"#393E41"} />
             </View>
           </View>
-        )}
+          <View
+            style={{ width: "100%", alignItems: "center", marginBottom: 12 }}
+          >
+            <Link href="/subscriptions" asChild>
+              <TouchableOpacity style={styles.seeLeaderboardButton}>
+                <Ionicons name="arrow-back" size={20} color={"#393E41"} />
+                <Text style={styles.secondaryButtonText}>
+                  Back to Subscriptions
+                </Text>
+              </TouchableOpacity>
+            </Link>
+          </View>
+          {!loading &&
+            leaderboard.map((streak, index) => (
+              <View
+                key={streak.id}
+                style={{
+                  alignItems: "center",
+                  width: "100%",
+                  justifyContent: "center",
+                  flexDirection: "row",
+                }}
+              >
+                <Text
+                  style={[
+                    {
+                      fontFamily: "QuicksandReg",
+                      fontSize: 18,
+                      color: "#393E41",
+                    },
+                  ]}
+                >
+                  {index + 1}. {streak.username}: {streak.current_streak} days
+                  (record:{" "}
+                  {streak.longest_streak
+                    ? streak.longest_streak
+                    : streak.current_streak}
+                  )
+                </Text>
+                {index + 1 === 1 && (
+                  <Ionicons name="trophy" size={24} color={"gold"} />
+                )}
+                {index + 1 === 2 && (
+                  <Ionicons name="trophy" size={24} color={"silver"} />
+                )}
+                {index + 1 === 3 && (
+                  <Ionicons name="trophy" size={24} color={"bronze"} />
+                )}
+              </View>
+            ))}
+        </View>
       </ScrollView>
       <BannerAd
-        key={`ad-subscriptions`}
+        key={`ad-leaderboard`}
         ref={bannerRef}
         unitId={adUnitId}
         size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
@@ -136,10 +148,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F6F7EB",
   },
-  subscriptionsHeader: {
+  leaderBoardHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    margin: 8,
   },
   streakHeader: {
     marginTop: 12,
@@ -171,7 +184,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginLeft: 8,
   },
-  extractWrapper: {
+  streakWrapper: {
     padding: 16,
     marginTop: 24,
     width: "100%",
@@ -222,18 +235,25 @@ const styles = StyleSheet.create({
   artworkDetailsContainer: {
     marginTop: 8,
   },
-  seeLeaderboardButton: {
+  changeReaderTagButton: {
     paddingVertical: 16,
     backgroundColor: "#363E41",
     borderRadius: 8,
     alignItems: "center",
-    width: "50%",
+    width: "100%",
     marginBottom: 12,
     marginTop: 16,
   },
   secondaryButtonText: {
-    color: "#F6F7EB",
+    color: "#393E41",
     fontFamily: "QuicksandReg",
     fontSize: 16,
+    textDecorationLine: "underline",
+  },
+  seeLeaderboardButton: {
+    flexDirection: "row",
+    backgroundColor: "#F6F7EB",
+    alignItems: "center",
+    width: "50%",
   },
 });
