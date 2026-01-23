@@ -1,5 +1,65 @@
 import supabase from '../lib/supabase';
 
+export async function getStreak(userId: string){
+  if(!userId){
+    throw new Error("Missing required parameters");
+  } 
+
+  const { data: streak, error } = await supabase
+    .from('streaks')
+    .select()
+    .eq('user_id', userId)
+    .single();
+
+    return streak;
+}
+
+export async function createStreak(userId: string){
+  if(!userId){
+    throw new Error("Missing required parameters");
+  } 
+
+  const { data: newStreak, error } = await supabase
+    .from('streaks')
+    .insert({ user_id: userId,  current_streak: 0, longest_streak: 0})
+    .select()
+    .single();
+    return newStreak;
+}
+
+export async function updateStreak(userId: string, newStreakCount: number){
+  if(!userId || newStreakCount === undefined){
+    throw new Error("Missing required parameters");
+  }
+
+  const { data: updatedStreaks, error } = await supabase
+    .from('streaks')
+    .update({ current_streak: newStreakCount})
+    .eq('user_id', userId)
+    .select()
+    .single();
+
+  if(error){
+    console.error("Error updating streaks:", error);
+    return null;
+  }
+
+  return updatedStreaks;
+}
+
+export async function resetStreak(userId: string, longest_streak: number){
+  if(!userId){
+    throw new Error("Missing required parameters");
+  }
+
+  const { data: resetStreaks, error } = await supabase
+    .from('streaks')
+    .update({ current_streak: 0, longest_streak: longest_streak })
+    .eq('user_id', userId)
+    .select()
+    .single();
+}
+
 export async function createSubscription(userId: string, textId: number, chapter: number, due: number, subscribeart: string, title: string, author: string){
   if (!userId || !textId || !chapter || !due || !title || !author) {
     throw new Error("Missing required parameters");

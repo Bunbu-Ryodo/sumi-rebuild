@@ -10,8 +10,8 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 
 import { useEffect, useState } from "react";
 import { getUserSession } from "../../supabase_queries/auth.js";
-import { getAllSeries } from "../../supabase_queries/subscriptions";
-import { SeriesType } from "../../types/types";
+import { getAllSeries, getStreak } from "../../supabase_queries/subscriptions";
+import { SeriesType, StreakType } from "../../types/types";
 import {
   BannerAd,
   BannerAdSize,
@@ -35,6 +35,9 @@ if (useTestAds) {
 
 export default function Subscriptions() {
   const bannerRef = useRef<BannerAd>(null);
+  const [series, setSeries] = useState<SeriesType[]>([]);
+  const [streak, setStreak] = useState<StreakType | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useForeground(() => {
     if (Platform.OS === "android" || Platform.OS === "ios") {
@@ -45,6 +48,12 @@ export default function Subscriptions() {
   const fetchSubscriptionData = async () => {
     setLoading(true);
     const user = await getUserSession();
+    const streakData = await getStreak(user?.id || "");
+    if (streakData) {
+      setStreak(streakData);
+      console.log(streakData, "streak data!");
+      console.log(streak, "streak data");
+    }
     if (user) {
       const series = await getAllSeries(user.id);
       setSeries(series || []);
@@ -56,8 +65,6 @@ export default function Subscriptions() {
     fetchSubscriptionData();
   }, []);
 
-  const [series, setSeries] = useState<SeriesType[]>([]);
-  const [loading, setLoading] = useState(true);
   return (
     <>
       <ScrollView
@@ -81,6 +88,17 @@ export default function Subscriptions() {
               </Text>
               <View style={styles.headerIconContainer}>
                 <Ionicons name="mail-unread" size={24} color={"#393E41"} />
+              </View>
+            </View>
+            <View style={styles.streakHeader}>
+              <Text style={styles.streakHeaderText}>
+                Current Login & Read Streak: {streak?.current_streak}
+              </Text>
+              <Text style={styles.streakHeaderText}>
+                Longest Streak: {streak?.longest_streak}
+              </Text>
+              <View style={styles.headerIconContainer}>
+                <Ionicons name="calendar" size={24} color={"#393E41"} />
               </View>
             </View>
             <View style={styles.subscriptionSection}>
@@ -116,6 +134,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  streakHeader: {
+    marginTop: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   artworksHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -124,6 +147,11 @@ const styles = StyleSheet.create({
   newInstallmentsHeader: {
     fontFamily: "QuicksandReg",
     fontSize: 20,
+    color: "#393E41",
+  },
+  streakHeaderText: {
+    fontFamily: "QuicksandReg",
+    fontSize: 16,
     color: "#393E41",
   },
   yourArtworks: {

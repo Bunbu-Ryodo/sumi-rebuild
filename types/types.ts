@@ -22,6 +22,13 @@ export type ReadingProgressType = {
     furthest_scroll_position: number; 
 }
 
+export type StreakType = {
+    id: number;
+    userid: string;
+    current_streak: number;
+    longest_streak: number;
+}
+
 export type ArtworkType = {
     id: number,
     userid: string,

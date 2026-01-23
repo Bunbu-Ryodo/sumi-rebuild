@@ -41,7 +41,10 @@ import {
   hideSeries,
   checkForSeries,
   updateSeriesDueDate,
+  updateStreak,
+  getStreak,
 } from "../../supabase_queries/subscriptions";
+import { setStreakChecking } from "../../supabase_queries/profiles";
 import { getUserSession } from "../../supabase_queries/auth.js";
 import supabase from "../../lib/supabase.js";
 import { lookUpUserProfile } from "../../supabase_queries/auth";
@@ -159,6 +162,8 @@ export default function EReader() {
   const [contentHeight, setContentHeight] = useState(0);
   const [viewHeight, setViewHeight] = useState(0);
   const [scrollPosition, setScrollPosition] = useState(0);
+  const [checkForStreak, setCheckForStreak] = useState(false);
+  const [currentStreak, setCurrentStreak] = useState(0);
   const webViewRef = useRef<WebView>(null);
 
   const injectedJavaScript = `
@@ -486,6 +491,19 @@ export default function EReader() {
   const generateSynopsis = () => callGrok("synopsis");
 
   const backToFeed = async () => {
+    if (checkForStreak) {
+      const streak = await updateStreak(userid, currentStreak + 1);
+      await setStreakChecking(userid, false);
+      setCheckForStreak(false);
+
+      if (streak) {
+        Toast.show({
+          type: "streakUp",
+          text1: "+1 to your reading streak!",
+        });
+      }
+    }
+
     await updateReadingProgress(
       userid,
       extract.id,
@@ -536,6 +554,15 @@ export default function EReader() {
     );
 
     const userProfile = await lookUpUserProfile(userId);
+
+    if (userProfile.checkForStreak) {
+      setCheckForStreak(true);
+    }
+
+    const streak = await getStreak(userId);
+    if (streak) {
+      setCurrentStreak(streak.current_streak);
+    }
 
     let duedate;
     if (userProfile.subscriptioninterval) {

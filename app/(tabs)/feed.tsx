@@ -25,7 +25,11 @@ import {
   getExtractByTextIdChapter,
   updateSubscription,
   appendExtractToSeries,
+  getStreak,
+  resetStreak,
+  createStreak,
 } from "../../supabase_queries/subscriptions";
+import { setStreakChecking } from "../../supabase_queries/profiles";
 import { ExtractType } from "../../types/types.js";
 import Extract from "../../components/extract";
 import {
@@ -89,7 +93,7 @@ export default function FeedScreen() {
           ref.current.close();
         }
       });
-    }, [extracts.length])
+    }, [extracts.length]),
   );
 
   useEffect(() => {
@@ -127,11 +131,39 @@ export default function FeedScreen() {
 
   const checkUserProfileStatus = async function (userId: string) {
     const userProfile = await lookUpUserProfile(userId);
+    const streak = await getStreak(userId);
+    if (!streak) {
+      console.log("Streak not found, creating new streak");
+      await createStreak(userId);
+    }
     if (!userProfile) {
       console.log("Profile not found, creating new profile");
       await createNewProfile(userId, new Date());
     } else if (userProfile) {
-      console.log("Profile found, setting login date and time");
+      const today = new Date();
+      const lastLogin = new Date(userProfile.lastLogin);
+      const daysDiff = Math.floor(
+        (today.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24),
+      );
+
+      if (daysDiff > 1) {
+        console.log("Streak broken, resetting streak count");
+
+        const streak = await getStreak(userId);
+        const currentStreak = streak ? streak.current_streak : 0;
+        const longestStreak = streak ? streak.longest_streak : 0;
+        if (currentStreak >= longestStreak) {
+          await resetStreak(userId, currentStreak);
+        } else {
+          await resetStreak(userId, longestStreak);
+        }
+        await setStreakChecking(userId, true);
+        console.log("Streak reset, checking for new streak");
+        //If last login is same day, do not check for streak
+      } else if (daysDiff === 0) {
+        await setStreakChecking(userId, false);
+        console.log("No neeed check for streak this session");
+      }
       await setLoginDateTime(userId, new Date());
     }
   };
@@ -155,7 +187,7 @@ export default function FeedScreen() {
       for (let i = 0; i < subscriptions.length; i++) {
         const extract = await getExtractByTextIdChapter(
           subscriptions[i].textid,
-          subscriptions[i].chapter
+          subscriptions[i].chapter,
         );
 
         if (!extract) {
@@ -186,7 +218,7 @@ export default function FeedScreen() {
             userId,
             subscriptions[i].id,
             extract,
-            dueDateMidnight
+            dueDateMidnight,
           );
 
           if (newInstalment) {
@@ -194,7 +226,7 @@ export default function FeedScreen() {
             const updatedSubscription = await updateSubscription(
               subscriptions[i].id,
               subscriptions[i].chapter + 1,
-              dueDateMidnight
+              dueDateMidnight,
             );
             if (updatedSubscription) {
               count++;

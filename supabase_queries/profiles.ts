@@ -13,3 +13,10 @@ export async function updateSubscriptionInterval(userId: string, interval: numbe
     console.log("Updated subscription interval")
   }
 }
+
+export async function setStreakChecking(userId: string, streakChecking: boolean){
+  const { error: fetchError } = await supabase
+    .from("profiles")
+    .update({checkForStreak: streakChecking})
+    .eq("user_id", userId)
+}
