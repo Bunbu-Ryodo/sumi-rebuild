@@ -108,7 +108,10 @@ export default function FeedScreen() {
         await checkUserProfileStatus(user.id);
         await initializeAdsConsent();
         await fetchExtracts();
-        await processSubscriptions(user.id);
+        setRefreshing(false);
+        processSubscriptions(user.id).catch((err) =>
+          console.error("Subscription processing error:", err),
+        );
       }
     };
     checkUserAuthenticated();
@@ -157,12 +160,7 @@ export default function FeedScreen() {
         } else {
           await resetStreak(userId, longestStreak);
         }
-        await setStreakChecking(userId, true);
         console.log("Streak reset, checking for new streak");
-        //If last login is same day, do not check for streak
-      } else if (daysDiff === 0) {
-        await setStreakChecking(userId, false);
-        console.log("No neeed check for streak this session");
       }
       await setLoginDateTime(userId, new Date());
     }
@@ -235,7 +233,7 @@ export default function FeedScreen() {
           }
         }
       }
-      setRefreshing(false);
+
       if (count > 0) {
         displayNewInstalmentsToast(count);
       }
@@ -245,7 +243,6 @@ export default function FeedScreen() {
   };
 
   const fetchExtracts = async function () {
-    setRefreshing(true);
     setAllExtractsDismissed(false);
 
     const shuffle = (array: ExtractType[]) => {
@@ -265,7 +262,6 @@ export default function FeedScreen() {
       console.log("No extracts found");
       setExtracts([]);
     }
-    setRefreshing(false);
   };
 
   // Refresh data is for testing, should only processSubscriptions on initial load on login
@@ -276,6 +272,7 @@ export default function FeedScreen() {
   //     await fetchExtracts();
   //     await processSubscriptions(user.id);
   //   }
+  //   setRefreshing(false);
   // };
 
   return (

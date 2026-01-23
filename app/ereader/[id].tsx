@@ -30,7 +30,7 @@ import {
   createReadingProgress,
   updateReadingProgress,
 } from "../../supabase_queries/extracts";
-import { ExtractType, QuoteType } from "../../types/types";
+import { ExtractType, QuoteType, StreakType } from "../../types/types";
 import {
   checkForSubscription,
   createSubscription,
@@ -162,8 +162,7 @@ export default function EReader() {
   const [contentHeight, setContentHeight] = useState(0);
   const [viewHeight, setViewHeight] = useState(0);
   const [scrollPosition, setScrollPosition] = useState(0);
-  const [checkForStreak, setCheckForStreak] = useState(false);
-  const [currentStreak, setCurrentStreak] = useState(0);
+  const [streak, setStreak] = useState<StreakType | null>(null);
   const webViewRef = useRef<WebView>(null);
 
   const injectedJavaScript = `
@@ -479,17 +478,35 @@ export default function EReader() {
   const generateChapterBulletPoints = () => callGrok("bullets");
   const generateSynopsis = () => callGrok("synopsis");
 
-  const backToFeed = async () => {
-    if (checkForStreak) {
-      const streak = await updateStreak(userid, currentStreak + 1);
-      await setStreakChecking(userid, false);
-      setCheckForStreak(false);
+  const isSameDay = (date1: Date, date2: Date): boolean => {
+    return (
+      date1.getFullYear() === date2.getFullYear() &&
+      date1.getMonth() === date2.getMonth() &&
+      date1.getDate() === date2.getDate()
+    );
+  };
 
-      if (streak) {
-        Toast.show({
-          type: "streakUp",
-          text1: "+1 to your reading streak!",
-        });
+  const backToFeed = async () => {
+    if (streak) {
+      const lastUpdated = streak.last_updated
+        ? new Date(streak?.last_updated)
+        : null;
+      const today = new Date();
+      if (lastUpdated !== null && isSameDay(lastUpdated, today)) {
+        console.log("Already ready today, streak not incremented");
+      } else {
+        console.log("Incrementing streak from", streak.current_streak);
+        const updatedStreak = await updateStreak(
+          userid,
+          streak.current_streak + 1,
+          new Date(),
+        );
+        if (updatedStreak) {
+          Toast.show({
+            type: "streakUp",
+            text1: "+1 to your reading streak!",
+          });
+        }
       }
     }
 
@@ -544,13 +561,9 @@ export default function EReader() {
 
     const userProfile = await lookUpUserProfile(userId);
 
-    if (userProfile.checkForStreak) {
-      setCheckForStreak(true);
-    }
-
-    const streak = await getStreak(userId);
-    if (streak) {
-      setCurrentStreak(streak.current_streak);
+    const currentStreak = await getStreak(userId);
+    if (currentStreak) {
+      setStreak(currentStreak);
     }
 
     let duedate;
@@ -1011,6 +1024,14 @@ export default function EReader() {
                 onPress={backToFeed}
               >
                 <Ionicons name="arrow-back" size={24} color="#8980F5" />
+                <Text
+                  style={[
+                    styles.shoppingText,
+                    warmth === 4 && { color: "#F6F7EB" },
+                  ]}
+                >
+                  Save Progress &amp;
+                </Text>
                 <Text
                   style={[
                     styles.shoppingText,

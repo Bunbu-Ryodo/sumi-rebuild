@@ -27,14 +27,14 @@ export async function createStreak(userId: string, username: string){
     return newStreak;
 }
 
-export async function updateStreak(userId: string, newStreakCount: number){
+export async function updateStreak(userId: string, newStreakCount: number, lastUpdated: Date){
   if(!userId || newStreakCount === undefined){
     throw new Error("Missing required parameters");
   }
 
   const { data: updatedStreaks, error } = await supabase
     .from('streaks')
-    .update({ current_streak: newStreakCount})
+    .update({ current_streak: newStreakCount, last_updated: lastUpdated })
     .eq('user_id', userId)
     .select()
     .single();

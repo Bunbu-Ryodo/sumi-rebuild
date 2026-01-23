@@ -73,7 +73,7 @@ export default function Leaderboards() {
           <View style={styles.leaderBoardHeader}>
             <Text style={styles.newInstallmentsHeader}>Global Leaderboard</Text>
             <View style={styles.headerIconContainer}>
-              <Ionicons name="trophy" size={24} color={"#393E41"} />
+              <Ionicons name="globe" size={24} color={"#393E41"} />
             </View>
           </View>
           <View
