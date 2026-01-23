@@ -95,7 +95,10 @@ export default function Subscriptions() {
                 Current Login & Read Streak: {streak?.current_streak}
               </Text>
               <Text style={styles.streakHeaderText}>
-                Longest Streak: {streak?.longest_streak}
+                Longest Streak:{" "}
+                {streak && streak.longest_streak > 0
+                  ? streak.longest_streak
+                  : streak?.current_streak}
               </Text>
               <View style={styles.headerIconContainer}>
                 <Ionicons name="calendar" size={24} color={"#393E41"} />

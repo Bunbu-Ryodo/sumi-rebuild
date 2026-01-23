@@ -160,12 +160,7 @@ export default function FeedScreen() {
         } else {
           await resetStreak(userId, longestStreak);
         }
-        await setStreakChecking(userId, true);
         console.log("Streak reset, checking for new streak");
-        //If last login is same day, do not check for streak
-      } else if (daysDiff === 0) {
-        await setStreakChecking(userId, false);
-        console.log("No neeed check for streak this session");
       }
       await setLoginDateTime(userId, new Date());
     }
