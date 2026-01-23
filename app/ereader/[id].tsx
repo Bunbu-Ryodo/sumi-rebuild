@@ -24,7 +24,12 @@ import React, {
   useState,
 } from "react";
 import { useRouter } from "expo-router";
-import { getExtract } from "../../supabase_queries/extracts";
+import {
+  getExtract,
+  checkForReadingProgress,
+  createReadingProgress,
+  updateReadingProgress,
+} from "../../supabase_queries/extracts";
 import { ExtractType, QuoteType } from "../../types/types";
 import {
   checkForSubscription,
@@ -153,6 +158,8 @@ export default function EReader() {
   const [readingProgress, setReadingProgress] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
   const [viewHeight, setViewHeight] = useState(0);
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const webViewRef = useRef<WebView>(null);
 
   const injectedJavaScript = `
   (function() {
@@ -222,7 +229,8 @@ export default function EReader() {
         case "scrollProgress":
           setReadingProgress(data.progress);
           if (data.progress > readingProgress) {
-            setReadingProgress(data.progress);
+            setReadingProgress(Math.floor(data.progress));
+            setScrollPosition(Math.floor(data.scrollTop));
           }
           break;
 
@@ -233,8 +241,15 @@ export default function EReader() {
             "Content dimensions",
           );
           console.log(data.clientHeight, "View height");
+
           setContentHeight(data.scrollHeight);
           setViewHeight(data.clientHeight);
+
+          if (scrollPosition > 0) {
+            webViewRef.current?.injectJavaScript(
+              `window.scrollTo(0, ${scrollPosition}); true;`,
+            );
+          }
           break;
       }
     } catch (error) {
@@ -470,7 +485,14 @@ export default function EReader() {
   const generateChapterBulletPoints = () => callGrok("bullets");
   const generateSynopsis = () => callGrok("synopsis");
 
-  const backToFeed = () => {
+  const backToFeed = async () => {
+    await updateReadingProgress(
+      userid,
+      extract.id,
+      Math.floor(readingProgress),
+      Math.floor(scrollPosition),
+    );
+
     router.push({
       pathname: "/feed",
     });
@@ -591,9 +613,24 @@ export default function EReader() {
     const user = await getUserSession();
     if (user) {
       setUserid(user.id);
+
       const extract = await getExtract(id);
 
       if (extract) {
+        const savedReadingProgress = await checkForReadingProgress(
+          user.id,
+          extract.id,
+        );
+
+        if (
+          savedReadingProgress &&
+          savedReadingProgress.furthest_scroll_position
+        ) {
+          setScrollPosition(savedReadingProgress.furthest_scroll_position);
+        } else if (!savedReadingProgress) {
+          await createReadingProgress(user.id, extract.id);
+        }
+
         const formattedExtract = {
           ...extract,
           fulltext: formatTextForHTML(extract.fulltext),
@@ -849,6 +886,7 @@ export default function EReader() {
               )}
               <View style={{ width: "100%" }}>
                 <WebView
+                  ref={webViewRef}
                   style={styles.webView}
                   originWhitelist={["*"]}
                   source={{
@@ -947,16 +985,12 @@ export default function EReader() {
                 )}
               </View>
             </View>
+            <View style={styles.readingProgressContainer}>
+              <Text style={styles.readingProgressText}>
+                {Math.floor(readingProgress)}% complete
+              </Text>
+            </View>
             <View style={styles.engagementButtons}>
-              {/* <TouchableOpacity onPress={toggleLike}>
-              <BounceView ref={heartRef}>
-                <Ionicons
-                  name={like ? "heart" : "heart-outline"}
-                  size={24}
-                  color="#D64045"
-                />
-              </BounceView>
-            </TouchableOpacity> */}
               <TouchableOpacity
                 style={styles.returnAnchor}
                 onPress={backToFeed}
@@ -1176,6 +1210,15 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     alignItems: "center",
     height: 100,
+  },
+  readingProgressContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+  },
+  readingProgressText: {
+    fontFamily: "EBGaramond",
+    fontSize: 18,
   },
   subscribeContainer: {
     alignItems: "center",

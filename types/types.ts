@@ -15,6 +15,13 @@ export type ExtractType = {
     totalchapters: number;
 }
 
+export type ReadingProgressType = {
+    id: number;
+    userid: string;
+    progress_percentage: number;
+    furthest_scroll_position: number; 
+}
+
 export type ArtworkType = {
     id: number,
     userid: string,
