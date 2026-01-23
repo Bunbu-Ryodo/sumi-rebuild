@@ -755,6 +755,7 @@ export default function EReader() {
     <>
       <ScrollView
         style={[styles.paper, { backgroundColor: brightnessHex[warmth] }]}
+        scrollEnabled={false}
       >
         {loading ? (
           <ActivityIndicator size="large" color="#393E41" />
@@ -917,6 +918,7 @@ export default function EReader() {
                   ref={webViewRef}
                   style={styles.webView}
                   originWhitelist={["*"]}
+                  scrollEnabled={true}
                   source={{
                     html: `
                       <html>
