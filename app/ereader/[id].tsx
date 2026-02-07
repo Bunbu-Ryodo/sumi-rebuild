@@ -979,7 +979,7 @@ export default function EReader() {
                           </style>
                         </head>
                         <body>
-                         ${thinking ? '<div class="argument-container"><div class="thinking-text">✨ Thinking...</div></div>' : ""}
+                         ${thinking ? '<div class="argument-container"><div class="thinking-text">Thinking...</div></div>' : ""}
                          ${argument && argument.length > 0 ? `<div class="argument-container"><div class="argument-text">${argument.replace(/\n/g, "<br>")}</div>${needsPremium ? '<a href="#settings" class="settings-link" onclick="window.ReactNativeWebView.postMessage(JSON.stringify({type: \'goToSettings\'})); return false;">Go To Settings</a>' : ""}</div>` : ""}
                           <div>
                             ${
