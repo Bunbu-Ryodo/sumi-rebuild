@@ -3,8 +3,10 @@ import { TouchableOpacity, Text, StyleSheet } from "react-native";
 import { useStripe, PaymentSheetError } from "@stripe/stripe-react-native";
 import { getUserSession, lookUpUserProfile } from "../supabase_queries/auth";
 import Toast from "react-native-toast-message";
+import { useRouter } from "expo-router";
 
 export default function UpgradeButton() {
+  const router = useRouter();
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
   const displaySubscribedToast = (message: string) => {
@@ -19,7 +21,6 @@ export default function UpgradeButton() {
       const user = await getUserSession();
       if (user) {
         const profile = await lookUpUserProfile(user.id);
-        console.log(profile.client_secret, "CLIENT SECRET");
         const { error } = await initPaymentSheet({
           paymentIntentClientSecret: profile?.client_secret,
           merchantDisplayName: "Sumi Rebuild",
@@ -46,6 +47,7 @@ export default function UpgradeButton() {
         } else {
           // Payment Succeeded
           displaySubscribedToast("Subscribed to Premium");
+          router.replace("/(tabs)/feed");
         }
       }}
     >

@@ -16,12 +16,18 @@ import {
   updateUsername,
 } from "../../supabase_queries/settings";
 import { getUserSession, lookUpUserProfile } from "../../supabase_queries/auth";
+import {
+  hasActivePremiumSubscription,
+  getSubscriptionCancellationInfo,
+} from "../../supabase_queries/auth";
 import { changeUserNameOnStreak } from "../../supabase_queries/subscriptions";
 import supabase from "../../lib/supabase.js";
 import { updateSubscriptionInterval } from "../../supabase_queries/profiles";
 import Toast from "react-native-toast-message";
 import { AdsConsent } from "react-native-google-mobile-ads";
 import UpgradeButton from "../../components/upgrade";
+import CancelButton from "../../components/cancel";
+import ReactivateButton from "../../components/reactivate";
 
 export default function Settings() {
   const router = useRouter();
@@ -39,6 +45,9 @@ export default function Settings() {
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [premium, setPremium] = useState(false);
+  const [deactivated, setDeactivated] = useState(false);
+  const [cancelAt, setCancelAt] = useState<Date | null>(null);
 
   const displayToast = (message: string) => {
     Toast.show({
@@ -63,6 +72,13 @@ export default function Settings() {
           setUsername(profile.username);
           setReaderTag(profile.readertag);
           setInterval(profile.subscriptioninterval);
+          const subscription = await hasActivePremiumSubscription(user.id);
+          const cancellationInfo = await getSubscriptionCancellationInfo(
+            user.id,
+          );
+          setPremium(subscription);
+          setDeactivated(cancellationInfo?.willCancel || false);
+          setCancelAt(cancellationInfo?.cancelAt || null);
         }
         setLoading(false);
       }
@@ -259,7 +275,21 @@ export default function Settings() {
                 Manage Privacy Settings
               </Text>
             </TouchableOpacity>
-            <UpgradeButton />
+            {deactivated ? (
+              <>
+                <Text style={styles.selectedText}>
+                  Subscription will cancel on{" "}
+                  {cancelAt
+                    ? new Date(cancelAt).toLocaleDateString()
+                    : "Unknown"}
+                </Text>
+                <ReactivateButton />
+              </>
+            ) : !premium && !deactivated ? (
+              <UpgradeButton />
+            ) : (
+              <CancelButton />
+            )}
 
             <TouchableOpacity style={styles.logoutButton} onPress={Logout}>
               <Text style={styles.logoutButtonText}>Logout</Text>
@@ -489,7 +519,9 @@ const styles = StyleSheet.create({
   selectedText: {
     marginTop: 16,
     fontSize: 16,
-    color: "#393E41",
+    color: "#F6F7EB",
+    fontFamily: "QuicksandReg",
+    textAlign: "center",
   },
   subscriptionFrequencyLabel: {
     fontSize: 16,

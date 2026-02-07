@@ -18,6 +18,7 @@ import {
   lookUpUserProfile,
   getUserSession,
   setLoginDateTime,
+  updateUserProfileSubscription,
 } from "../../supabase_queries/auth.js";
 import { getExtracts } from "../../supabase_queries/feed";
 import {
@@ -157,8 +158,7 @@ export default function FeedScreen() {
 
       if (customerError) throw customerError;
 
-      console.log("Customer created:", customerData);
-      const subscriptionData = await createSubscription(customerData);
+      const subscriptionData = await createSubscription(customerData.id);
 
       const { id } = customerData;
       const { subscriptionId, status, clientSecret } = subscriptionData || {};
@@ -175,7 +175,7 @@ export default function FeedScreen() {
     }
   };
 
-  const createSubscription = async (customerData: any) => {
+  const createSubscription = async (customerId: string) => {
     try {
       const { data: session } = await supabase.auth.getSession();
 
@@ -186,7 +186,7 @@ export default function FeedScreen() {
       const { data: subscriptionData, error: subscriptionError } =
         await supabase.functions.invoke("create-subscription", {
           body: {
-            customerId: customerData.id,
+            customerId: customerId,
           },
           headers: {
             Authorization: `Bearer ${session.session.access_token}`,
@@ -195,7 +195,6 @@ export default function FeedScreen() {
 
       if (subscriptionError) throw subscriptionError;
 
-      console.log("Subscription created:", subscriptionData);
       return subscriptionData;
     } catch (error) {
       console.error("Error creating subscription:", error);
@@ -225,6 +224,17 @@ export default function FeedScreen() {
         data?.clientSecret,
       );
     } else if (userProfile) {
+      if (userProfile.subscription_status == "cancelled") {
+        console.log("Subscription cancelled, creating new subscription");
+        const { subscriptionId, status, clientSecret } =
+          await createSubscription(userProfile.stripe_customer_id);
+        await updateUserProfileSubscription(
+          userId,
+          subscriptionId,
+          status,
+          clientSecret,
+        );
+      }
       const today = new Date();
       const lastLogin = new Date(userProfile.lastLogin);
       const daysDiff = Math.floor(

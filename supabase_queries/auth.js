@@ -20,6 +20,55 @@ const { data: userProfile, error } = await supabase
   return userProfile;
 }
 
+export async function getSubscriptionCancellationInfo(user_id) {
+  const profile = await lookUpUserProfile(user_id);
+  
+  if (!profile) return null;
+  
+  return {
+    willCancel: profile.cancel_at_period_end === true,
+    cancelAt: profile.cancel_at, // Timestamp when it will cancel
+    status: profile.subscription_status
+  };
+}
+
+export async function cancelSubscriptionAtPeriodEnd(user_id, cancel_at){
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ cancel_at_period_end: true, cancel_at: cancel_at})
+    .eq('user_id', user_id)
+    .select();
+
+    if(error){
+      console.error('Error setting subscription to cancel at period end:', error.message);
+      return null;
+    }
+
+    return data;
+}
+
+export async function uncancelSubscription(user_id){
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ cancel_at_period_end: false, cancel_at: null})
+    .eq('user_id', user_id)
+    .select();
+}
+
+export async function updateUserProfileSubscription(user_id, subscription_id, subscription_status, client_secret){
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ subscription_id: subscription_id, subscription_status: subscription_status, client_secret: client_secret })
+    .eq('user_id', user_id)
+    .select();
+
+  if (error) {
+    console.error('Error updating user profile subscription:', error.message);
+    return null;
+  }
+  return data;
+}
+
 export async function hasActivePremiumSubscription(user_id) {
   const profile = await lookUpUserProfile(user_id);
   
@@ -27,6 +76,15 @@ export async function hasActivePremiumSubscription(user_id) {
   
   const activeStatuses = ['active', 'trialing'];
   return activeStatuses.includes(profile.subscription_status);
+}
+
+export async function willCancelAtPeriodEnd(user_id) {
+  const profile = await lookUpUserProfile(user_id);
+  
+  if (!profile) return false;
+  
+  // Check if cancel_at_period_end field exists and is true
+  return profile.cancel_at_period_end === true;
 }
 
 export async function lookUpUserProfile(user_id){
