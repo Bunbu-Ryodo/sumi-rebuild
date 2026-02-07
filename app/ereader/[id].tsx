@@ -970,8 +970,8 @@ export default function EReader() {
                               display: inline-block;
                               margin-top: 12px;
                               padding: 8px 16px;
-                              background-color: #8980F5;
-                              color: white;
+                              background-color: #FE7F2D;
+                              color: #393E41;
                               text-decoration: none;
                               border-radius: 6px;
                               font-family: 'Georgia', serif;
