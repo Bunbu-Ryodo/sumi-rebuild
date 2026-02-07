@@ -21,8 +21,7 @@ import supabase from "../../lib/supabase.js";
 import { updateSubscriptionInterval } from "../../supabase_queries/profiles";
 import Toast from "react-native-toast-message";
 import { AdsConsent } from "react-native-google-mobile-ads";
-import { useStripe, PaymentSheetError } from "@stripe/stripe-react-native";
-const { initPaymentSheet, presentPaymentSheet } = useStripe();
+import UpgradeButton from "../../components/upgrade";
 
 export default function Settings() {
   const router = useRouter();
@@ -117,95 +116,6 @@ export default function Settings() {
       displayErrorToast("Error updating password");
     }
   };
-
-  const createCustomer = async () => {
-    try {
-      const { data: session } = await supabase.auth.getSession();
-
-      if (!session?.session?.access_token) {
-        throw new Error("No valid session");
-      }
-
-      const { data: customerData, error: customerError } =
-        await supabase.functions.invoke("create-customer", {
-          headers: {
-            Authorization: `Bearer ${session.session.access_token}`,
-          },
-        });
-
-      if (customerError) throw customerError;
-
-      console.log("Customer created:", customerData);
-      const subscription = await createSubscription(customerData);
-
-      if (subscription && subscription.clientSecret) {
-        const initializePaymentSheet = async () => {
-          const { error: initPaymentSheetError } = await initPaymentSheet({
-            paymentIntentClientSecret: subscription.clientSecret,
-            returnURL: "sumirebuild://settings",
-            merchantDisplayName: "",
-          });
-
-          if (initPaymentSheetError) {
-            console.error(
-              "Error initializing payment sheet:",
-              initPaymentSheetError,
-            );
-            displayErrorToast(
-              "Failed to initialize payment sheet. Please try again.",
-            );
-          }
-
-          await initializePaymentSheet();
-          const { error: presentPaymentSheetError } =
-            await presentPaymentSheet();
-          if (presentPaymentSheetError) {
-            console.error(
-              "Error presenting payment sheet:",
-              presentPaymentSheetError,
-            );
-            displayErrorToast(
-              "Failed to present payment sheet. Please try again.",
-            );
-          }
-        };
-      }
-    } catch (error) {
-      console.error("Error creating customer:", error);
-      displayErrorToast("Failed to create customer. Please try again.");
-    }
-  };
-
-  const createSubscription = async (customerData: any) => {
-    try {
-      const { data: session } = await supabase.auth.getSession();
-
-      if (!session?.session?.access_token) {
-        throw new Error("No valid session");
-      }
-
-      const { data: subscriptionData, error: subscriptionError } =
-        await supabase.functions.invoke("create-subscription", {
-          body: {
-            customerId: customerData.id,
-          },
-          headers: {
-            Authorization: `Bearer ${session.session.access_token}`,
-          },
-        });
-
-      if (subscriptionError) throw subscriptionError;
-
-      console.log("Subscription created:", subscriptionData);
-      return subscriptionData;
-    } catch (error) {
-      console.error("Error creating subscription:", error);
-      displayErrorToast("Failed to create subscription. Please try again.");
-      return null;
-    }
-  };
-
-  async function SubscribeView(clientSecret: any) {}
 
   const handleConsent = async () => {
     try {
@@ -349,12 +259,7 @@ export default function Settings() {
                 Manage Privacy Settings
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.premiumButton}
-              onPress={createCustomer}
-            >
-              <Text style={styles.premiumButtonText}>Upgrade to Premium</Text>
-            </TouchableOpacity>
+            <UpgradeButton />
 
             <TouchableOpacity style={styles.logoutButton} onPress={Logout}>
               <Text style={styles.logoutButtonText}>Logout</Text>
