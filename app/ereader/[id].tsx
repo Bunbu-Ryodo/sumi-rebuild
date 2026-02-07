@@ -45,7 +45,10 @@ import {
   getStreak,
 } from "../../supabase_queries/subscriptions";
 import { setStreakChecking } from "../../supabase_queries/profiles";
-import { getUserSession } from "../../supabase_queries/auth.js";
+import {
+  getUserSession,
+  hasActivePremiumSubscription,
+} from "../../supabase_queries/auth.js";
 import supabase from "../../lib/supabase.js";
 import { lookUpUserProfile } from "../../supabase_queries/auth";
 import {
@@ -66,6 +69,7 @@ import {
   saveMarginalia,
 } from "../../supabase_queries/marginalia";
 import Toast from "react-native-toast-message";
+import Upgrade from "../../components/upgrade";
 
 let adUnitId = "";
 
@@ -163,6 +167,7 @@ export default function EReader() {
   const [viewHeight, setViewHeight] = useState(0);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [streak, setStreak] = useState<StreakType | null>(null);
+  const [needsPremium, setNeedsPremium] = useState(false);
   const webViewRef = useRef<WebView>(null);
 
   const injectedJavaScript = `
@@ -449,10 +454,18 @@ export default function EReader() {
     try {
       const { data: session } = await supabase.auth.getSession();
 
-      console.log(session, "SESSION");
-
       if (!session?.session?.access_token) {
         throw new Error("No valid session");
+      }
+
+      const hasSubscription = await hasActivePremiumSubscription(userid);
+
+      if (!hasSubscription) {
+        setArgument(
+          "Upgrade to Premium to unlock Grok-powered reading assists!",
+        );
+        setNeedsPremium(true);
+        return;
       }
 
       const { data, error } = await supabase.functions.invoke("ai-summary", {
@@ -522,6 +535,10 @@ export default function EReader() {
     router.push({
       pathname: "/feed",
     });
+  };
+
+  const toSettings = async () => {
+    router.push("/settings");
   };
 
   const fontUp = () => {
@@ -888,6 +905,15 @@ export default function EReader() {
                       </Text>
                     </Animated.View>
                   )}
+
+                  {needsPremium && (
+                    <TouchableOpacity onPress={toSettings}>
+                      <Text style={styles.goToSettingsText}>
+                        Go To Settings
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+
                   {/* <View
                     style={{
                       flexDirection: "row",
@@ -1214,6 +1240,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#393E41",
     width: "100%",
     height: "100%",
+  },
+  goToSettingsText: {
+    marginTop: 8,
+    color: "#F6F7EB",
+    textDecorationLine: "underline",
+    fontFamily: "QuicksandReg",
+    fontSize: 16,
   },
   titleBar: {
     alignItems: "center",

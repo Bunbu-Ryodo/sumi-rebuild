@@ -14,7 +14,6 @@ export default function UpgradeButton() {
         console.log(profile.client_secret, "CLIENT SECRET");
         const { error } = await initPaymentSheet({
           paymentIntentClientSecret: profile?.client_secret,
-          returnURL: "sumirebuild://settings",
           merchantDisplayName: "Sumi Rebuild",
         });
 
