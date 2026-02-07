@@ -1,25 +1,20 @@
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
 import Toast from "react-native-toast-message";
 import supabase from "../lib/supabase";
-import {
-  getUserSession,
-  lookUpUserProfile,
-  uncancelSubscription,
-} from "../supabase_queries/auth";
+import { getUserSession, lookUpUserProfile } from "../supabase_queries/auth";
 import { useRouter } from "expo-router";
 
 export default function ReactivateButton() {
   const router = useRouter();
   const reactivateSubscription = async () => {
-    const user = await getUserSession();
     const { data: session } = await supabase.auth.getSession();
 
     if (!session?.session?.access_token) {
       throw new Error("No valid session");
     }
 
-    if (user) {
-      const profile = await lookUpUserProfile(user.id);
+    if (session.session.user.id) {
+      const profile = await lookUpUserProfile(session.session.user.id);
       const { data } = await supabase.functions.invoke(
         "reactivate-subscription",
         {
@@ -60,7 +55,7 @@ export default function ReactivateButton() {
 
 const styles = StyleSheet.create({
   cancelButton: {
-    backgroundColor: "#FE7F2D",
+    backgroundColor: "#77966D",
     paddingVertical: 16,
     borderRadius: 8,
     alignItems: "center",
@@ -68,7 +63,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   cancelButtonText: {
-    color: "#393E41",
+    color: "#F6F7EB",
     fontFamily: "QuicksandReg",
     fontSize: 16,
   },

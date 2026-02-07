@@ -21,10 +21,9 @@ export default function Index() {
   const router = useRouter();
 
   const taglines = [
-    "Just one more chapter",
-    "Guilt-free screen time",
-    "A virtuous cycle of scrolling",
-    "Smarter every break",
+    "ひと休みする!",
+    "Your new feed...",
+    "...Flooded with the Great Books",
   ];
 
   useEffect(() => {
