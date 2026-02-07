@@ -9,6 +9,7 @@ import { StatusBar } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Toast from "react-native-toast-message";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import StripeProvider from "../components/stripe-provider";
 
 const SupabaseContext = createContext(supabase);
 
@@ -245,70 +246,72 @@ export default function RootLayout() {
   };
 
   return (
-    <SupabaseContext.Provider value={supabase}>
-      <GestureHandlerRootView>
-        <StatusBar backgroundColor="#393E41" barStyle="light-content" />
-        <Stack>
-          <Stack.Screen
-            name="index"
-            options={{ headerShown: false }}
-          ></Stack.Screen>
-          <Stack.Screen
-            name="register"
-            options={{ headerShown: false }}
-          ></Stack.Screen>
-          <Stack.Screen
-            name="passwordreset"
-            options={{ headerShown: false }}
-          ></Stack.Screen>
-          <Stack.Screen
-            name="changepassword"
-            options={{ headerShown: false }}
-          ></Stack.Screen>
-          <Stack.Screen
-            name="leaderboards"
-            options={{ headerShown: false }}
-          ></Stack.Screen>
-          <Stack.Screen
-            name="ereader/[id]"
-            options={{ headerShown: false }}
-          ></Stack.Screen>
-          <Stack.Screen
-            name="view_artwork/[id]"
-            options={{
-              headerShown: true,
-              title: "View Artwork",
-              headerStyle: {
-                backgroundColor: "#393E41",
-              },
-              headerTitleStyle: {
-                fontFamily: "QuicksandReg",
-                color: "#F6F7EB",
-              },
-              headerTintColor: "#F6F7EB",
-              headerShadowVisible: false,
-            }}
-          ></Stack.Screen>
-          <Stack.Screen
-            name="view_quote/[id]"
-            options={{
-              headerShown: true,
-              title: "View Quote",
-              headerStyle: {
-                backgroundColor: "#393E41",
-              },
-              headerTitleStyle: {
-                fontFamily: "QuicksandReg",
-                color: "#F6F7EB",
-              },
-              headerTintColor: "#F6F7EB",
-              headerShadowVisible: false,
-            }}
-          ></Stack.Screen>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        </Stack>
-        <Toast config={toastConfig} />
-      </GestureHandlerRootView>
-    </SupabaseContext.Provider>
+    <StripeProvider>
+      <SupabaseContext.Provider value={supabase}>
+        <GestureHandlerRootView>
+          <StatusBar backgroundColor="#393E41" barStyle="light-content" />
+          <Stack>
+            <Stack.Screen
+              name="index"
+              options={{ headerShown: false }}
+            ></Stack.Screen>
+            <Stack.Screen
+              name="register"
+              options={{ headerShown: false }}
+            ></Stack.Screen>
+            <Stack.Screen
+              name="passwordreset"
+              options={{ headerShown: false }}
+            ></Stack.Screen>
+            <Stack.Screen
+              name="changepassword"
+              options={{ headerShown: false }}
+            ></Stack.Screen>
+            <Stack.Screen
+              name="leaderboards"
+              options={{ headerShown: false }}
+            ></Stack.Screen>
+            <Stack.Screen
+              name="ereader/[id]"
+              options={{ headerShown: false }}
+            ></Stack.Screen>
+            <Stack.Screen
+              name="view_artwork/[id]"
+              options={{
+                headerShown: true,
+                title: "View Artwork",
+                headerStyle: {
+                  backgroundColor: "#393E41",
+                },
+                headerTitleStyle: {
+                  fontFamily: "QuicksandReg",
+                  color: "#F6F7EB",
+                },
+                headerTintColor: "#F6F7EB",
+                headerShadowVisible: false,
+              }}
+            ></Stack.Screen>
+            <Stack.Screen
+              name="view_quote/[id]"
+              options={{
+                headerShown: true,
+                title: "View Quote",
+                headerStyle: {
+                  backgroundColor: "#393E41",
+                },
+                headerTitleStyle: {
+                  fontFamily: "QuicksandReg",
+                  color: "#F6F7EB",
+                },
+                headerTintColor: "#F6F7EB",
+                headerShadowVisible: false,
+              }}
+            ></Stack.Screen>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          </Stack>
+          <Toast config={toastConfig} />
+        </GestureHandlerRootView>
+      </SupabaseContext.Provider>
+    </StripeProvider>
   );
 }

@@ -21,6 +21,8 @@ import supabase from "../../lib/supabase.js";
 import { updateSubscriptionInterval } from "../../supabase_queries/profiles";
 import Toast from "react-native-toast-message";
 import { AdsConsent } from "react-native-google-mobile-ads";
+import { useStripe, PaymentSheetError } from "@stripe/stripe-react-native";
+const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
 export default function Settings() {
   const router = useRouter();
@@ -115,6 +117,95 @@ export default function Settings() {
       displayErrorToast("Error updating password");
     }
   };
+
+  const createCustomer = async () => {
+    try {
+      const { data: session } = await supabase.auth.getSession();
+
+      if (!session?.session?.access_token) {
+        throw new Error("No valid session");
+      }
+
+      const { data: customerData, error: customerError } =
+        await supabase.functions.invoke("create-customer", {
+          headers: {
+            Authorization: `Bearer ${session.session.access_token}`,
+          },
+        });
+
+      if (customerError) throw customerError;
+
+      console.log("Customer created:", customerData);
+      const subscription = await createSubscription(customerData);
+
+      if (subscription && subscription.clientSecret) {
+        const initializePaymentSheet = async () => {
+          const { error: initPaymentSheetError } = await initPaymentSheet({
+            paymentIntentClientSecret: subscription.clientSecret,
+            returnURL: "sumirebuild://settings",
+            merchantDisplayName: "",
+          });
+
+          if (initPaymentSheetError) {
+            console.error(
+              "Error initializing payment sheet:",
+              initPaymentSheetError,
+            );
+            displayErrorToast(
+              "Failed to initialize payment sheet. Please try again.",
+            );
+          }
+
+          await initializePaymentSheet();
+          const { error: presentPaymentSheetError } =
+            await presentPaymentSheet();
+          if (presentPaymentSheetError) {
+            console.error(
+              "Error presenting payment sheet:",
+              presentPaymentSheetError,
+            );
+            displayErrorToast(
+              "Failed to present payment sheet. Please try again.",
+            );
+          }
+        };
+      }
+    } catch (error) {
+      console.error("Error creating customer:", error);
+      displayErrorToast("Failed to create customer. Please try again.");
+    }
+  };
+
+  const createSubscription = async (customerData: any) => {
+    try {
+      const { data: session } = await supabase.auth.getSession();
+
+      if (!session?.session?.access_token) {
+        throw new Error("No valid session");
+      }
+
+      const { data: subscriptionData, error: subscriptionError } =
+        await supabase.functions.invoke("create-subscription", {
+          body: {
+            customerId: customerData.id,
+          },
+          headers: {
+            Authorization: `Bearer ${session.session.access_token}`,
+          },
+        });
+
+      if (subscriptionError) throw subscriptionError;
+
+      console.log("Subscription created:", subscriptionData);
+      return subscriptionData;
+    } catch (error) {
+      console.error("Error creating subscription:", error);
+      displayErrorToast("Failed to create subscription. Please try again.");
+      return null;
+    }
+  };
+
+  async function SubscribeView(clientSecret: any) {}
 
   const handleConsent = async () => {
     try {
@@ -258,59 +349,12 @@ export default function Settings() {
                 Manage Privacy Settings
               </Text>
             </TouchableOpacity>
-
-            {/* Feedback Form */}
-            {/* <Text style={styles.feedbackSectionTitle}>Send Feedback</Text>
-            <Text style={styles.feedbackDescription}>
-              Help us improve by sending your feedback to support@sumi.club
-            </Text>
-
-            <Text style={styles.formLabel}>Your Name</Text>
-            <TextInput
-              style={styles.formInput}
-              value={feedbackName}
-              onChangeText={setFeedbackName}
-              placeholder="Enter your name"
-              placeholderTextColor="#B0B0B0"
-            />
-
-            <Text style={styles.formLabel}>Email Address</Text>
-            <TextInput
-              style={styles.formInput}
-              value={feedbackEmail}
-              onChangeText={setFeedbackEmail}
-              placeholder="Enter your email address"
-              placeholderTextColor="#B0B0B0"
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-
-            <Text style={styles.formLabel}>Message</Text>
-            <TextInput
-              style={[styles.formInput, styles.feedbackTextarea]}
-              value={feedbackMessage}
-              onChangeText={setFeedbackMessage}
-              placeholder="Tell us what you think, report bugs, or suggest improvements..."
-              placeholderTextColor="#B0B0B0"
-              multiline={true}
-              numberOfLines={6}
-              textAlignVertical="top"
-            />
-
             <TouchableOpacity
-              style={[
-                styles.feedbackButton,
-                feedbackLoading && styles.disabledButton,
-              ]}
-              onPress={sendFeedback}
-              disabled={feedbackLoading}
+              style={styles.premiumButton}
+              onPress={createCustomer}
             >
-              {feedbackLoading ? (
-                <ActivityIndicator size="small" color="#393E41" />
-              ) : (
-                <Text style={styles.feedbackButtonText}>Send Feedback</Text>
-              )}
-            </TouchableOpacity> */}
+              <Text style={styles.premiumButtonText}>Upgrade to Premium</Text>
+            </TouchableOpacity>
 
             <TouchableOpacity style={styles.logoutButton} onPress={Logout}>
               <Text style={styles.logoutButtonText}>Logout</Text>
@@ -569,6 +613,20 @@ const styles = StyleSheet.create({
     fontFamily: "QuicksandReg",
     fontSize: 16,
   },
+  premiumButton: {
+    backgroundColor: "#FE7F2D",
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    width: "100%",
+    marginTop: 12,
+  },
+  premiumButtonText: {
+    color: "#393E41",
+    fontFamily: "QuicksandReg",
+    fontSize: 16,
+  },
+
   logoutButtonText: {
     color: "#FFF",
     fontFamily: "QuicksandReg",

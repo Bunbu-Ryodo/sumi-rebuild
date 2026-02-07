@@ -449,6 +449,8 @@ export default function EReader() {
     try {
       const { data: session } = await supabase.auth.getSession();
 
+      console.log(session, "SESSION");
+
       if (!session?.session?.access_token) {
         throw new Error("No valid session");
       }
