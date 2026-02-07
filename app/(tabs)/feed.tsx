@@ -18,6 +18,7 @@ import {
   lookUpUserProfile,
   getUserSession,
   setLoginDateTime,
+  updateUserProfileSubscription,
 } from "../../supabase_queries/auth.js";
 import { getExtracts } from "../../supabase_queries/feed";
 import {
@@ -42,6 +43,7 @@ import { useRef } from "react";
 import { useFocusEffect } from "expo-router";
 import Toast from "react-native-toast-message";
 import { AdsConsent, AdsConsentStatus } from "react-native-google-mobile-ads";
+import supabase from "../../lib/supabase.js";
 
 let adUnitId = "";
 
@@ -75,6 +77,13 @@ export default function FeedScreen() {
     Toast.show({
       type: "newInstalments",
       text1: `${count} new instalment${count > 1 ? "s" : ""}!`,
+    });
+  };
+
+  const displayErrorToast = (message: string) => {
+    Toast.show({
+      type: "settingsUpdateError",
+      text1: message,
     });
   };
 
@@ -132,6 +141,68 @@ export default function FeedScreen() {
     }
   };
 
+  const createCustomer = async () => {
+    try {
+      const { data: session } = await supabase.auth.getSession();
+
+      if (!session?.session?.access_token) {
+        throw new Error("No valid session");
+      }
+
+      const { data: customerData, error: customerError } =
+        await supabase.functions.invoke("create-customer", {
+          headers: {
+            Authorization: `Bearer ${session.session.access_token}`,
+          },
+        });
+
+      if (customerError) throw customerError;
+
+      const subscriptionData = await createSubscription(customerData.id);
+
+      const { id } = customerData;
+      const { subscriptionId, status, clientSecret } = subscriptionData || {};
+
+      return {
+        id: id,
+        subscriptionId: subscriptionId,
+        status: status,
+        clientSecret: clientSecret,
+      };
+    } catch (error) {
+      console.error("Error creating customer:", error);
+      displayErrorToast("Failed to create customer. Please try again.");
+    }
+  };
+
+  const createSubscription = async (customerId: string) => {
+    try {
+      const { data: session } = await supabase.auth.getSession();
+
+      if (!session?.session?.access_token) {
+        throw new Error("No valid session");
+      }
+
+      const { data: subscriptionData, error: subscriptionError } =
+        await supabase.functions.invoke("create-subscription", {
+          body: {
+            customerId: customerId,
+          },
+          headers: {
+            Authorization: `Bearer ${session.session.access_token}`,
+          },
+        });
+
+      if (subscriptionError) throw subscriptionError;
+
+      return subscriptionData;
+    } catch (error) {
+      console.error("Error creating subscription:", error);
+      displayErrorToast("Failed to create subscription. Please try again.");
+      return null;
+    }
+  };
+
   const checkUserProfileStatus = async function (userId: string) {
     const userProfile = await lookUpUserProfile(userId);
     const streak = await getStreak(userId);
@@ -141,8 +212,29 @@ export default function FeedScreen() {
     }
     if (!userProfile) {
       console.log("Profile not found, creating new profile");
-      await createNewProfile(userId, new Date());
+      const data = await createCustomer();
+      console.log("Customer and subscription data:", data);
+
+      await createNewProfile(
+        userId,
+        new Date(),
+        data?.id,
+        data?.subscriptionId,
+        data?.status,
+        data?.clientSecret,
+      );
     } else if (userProfile) {
+      if (userProfile.subscription_status == "cancelled") {
+        console.log("Subscription cancelled, creating new subscription");
+        const { subscriptionId, status, clientSecret } =
+          await createSubscription(userProfile.stripe_customer_id);
+        await updateUserProfileSubscription(
+          userId,
+          subscriptionId,
+          status,
+          clientSecret,
+        );
+      }
       const today = new Date();
       const lastLogin = new Date(userProfile.lastLogin);
       const daysDiff = Math.floor(

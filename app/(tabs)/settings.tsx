@@ -16,11 +16,18 @@ import {
   updateUsername,
 } from "../../supabase_queries/settings";
 import { getUserSession, lookUpUserProfile } from "../../supabase_queries/auth";
+import {
+  hasActivePremiumSubscription,
+  getSubscriptionCancellationInfo,
+} from "../../supabase_queries/auth";
 import { changeUserNameOnStreak } from "../../supabase_queries/subscriptions";
 import supabase from "../../lib/supabase.js";
 import { updateSubscriptionInterval } from "../../supabase_queries/profiles";
 import Toast from "react-native-toast-message";
 import { AdsConsent } from "react-native-google-mobile-ads";
+import UpgradeButton from "../../components/upgrade";
+import CancelButton from "../../components/cancel";
+import ReactivateButton from "../../components/reactivate";
 
 export default function Settings() {
   const router = useRouter();
@@ -38,6 +45,9 @@ export default function Settings() {
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [premium, setPremium] = useState(false);
+  const [deactivated, setDeactivated] = useState(false);
+  const [cancelAt, setCancelAt] = useState<Date | null>(null);
 
   const displayToast = (message: string) => {
     Toast.show({
@@ -62,6 +72,13 @@ export default function Settings() {
           setUsername(profile.username);
           setReaderTag(profile.readertag);
           setInterval(profile.subscriptioninterval);
+          const subscription = await hasActivePremiumSubscription(user.id);
+          const cancellationInfo = await getSubscriptionCancellationInfo(
+            user.id,
+          );
+          setPremium(subscription);
+          setDeactivated(cancellationInfo?.willCancel || false);
+          setCancelAt(cancellationInfo?.cancelAt || null);
         }
         setLoading(false);
       }
@@ -258,59 +275,21 @@ export default function Settings() {
                 Manage Privacy Settings
               </Text>
             </TouchableOpacity>
-
-            {/* Feedback Form */}
-            {/* <Text style={styles.feedbackSectionTitle}>Send Feedback</Text>
-            <Text style={styles.feedbackDescription}>
-              Help us improve by sending your feedback to support@sumi.club
-            </Text>
-
-            <Text style={styles.formLabel}>Your Name</Text>
-            <TextInput
-              style={styles.formInput}
-              value={feedbackName}
-              onChangeText={setFeedbackName}
-              placeholder="Enter your name"
-              placeholderTextColor="#B0B0B0"
-            />
-
-            <Text style={styles.formLabel}>Email Address</Text>
-            <TextInput
-              style={styles.formInput}
-              value={feedbackEmail}
-              onChangeText={setFeedbackEmail}
-              placeholder="Enter your email address"
-              placeholderTextColor="#B0B0B0"
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-
-            <Text style={styles.formLabel}>Message</Text>
-            <TextInput
-              style={[styles.formInput, styles.feedbackTextarea]}
-              value={feedbackMessage}
-              onChangeText={setFeedbackMessage}
-              placeholder="Tell us what you think, report bugs, or suggest improvements..."
-              placeholderTextColor="#B0B0B0"
-              multiline={true}
-              numberOfLines={6}
-              textAlignVertical="top"
-            />
-
-            <TouchableOpacity
-              style={[
-                styles.feedbackButton,
-                feedbackLoading && styles.disabledButton,
-              ]}
-              onPress={sendFeedback}
-              disabled={feedbackLoading}
-            >
-              {feedbackLoading ? (
-                <ActivityIndicator size="small" color="#393E41" />
-              ) : (
-                <Text style={styles.feedbackButtonText}>Send Feedback</Text>
-              )}
-            </TouchableOpacity> */}
+            {deactivated ? (
+              <>
+                <Text style={styles.selectedText}>
+                  Subscription will cancel on{" "}
+                  {cancelAt
+                    ? new Date(cancelAt).toLocaleDateString()
+                    : "Unknown"}
+                </Text>
+                <ReactivateButton />
+              </>
+            ) : !premium && !deactivated ? (
+              <UpgradeButton />
+            ) : (
+              <CancelButton />
+            )}
 
             <TouchableOpacity style={styles.logoutButton} onPress={Logout}>
               <Text style={styles.logoutButtonText}>Logout</Text>
@@ -540,7 +519,9 @@ const styles = StyleSheet.create({
   selectedText: {
     marginTop: 16,
     fontSize: 16,
-    color: "#393E41",
+    color: "#F6F7EB",
+    fontFamily: "QuicksandReg",
+    textAlign: "center",
   },
   subscriptionFrequencyLabel: {
     fontSize: 16,
@@ -569,6 +550,20 @@ const styles = StyleSheet.create({
     fontFamily: "QuicksandReg",
     fontSize: 16,
   },
+  premiumButton: {
+    backgroundColor: "#FE7F2D",
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    width: "100%",
+    marginTop: 12,
+  },
+  premiumButtonText: {
+    color: "#393E41",
+    fontFamily: "QuicksandReg",
+    fontSize: 16,
+  },
+
   logoutButtonText: {
     color: "#FFF",
     fontFamily: "QuicksandReg",
