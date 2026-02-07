@@ -213,7 +213,7 @@ export default function FeedScreen() {
     if (!userProfile) {
       console.log("Profile not found, creating new profile");
       const data = await createCustomer();
-      console.log("Customer and subscription data:", data);
+      console.log("Created customer and subscription data");
 
       await createNewProfile(
         userId,

@@ -226,6 +226,9 @@ export default function EReader() {
       const data = JSON.parse(event.nativeEvent.data);
 
       switch (data.type) {
+        case "goToSettings":
+          toSettings();
+          break;
         case "textSelected":
           setSelectedText(data.text);
           break;
@@ -774,7 +777,6 @@ export default function EReader() {
     <>
       <ScrollView
         style={[styles.paper, { backgroundColor: brightnessHex[warmth] }]}
-        scrollEnabled={false}
       >
         {loading ? (
           <ActivityIndicator size="large" color="#393E41" />
@@ -878,42 +880,6 @@ export default function EReader() {
                     warmth === 4 && { backgroundColor: "#F6F7EB" },
                   ]}
                 >
-                  {thinking ? (
-                    <ActivityIndicator
-                      size="large"
-                      color={warmth === 4 ? "#393E41" : "#F6F7EB"}
-                    />
-                  ) : (
-                    <Ionicons
-                      name="school"
-                      size={24}
-                      color="#F6F7EB"
-                      style={warmth === 4 && { color: "#393E41" }}
-                    />
-                  )}
-
-                  {argument && argument.length > 0 && (
-                    <Animated.View style={{ opacity: fadeAnim }}>
-                      <Text
-                        style={[
-                          styles.argument,
-                          { fontSize },
-                          warmth === 4 && { color: "#393E41" },
-                        ]}
-                      >
-                        {argument}
-                      </Text>
-                    </Animated.View>
-                  )}
-
-                  {needsPremium && (
-                    <TouchableOpacity onPress={toSettings}>
-                      <Text style={styles.goToSettingsText}>
-                        Go To Settings
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-
                   {/* <View
                     style={{
                       flexDirection: "row",
@@ -982,9 +948,39 @@ export default function EReader() {
                               background-color: #8980F5;
                               color: white;
                             }
+                            .argument-container {
+                              margin-bottom: 16px;
+                              padding: 16px;
+                              background-color: ${warmth === 4 ? "#F6F7EB" : "#393E41"};
+                              border-radius: 8px;
+                              text-align: center;
+                            }
+                            .argument-text {
+                              font-family: 'Georgia', serif;
+                              font-size: ${fontSize}px;
+                              color: ${warmth === 4 ? "#393E41" : "#F6F7EB"};
+                              line-height: 1.6;
+                              white-space: pre-wrap;
+                            }
+                            .thinking-text {
+                              color: ${warmth === 4 ? "#393E41" : "#F6F7EB"};
+                              font-style: italic;
+                            }
+                            .settings-link {
+                              display: inline-block;
+                              margin-top: 12px;
+                              padding: 8px 16px;
+                              background-color: #FE7F2D;
+                              color: #393E41;
+                              text-decoration: none;
+                              border-radius: 6px;
+                              font-family: 'Georgia', serif;
+                            }
                           </style>
                         </head>
                         <body>
+                         ${thinking ? '<div class="argument-container"><div class="thinking-text">Thinking...</div></div>' : ""}
+                         ${argument && argument.length > 0 ? `<div class="argument-container"><div class="argument-text">${argument.replace(/\n/g, "<br>")}</div>${needsPremium ? '<a href="#settings" class="settings-link" onclick="window.ReactNativeWebView.postMessage(JSON.stringify({type: \'goToSettings\'})); return false;">Go To Settings</a>' : ""}</div>` : ""}
                           <div>
                             ${
                               extract.fulltext
