@@ -5,11 +5,11 @@ export async function getUserSession(){
   return user;
 }
 
-export async function createNewProfile(user_id, created_at){
+export async function createNewProfile(user_id, created_at, stripe_customer_id, subscription_id, subscription_status, client_secret){
 const { data: userProfile, error } = await supabase
   .from('profiles')
   .insert([
-    { user_id: user_id, created_at: created_at },
+    { user_id: user_id, created_at: created_at, stripe_customer_id: stripe_customer_id, subscription_id: subscription_id, subscription_status: subscription_status, client_secret: client_secret },
   ])
   .select()
 
