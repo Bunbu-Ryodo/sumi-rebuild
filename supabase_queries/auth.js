@@ -20,6 +20,15 @@ const { data: userProfile, error } = await supabase
   return userProfile;
 }
 
+export async function hasActivePremiumSubscription(user_id) {
+  const profile = await lookUpUserProfile(user_id);
+  
+  if (!profile) return false;
+  
+  const activeStatuses = ['active', 'trialing'];
+  return activeStatuses.includes(profile.subscription_status);
+}
+
 export async function lookUpUserProfile(user_id){
   const { data: userProfile, error } = await supabase
     .from('profiles')
