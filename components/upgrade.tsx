@@ -2,9 +2,17 @@ import { useEffect } from "react";
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
 import { useStripe, PaymentSheetError } from "@stripe/stripe-react-native";
 import { getUserSession, lookUpUserProfile } from "../supabase_queries/auth";
+import Toast from "react-native-toast-message";
 
 export default function UpgradeButton() {
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
+
+  const displaySubscribedToast = (message: string) => {
+    Toast.show({
+      type: "subscribed",
+      text1: message,
+    });
+  };
 
   useEffect(() => {
     const initializePaymentSheet = async () => {
@@ -37,6 +45,7 @@ export default function UpgradeButton() {
           // Handle Failed
         } else {
           // Payment Succeeded
+          displaySubscribedToast("Subscribed to Premium");
         }
       }}
     >
