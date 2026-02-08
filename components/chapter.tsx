@@ -22,12 +22,12 @@ const styles = StyleSheet.create({
   },
   subscriptionWrapper: { width: "25%", marginBottom: 12 },
   chapter: {
-    fontSize: 16,
-    fontFamily: "QuicksandReg",
+    fontSize: 14,
+    fontFamily: "BeProVietnam",
     textAlign: "center",
   },
   sequelDue: {
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 14,
     textAlign: "center",
   },
@@ -38,11 +38,11 @@ const styles = StyleSheet.create({
     margin: 8,
   },
   noSubscribes: {
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 16,
   },
   details: {
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 16,
   },
   daysLeft: {

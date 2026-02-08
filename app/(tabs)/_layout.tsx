@@ -13,7 +13,7 @@ export default function TabLayout() {
             backgroundColor: "#393E41",
           },
           headerTitleStyle: {
-            fontFamily: "QuicksandReg",
+            fontFamily: "BeProVietnam",
           },
           headerShadowVisible: false,
           headerTintColor: "#F6F7EB",

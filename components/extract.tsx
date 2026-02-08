@@ -94,7 +94,7 @@ export default function Extract({
         userid,
         coverartTitle,
         coverartArtist,
-        coverartYear
+        coverartYear,
       );
 
       if (!artworkExists) {
@@ -103,7 +103,7 @@ export default function Extract({
           coverartTitle,
           coverartArtist,
           coverartYear,
-          coverart
+          coverart,
         );
         if (artwork) {
           setSaved(true);
@@ -249,13 +249,13 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   saveArtwork: {
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 14,
     color: "#393E41",
     textDecorationLine: "underline",
   },
   savedArtwork: {
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 14,
     color: "#393E41",
   },
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     borderRadius: 8,
     alignItems: "center",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     width: "100%",
     flexDirection: "row",
   },
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     borderRadius: 8,
     alignItems: "center",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     width: "100%",
     flexDirection: "row",
   },

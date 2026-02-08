@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     color: "#F6F7EB",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 16,
   },
 });

@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     width: "100%",
   },
   deleteButton: {
@@ -164,12 +164,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     width: "100%",
   },
   buttonText: {
     color: "#393E41",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 16,
     marginLeft: 8,
     textDecorationLine: "underline",

@@ -465,7 +465,7 @@ export default function EReader() {
 
       if (!hasSubscription) {
         setArgument(
-          "Upgrade to Premium to unlock Grok-powered reading assists!",
+          "Upgrade to Premium to unlock AI-powered reading assists! Generate chapter arguments, bullet point summaries, and synopses to help you engage with the text in a deeper way.",
         );
         setNeedsPremium(true);
         return;
@@ -895,7 +895,7 @@ export default function EReader() {
                     <Text
                       style={{
                         color: warmth === 4 ? "#393E41" : "#F6F7EB",
-                        fontFamily: "QuicksandReg",
+                        fontFamily: "BeProVietnam",
                         fontSize: 16,
                         marginLeft: 4,
                       }}
@@ -1241,7 +1241,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     color: "#F6F7EB",
     textDecorationLine: "underline",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 16,
   },
   titleBar: {
@@ -1303,11 +1303,11 @@ const styles = StyleSheet.create({
   },
   bookmarkText: {
     textAlign: "center",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
   },
   shoppingText: {
     textAlign: "center",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
   },
   discuss: {
     fontFamily: "EBGaramond",
@@ -1319,7 +1319,7 @@ const styles = StyleSheet.create({
     borderColor: "#393E41",
     padding: 8,
     borderRadius: 8,
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     marginTop: 8,
   },
   submitCommentButton: {
@@ -1332,7 +1332,7 @@ const styles = StyleSheet.create({
   },
   markAsReadText: {
     color: "#F6F7EB",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 16,
   },
   returnAnchor: {
@@ -1345,7 +1345,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#393E41",
     borderRadius: 8,
     alignItems: "center",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     width: "100%",
   },
   buttonPrimaryDarkMode: {
@@ -1355,7 +1355,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F6F7EB",
     borderRadius: 8,
     alignItems: "center",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     width: "100%",
   },
   markAsUnread: {
@@ -1365,7 +1365,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     alignItems: "center",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     width: "100%",
   },
   markAsUnreadDarkMode: {
@@ -1375,12 +1375,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     alignItems: "center",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     width: "100%",
   },
   markAsUnreadText: {
     color: "#393E41",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 16,
   },
   tooltip: {
@@ -1397,7 +1397,7 @@ const styles = StyleSheet.create({
   },
   tooltipText: {
     color: "#F6F7EB",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 14,
   },
   adjustFontSize: {
@@ -1478,7 +1478,7 @@ const styles = StyleSheet.create({
   },
   saveQuoteText: {
     color: "#F6F7EB",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 14,
     marginLeft: 8,
     flex: 1,
@@ -1554,7 +1554,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   cancelButtonText: {
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 16,
     color: "#393E41",
   },
@@ -1566,7 +1566,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   saveButtonText: {
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 16,
     color: "#F6F7EB",
   },

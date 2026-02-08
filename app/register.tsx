@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
   },
   tagline: {
     fontSize: 18,
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     color: "#F6F7EB",
   },
   form: {
@@ -173,14 +173,14 @@ const styles = StyleSheet.create({
   },
   formLabel: {
     fontSize: 16,
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     color: "#F6F7EB",
   },
   formInput: {
     marginTop: 8,
     marginBottom: 8,
     fontSize: 16,
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     color: "#F6F7EB",
     borderRadius: 8,
     borderWidth: 1,
@@ -199,12 +199,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#F6F7EB",
     borderRadius: 8,
     alignItems: "center",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     width: "100%",
   },
   registerButtonText: {
     color: "#393E41",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 16,
   },
   backButton: {
@@ -216,31 +216,31 @@ const styles = StyleSheet.create({
     color: "#F6F7EB",
     borderRadius: 8,
     alignItems: "center",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     width: "100%",
   },
   backButtonText: {
     color: "#F6F7EB",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 16,
   },
   errorText: {
     color: "#D64045",
     marginTop: 12,
     fontSize: 16,
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
   },
   passwordEmailErrorText: {
     color: "#D64045",
     marginBottom: 6,
     fontSize: 16,
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
   },
   registerSuccess: {
     color: "#83F65E",
     marginBottom: 6,
     fontSize: 16,
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
   },
   errorInput: {
     borderColor: "#D64045",

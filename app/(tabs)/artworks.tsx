@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
   },
   tagline: {
     fontSize: 18,
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     color: "#393E41",
   },
   nameAndScoreContainer: {
@@ -291,13 +291,13 @@ const styles = StyleSheet.create({
   },
   score: {
     fontSize: 18,
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     color: "#393E41",
     textAlign: "center",
   },
   readerTag: {
     fontSize: 18,
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     color: "#393E41",
     textAlign: "center",
   },
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   completedAchievementText: {
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 18,
     color: "#393E41",
   },
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
   pendingAchievementsHeader: {
     marginTop: 16,
     textDecorationLine: "underline",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 16,
   },
   quoteText: {
@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   yourArtworks: {
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 20,
     color: "#393E41",
   },
