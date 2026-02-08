@@ -25,7 +25,7 @@ export const useSupabase = () => {
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    QuicksandReg: require("../assets/fonts/Quicksand-Regular.ttf"),
+    BeProVietnam: require("../assets/fonts/BeVietnamPro-Light.ttf"),
     EBGaramond: require("../assets/fonts/EBGaramondVariable.ttf"),
     EBGaramondItalic: require("../assets/fonts/EBGaramondItalic.ttf"),
   });
@@ -77,7 +77,7 @@ export default function RootLayout() {
         <View style={{ alignContent: "center", justifyContent: "center" }}>
           <Text
             style={{
-              fontFamily: "QuicksandReg",
+              fontFamily: "BeProVietnam",
               fontSize: 16,
               color: "#393E41",
             }}
@@ -115,7 +115,7 @@ export default function RootLayout() {
         <View style={{ alignContent: "center", justifyContent: "center" }}>
           <Text
             style={{
-              fontFamily: "QuicksandReg",
+              fontFamily: "BeProVietnam",
               fontSize: 16,
               color: "#393E41",
             }}
@@ -153,7 +153,7 @@ export default function RootLayout() {
         <View style={{ alignContent: "center", justifyContent: "center" }}>
           <Text
             style={{
-              fontFamily: "QuicksandReg",
+              fontFamily: "BeProVietnam",
               fontSize: 16,
               color: "#393E41",
             }}
@@ -195,7 +195,7 @@ export default function RootLayout() {
         <View style={{ alignContent: "center", justifyContent: "center" }}>
           <Text
             style={{
-              fontFamily: "QuicksandReg",
+              fontFamily: "BeProVietnam",
               fontSize: 16,
               color: "#393E41",
             }}
@@ -233,7 +233,7 @@ export default function RootLayout() {
         <View style={{ alignContent: "center", justifyContent: "center" }}>
           <Text
             style={{
-              fontFamily: "QuicksandReg",
+              fontFamily: "BeProVietnam",
               fontSize: 16,
               color: "#393E41",
             }}
@@ -271,7 +271,7 @@ export default function RootLayout() {
         <View style={{ alignContent: "center", justifyContent: "center" }}>
           <Text
             style={{
-              fontFamily: "QuicksandReg",
+              fontFamily: "BeProVietnam",
               fontSize: 16,
               color: "#393E41",
             }}
@@ -309,7 +309,7 @@ export default function RootLayout() {
         <View style={{ alignContent: "center", justifyContent: "center" }}>
           <Text
             style={{
-              fontFamily: "QuicksandReg",
+              fontFamily: "BeProVietnam",
               fontSize: 16,
               color: "#393E41",
             }}
@@ -360,7 +360,7 @@ export default function RootLayout() {
                   backgroundColor: "#393E41",
                 },
                 headerTitleStyle: {
-                  fontFamily: "QuicksandReg",
+                  fontFamily: "BeProVietnam",
                   color: "#F6F7EB",
                 },
                 headerTintColor: "#F6F7EB",
@@ -376,7 +376,7 @@ export default function RootLayout() {
                   backgroundColor: "#393E41",
                 },
                 headerTitleStyle: {
-                  fontFamily: "QuicksandReg",
+                  fontFamily: "BeProVietnam",
                   color: "#F6F7EB",
                 },
                 headerTintColor: "#F6F7EB",

@@ -82,8 +82,8 @@ export default function Series({
               progress < 15
                 ? 15
                 : progress >= progressBarWidth
-                ? progress - 2
-                : progress
+                  ? progress - 2
+                  : progress
             }
           >
             <View style={[styles.progress]}></View>
@@ -139,13 +139,13 @@ const styles = StyleSheet.create({
   },
   dueText: {
     marginTop: 8,
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 14,
     color: "#393E41",
   },
   progressText: {
-    fontFamily: "QuicksandReg",
-    fontSize: 16,
+    fontFamily: "BeProVietnam",
+    fontSize: 14,
     color: "#393E41",
   },
   progressBar: {

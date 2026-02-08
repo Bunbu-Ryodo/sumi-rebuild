@@ -278,7 +278,7 @@ export default function Settings() {
             {deactivated ? (
               <>
                 <Text style={styles.selectedText}>
-                  Subscription will cancel on{" "}
+                  Subscription will end on{" "}
                   {cancelAt
                     ? new Date(cancelAt).toLocaleDateString()
                     : "Unknown"}
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
   },
   tagline: {
     fontSize: 18,
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     color: "#F6F7EB",
   },
   form: {
@@ -368,13 +368,13 @@ const styles = StyleSheet.create({
   formLabel: {
     marginTop: 8,
     fontSize: 16,
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     color: "#F6F7EB",
   },
   formInput: {
     marginTop: 8,
     fontSize: 16,
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     color: "#F6F7EB",
     borderRadius: 8,
     borderWidth: 1,
@@ -429,17 +429,17 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     color: "#393E41",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 16,
   },
   changePasswordButtonText: {
     color: "#393E41",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 16,
   },
   changeReaderTagButtonText: {
     color: "#393E41",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 16,
   },
   buttonSecondary: {
@@ -453,19 +453,19 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     color: "#F6F7EB",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 16,
   },
   errorText: {
     marginTop: 8,
     color: "#D64045",
     fontSize: 16,
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
   },
   errorPasswordText: {
     color: "#D64045",
     fontSize: 16,
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
   },
   errorInput: {
     borderColor: "#D64045",
@@ -476,13 +476,13 @@ const styles = StyleSheet.create({
   successText: {
     color: "#77966D",
     fontSize: 16,
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     alignSelf: "center",
   },
   successPasswordText: {
     color: "#77966D",
     fontSize: 16,
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     alignSelf: "center",
     marginBottom: 12,
   },
@@ -512,20 +512,20 @@ const styles = StyleSheet.create({
     backgroundColor: "#F6F7EB",
   },
   radioButtonLabel: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#F6F7EB",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
   },
   selectedText: {
     marginTop: 16,
     fontSize: 16,
     color: "#F6F7EB",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     textAlign: "center",
   },
   subscriptionFrequencyLabel: {
     fontSize: 16,
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     color: "#F6F7EB",
     marginBottom: 8,
   },
@@ -547,7 +547,7 @@ const styles = StyleSheet.create({
   },
   privacyButtonText: {
     color: "#393E41",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 16,
   },
   premiumButton: {
@@ -560,19 +560,19 @@ const styles = StyleSheet.create({
   },
   premiumButtonText: {
     color: "#393E41",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 16,
   },
 
   logoutButtonText: {
     color: "#FFF",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 16,
   },
   // Feedback form styles
   feedbackSectionTitle: {
     fontSize: 20,
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     color: "#F6F7EB",
     marginTop: 24,
     marginBottom: 8,
@@ -580,7 +580,7 @@ const styles = StyleSheet.create({
   },
   feedbackDescription: {
     fontSize: 14,
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     color: "#B0B0B0",
     marginBottom: 16,
     textAlign: "center",
@@ -600,7 +600,7 @@ const styles = StyleSheet.create({
   },
   feedbackButtonText: {
     color: "#F6F7EB",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 16,
     fontWeight: "bold",
   },
@@ -625,7 +625,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 20,
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     color: "#393E41",
     marginBottom: 16,
     textAlign: "center",
@@ -633,7 +633,7 @@ const styles = StyleSheet.create({
   },
   modalMessage: {
     fontSize: 16,
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     color: "#393E41",
     textAlign: "center",
     lineHeight: 24,
@@ -648,7 +648,7 @@ const styles = StyleSheet.create({
   },
   modalButtonText: {
     color: "#F6F7EB",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 16,
     fontWeight: "bold",
   },

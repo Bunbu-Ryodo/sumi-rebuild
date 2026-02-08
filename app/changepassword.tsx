@@ -98,14 +98,14 @@ const styles = StyleSheet.create({
   },
   formLabel: {
     fontSize: 16,
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     color: "#F6F7EB",
   },
   formInput: {
     marginTop: 8,
     marginBottom: 8,
     fontSize: 16,
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     color: "#F6F7EB",
     borderRadius: 8,
     borderWidth: 1,
@@ -119,17 +119,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#F6F7EB",
     borderRadius: 8,
     alignItems: "center",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     width: "100%",
   },
   passwordResetButtonText: {
     color: "#393E41",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 16,
   },
   errorText: {
     color: "#D64045",
     fontSize: 16,
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
   },
 });

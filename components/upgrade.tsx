@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
   },
   premiumButtonText: {
     color: "#393E41",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 16,
   },
 });

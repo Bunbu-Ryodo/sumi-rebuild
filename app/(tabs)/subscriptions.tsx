@@ -155,17 +155,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   newInstallmentsHeader: {
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 20,
     color: "#393E41",
   },
   streakHeaderText: {
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 16,
     color: "#393E41",
   },
   yourArtworks: {
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 20,
     color: "#393E41",
   },
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     backgroundColor: "lightblue",
   },
   noInstalmentsText: {
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 16,
     color: "#393E41",
     textAlign: "center",
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     color: "#F6F7EB",
-    fontFamily: "QuicksandReg",
+    fontFamily: "BeProVietnam",
     fontSize: 16,
   },
 });
