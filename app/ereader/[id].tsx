@@ -22,6 +22,7 @@ import React, {
   useRef,
   useEffect,
   useState,
+  useMemo,
 } from "react";
 import { useRouter } from "expo-router";
 import {
@@ -238,11 +239,15 @@ export default function EReader() {
           break;
 
         case "scrollProgress":
-          setReadingProgress(data.progress);
-          if (data.progress > readingProgress) {
-            setReadingProgress(Math.floor(data.progress));
-            setScrollPosition(Math.floor(data.scrollTop));
-          }
+          const nextProgress = Math.floor(Number(data.progress) || 0);
+          const nextScrollTop = Math.floor(Number(data.scrollTop) || 0);
+
+          setReadingProgress((prev) =>
+            nextProgress > prev ? nextProgress : prev,
+          );
+          setScrollPosition((prev) =>
+            nextScrollTop > prev ? nextScrollTop : prev,
+          );
           break;
 
         case "contentLoaded":
@@ -773,16 +778,107 @@ export default function EReader() {
     }, []),
   );
 
+  const webViewSource = useMemo(
+    () => ({
+      html: `
+        <html>
+          <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+              body {
+                font-family: 'Georgia', serif;
+                font-size: ${fontSize}px;
+                line-height: 1.6;
+                margin: 8px;
+                background-color: ${brightnessHex[warmth]};
+                color: ${warmth === 4 ? "#F6F7EB" : "#393E41"};
+              }
+              h1 {
+                font-size: 24px;
+                margin-bottom: 16px;
+              }
+              p {
+                margin-bottom: 12px;
+              }
+              mark {
+                padding: 2px 4px;
+                border-radius: 3px;
+                font-weight: bold;
+                /* Default styles - will be overridden by inline styles */
+              }
+              ::selection {
+                background-color: #8980F5;
+                color: white;
+              }
+              ::-moz-selection {
+                background-color: #8980F5;
+                color: white;
+              }
+              .argument-container {
+                margin-bottom: 16px;
+                padding: 16px;
+                background-color: ${warmth === 4 ? "#F6F7EB" : "#393E41"};
+                border-radius: 8px;
+                text-align: center;
+              }
+              .argument-text {
+                font-family: 'Georgia', serif;
+                font-size: ${fontSize}px;
+                color: ${warmth === 4 ? "#393E41" : "#F6F7EB"};
+                line-height: 1.6;
+                white-space: pre-wrap;
+              }
+              .thinking-text {
+                color: ${warmth === 4 ? "#393E41" : "#F6F7EB"};
+                font-style: italic;
+              }
+              .settings-link {
+                display: inline-block;
+                margin-top: 12px;
+                padding: 8px 16px;
+                background-color: #FE7F2D;
+                color: #393E41;
+                text-decoration: none;
+                border-radius: 6px;
+                font-family: 'Georgia', serif;
+              }
+            </style>
+          </head>
+          <body>
+            ${thinking ? '<div class="argument-container"><div class="thinking-text">Thinking...</div></div>' : ""}
+            ${argument && argument.length > 0 ? `<div class="argument-container"><div class="argument-text">${argument.replace(/\n/g, "<br>")}</div>${needsPremium ? '<a href="#settings" class="settings-link" onclick="window.ReactNativeWebView.postMessage(JSON.stringify({type: \'goToSettings\'})); return false;">Go To Settings</a>' : ""}</div>` : ""}
+            <div>
+              ${
+                extract.fulltext
+                  ? highlightSavedQuotes(extract.fulltext, quotes, warmth)
+                  : "<h1>This is a static HTML source!</h1><p>Loading content...</p>"
+              }
+            </div>
+          </body>
+        </html>
+      `,
+    }),
+    [
+      argument,
+      extract.fulltext,
+      fontSize,
+      needsPremium,
+      quotes,
+      thinking,
+      warmth,
+    ],
+  );
+
   return (
     <>
-      <ScrollView
-        style={[styles.paper, { backgroundColor: brightnessHex[warmth] }]}
-      >
+      <View style={[styles.paper, { backgroundColor: brightnessHex[warmth] }]}>
         {loading ? (
-          <ActivityIndicator size="large" color="#393E41" />
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#393E41" />
+          </View>
         ) : (
-          <View>
-            <View>
+          <View style={styles.contentContainer}>
+            <View style={styles.mainReaderSection}>
               <View style={styles.adjustFontSize}>
                 <TouchableOpacity
                   style={[
@@ -907,98 +1003,17 @@ export default function EReader() {
               ) : (
                 <></>
               )}
-              <View style={{ width: "100%" }}>
+              <View style={styles.webViewContainer}>
                 <WebView
                   ref={webViewRef}
                   style={styles.webView}
                   originWhitelist={["*"]}
                   scrollEnabled={true}
-                  source={{
-                    html: `
-                      <html>
-                        <head>
-                          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                          <style>
-                            body {
-                              font-family: 'Georgia', serif;
-                              font-size: ${fontSize}px;
-                              line-height: 1.6;
-                              margin: 8px;
-                              background-color: ${brightnessHex[warmth]};
-                              color: ${warmth === 4 ? "#F6F7EB" : "#393E41"};
-                            }
-                            h1 {
-                              font-size: 24px;
-                              margin-bottom: 16px;
-                            }
-                            p {
-                              margin-bottom: 12px;
-                            }
-                            mark {
-                              padding: 2px 4px;
-                              border-radius: 3px;
-                              font-weight: bold;
-                              /* Default styles - will be overridden by inline styles */
-                            }
-                            ::selection {
-                              background-color: #8980F5;
-                              color: white;
-                            }
-                            ::-moz-selection {
-                              background-color: #8980F5;
-                              color: white;
-                            }
-                            .argument-container {
-                              margin-bottom: 16px;
-                              padding: 16px;
-                              background-color: ${warmth === 4 ? "#F6F7EB" : "#393E41"};
-                              border-radius: 8px;
-                              text-align: center;
-                            }
-                            .argument-text {
-                              font-family: 'Georgia', serif;
-                              font-size: ${fontSize}px;
-                              color: ${warmth === 4 ? "#393E41" : "#F6F7EB"};
-                              line-height: 1.6;
-                              white-space: pre-wrap;
-                            }
-                            .thinking-text {
-                              color: ${warmth === 4 ? "#393E41" : "#F6F7EB"};
-                              font-style: italic;
-                            }
-                            .settings-link {
-                              display: inline-block;
-                              margin-top: 12px;
-                              padding: 8px 16px;
-                              background-color: #FE7F2D;
-                              color: #393E41;
-                              text-decoration: none;
-                              border-radius: 6px;
-                              font-family: 'Georgia', serif;
-                            }
-                          </style>
-                        </head>
-                        <body>
-                         ${thinking ? '<div class="argument-container"><div class="thinking-text">Thinking...</div></div>' : ""}
-                         ${argument && argument.length > 0 ? `<div class="argument-container"><div class="argument-text">${argument.replace(/\n/g, "<br>")}</div>${needsPremium ? '<a href="#settings" class="settings-link" onclick="window.ReactNativeWebView.postMessage(JSON.stringify({type: \'goToSettings\'})); return false;">Go To Settings</a>' : ""}</div>` : ""}
-                          <div>
-                            ${
-                              extract.fulltext
-                                ? highlightSavedQuotes(
-                                    extract.fulltext,
-                                    quotes,
-                                    warmth,
-                                  )
-                                : "<h1>This is a static HTML source!</h1><p>Loading content...</p>"
-                            }
-                          </div>
-                        </body>
-                      </html>
-                    `,
-                  }}
+                  source={webViewSource}
                   javaScriptEnabled={true}
                   domStorageEnabled={true}
                   startInLoadingState={true}
+                  nestedScrollEnabled={true}
                   scalesPageToFit={false}
                   showsVerticalScrollIndicator={false}
                   injectedJavaScript={injectedJavaScript}
@@ -1102,10 +1117,9 @@ export default function EReader() {
                 </Text>
               </View>
             </View>
-            <View></View>
           </View>
         )}
-      </ScrollView>
+      </View>
       <BannerAd
         key={`ad-${id}`}
         ref={bannerRef}
@@ -1260,9 +1274,27 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   paper: {
+    flex: 1,
     backgroundColor: "#F6F7EB",
     width: "100%",
     padding: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  contentContainer: {
+    flex: 1,
+  },
+  mainReaderSection: {
+    flex: 1,
+    minHeight: 0,
+  },
+  webViewContainer: {
+    flex: 1,
+    minHeight: 0,
+    width: "100%",
   },
   extractText: {
     fontFamily: "EBGaramond",
@@ -1459,7 +1491,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   webView: {
-    minHeight: 420,
+    flex: 1,
     width: "100%",
     backgroundColor: "transparent",
   },
