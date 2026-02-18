@@ -1309,7 +1309,7 @@ const styles = StyleSheet.create({
     height: 100,
   },
   readingProgressContainer: {
-    marginTop: 12,
+    marginTop: 48,
     alignItems: "center",
     justifyContent: "center",
     width: "100%",
