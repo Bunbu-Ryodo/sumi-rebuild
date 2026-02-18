@@ -239,15 +239,11 @@ export default function EReader() {
           break;
 
         case "scrollProgress":
-          const nextProgress = Math.floor(Number(data.progress) || 0);
+          const nextProgress = Math.ceil(Number(data.progress) || 0);
           const nextScrollTop = Math.floor(Number(data.scrollTop) || 0);
 
-          setReadingProgress((prev) =>
-            nextProgress > prev ? nextProgress : prev,
-          );
-          setScrollPosition((prev) =>
-            nextScrollTop > prev ? nextScrollTop : prev,
-          );
+          setReadingProgress(nextProgress);
+          setScrollPosition(nextScrollTop);
           break;
 
         case "contentLoaded":
@@ -1056,7 +1052,7 @@ export default function EReader() {
             </View>
             <View style={styles.readingProgressContainer}>
               <Text style={styles.readingProgressText}>
-                {Math.floor(readingProgress)}% complete
+                {Math.floor(readingProgress)}%
               </Text>
             </View>
             <View style={styles.engagementButtons}>
@@ -1313,13 +1309,14 @@ const styles = StyleSheet.create({
     height: 100,
   },
   readingProgressContainer: {
+    marginTop: 12,
     alignItems: "center",
     justifyContent: "center",
     width: "100%",
   },
   readingProgressText: {
-    fontFamily: "EBGaramond",
-    fontSize: 18,
+    fontFamily: "BeVietnamPro",
+    fontSize: 14,
   },
   subscribeContainer: {
     alignItems: "center",
