@@ -18,7 +18,10 @@ import {
 } from "react-native-google-mobile-ads";
 import { ArtworkType, QuoteType } from "../../types/types";
 import { getUserArtworks } from "../../supabase_queries/artworks";
-import { getUserSession } from "../../supabase_queries/auth.js";
+import {
+  getUserSession,
+  hasActivePremiumSubscription,
+} from "../../supabase_queries/auth.js";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Carousel, {
   ICarouselInstance,
@@ -46,6 +49,7 @@ export default function Artwork() {
   const [artworks, setArtworks] = useState<ArtworkType[]>([]);
   const [quotes, setQuotes] = useState<QuoteType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasPremium, setHasPremium] = useState<boolean | null>(null);
 
   const artworkCarousel = React.useRef<ICarouselInstance>(null);
   const quoteCarousel = React.useRef<ICarouselInstance>(null);
@@ -85,7 +89,9 @@ export default function Artwork() {
 
   useForeground(() => {
     if (Platform.OS === "android" || Platform.OS === "ios") {
-      bannerRef.current?.load();
+      if (hasPremium !== null && !hasPremium) {
+        bannerRef.current?.load();
+      }
     }
   });
 
@@ -99,8 +105,10 @@ export default function Artwork() {
     if (user) {
       const artworks = await getUserArtworks(user.id);
       const quotes = await getUserQuotes(user.id);
+      const premiumStatus = await hasActivePremiumSubscription(user.id);
       setArtworks(artworks);
       setQuotes(quotes);
+      setHasPremium(premiumStatus);
     }
     setLoading(false);
   };
@@ -254,12 +262,14 @@ export default function Artwork() {
           </View>
         )}
       </ScrollView>
-      <BannerAd
-        key={`ad-artworks`}
-        ref={bannerRef}
-        unitId={adUnitId}
-        size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-      />
+      {hasPremium !== null && !hasPremium && (
+        <BannerAd
+          key={`ad-artworks`}
+          ref={bannerRef}
+          unitId={adUnitId}
+          size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+        />
+      )}
     </>
   );
 }

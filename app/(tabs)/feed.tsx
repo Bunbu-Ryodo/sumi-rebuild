@@ -19,6 +19,7 @@ import {
   getUserSession,
   setLoginDateTime,
   updateUserProfileSubscription,
+  hasActivePremiumSubscription,
 } from "../../supabase_queries/auth.js";
 import { getExtracts } from "../../supabase_queries/feed";
 import {
@@ -70,6 +71,7 @@ export default function FeedScreen() {
   const router = useRouter();
   const [extracts, setExtracts] = useState([] as ExtractType[]);
   const [refreshing, setRefreshing] = useState(false);
+  const [hasPremium, setHasPremium] = useState<boolean | null>(null);
   const [allExtractsDismissed, setAllExtractsDismissed] = useState(false);
   const [userid, setUserid] = useState("");
 
@@ -89,7 +91,9 @@ export default function FeedScreen() {
 
   useForeground(() => {
     if (Platform.OS === "android" || Platform.OS === "ios") {
-      bannerRef.current?.load();
+      if (hasPremium !== null && !hasPremium) {
+        bannerRef.current?.load();
+      }
     }
   });
 
@@ -255,6 +259,9 @@ export default function FeedScreen() {
         console.log("Streak reset, checking for new streak");
       }
       await setLoginDateTime(userId, new Date());
+
+      const hasSubscription = await hasActivePremiumSubscription(userId);
+      setHasPremium(hasSubscription);
     }
   };
 
@@ -436,12 +443,14 @@ export default function FeedScreen() {
           <ActivityIndicator size="large" color="#393E41" />
         )}
       </ScrollView>
-      <BannerAd
-        key={`feedad`}
-        ref={bannerRef}
-        unitId={adUnitId}
-        size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-      />
+      {hasPremium !== null && !hasPremium && (
+        <BannerAd
+          key={`feedad`}
+          ref={bannerRef}
+          unitId={adUnitId}
+          size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+        />
+      )}
     </>
   );
 }
