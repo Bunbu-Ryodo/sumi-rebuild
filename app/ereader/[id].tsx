@@ -452,6 +452,7 @@ export default function EReader() {
   }, [argument]);
 
   const callGrok = async (type: "argument" | "bullets" | "synopsis") => {
+    setScrollPosition(0);
     setThinking(true);
     setArgument("");
 
@@ -826,7 +827,11 @@ export default function EReader() {
               }
               .thinking-text {
                 color: ${warmth === 4 ? "#393E41" : "#F6F7EB"};
-                font-style: italic;
+                margin-bottom: 16px;
+                padding: 16px;
+                background-color: ${warmth === 4 ? "#F6F7EB" : "#393E41"};
+                border-radius: 8px;
+                text-align: center;
               }
               .settings-link {
                 display: inline-block;
@@ -841,7 +846,7 @@ export default function EReader() {
             </style>
           </head>
           <body>
-            ${thinking ? '<div class="argument-container"><div class="thinking-text">Thinking...</div></div>' : ""}
+            ${thinking ? '<div class="thinking-text">Thinking...</div>' : ""}
             ${argument && argument.length > 0 ? `<div class="argument-container"><div class="argument-text">${argument.replace(/\n/g, "<br>")}</div>${needsPremium ? '<a href="#settings" class="settings-link" onclick="window.ReactNativeWebView.postMessage(JSON.stringify({type: \'goToSettings\'})); return false;">Go To Settings</a>' : ""}</div>` : ""}
             <div>
               ${
@@ -964,41 +969,6 @@ export default function EReader() {
                   {extract.chapter}
                 </Text>
               </View>
-              {thinking || argument.length ? (
-                <View
-                  style={[
-                    styles.argumentContainer,
-                    { alignItems: "center" },
-                    warmth === 4 && { backgroundColor: "#F6F7EB" },
-                  ]}
-                >
-                  {/* <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Ionicons
-                      name="star"
-                      size={16}
-                      color={warmth === 4 ? "#393E41" : "#F6F7EB"}
-                    />
-                    <Text
-                      style={{
-                        color: warmth === 4 ? "#393E41" : "#F6F7EB",
-                        fontFamily: "BeProVietnam",
-                        fontSize: 16,
-                        marginLeft: 4,
-                      }}
-                    >
-                      {creditsLeft || 0}
-                    </Text>
-                  </View> */}
-                </View>
-              ) : (
-                <></>
-              )}
               <View style={styles.webViewContainer}>
                 <WebView
                   ref={webViewRef}
@@ -1095,21 +1065,6 @@ export default function EReader() {
                   ]}
                 >
                   Subscribe
-                </Text>
-              </View>
-              <View style={styles.shoppingContainer}>
-                <BounceView ref={cartRef}>
-                  <TouchableOpacity onPress={shop}>
-                    <Ionicons name="cart" size={24} color="#77966D" />
-                  </TouchableOpacity>
-                </BounceView>
-                <Text
-                  style={[
-                    styles.shoppingText,
-                    warmth === 4 && { color: "#F6F7EB" },
-                  ]}
-                >
-                  Buy Book (Coming Soon)
                 </Text>
               </View>
             </View>
