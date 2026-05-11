@@ -9,7 +9,7 @@ import {
   Image,
   Dimensions,
 } from "react-native";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { ArtworkType } from "@/types/types";
 import { useLocalSearchParams } from "expo-router";
 import {
@@ -18,24 +18,24 @@ import {
 } from "../../supabase_queries/artworks";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
-import {
-  BannerAd,
-  BannerAdSize,
-  TestIds,
-  useForeground,
-} from "react-native-google-mobile-ads";
+// import {
+//   BannerAd,
+//   BannerAdSize,
+//   TestIds,
+//   useForeground,
+// } from "react-native-google-mobile-ads";
 
-let adUnitId = "";
+// let adUnitId = "";
 
-const useTestAds = __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
+// const useTestAds = __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
 
-if (useTestAds) {
-  adUnitId = TestIds.ADAPTIVE_BANNER;
-} else if (Platform.OS === "android") {
-  adUnitId = "ca-app-pub-5850018728161057/6524403480";
-} else if (Platform.OS === "ios") {
-  adUnitId = "ca-app-pub-5850018728161057/3269917700";
-}
+// if (useTestAds) {
+//   adUnitId = TestIds.ADAPTIVE_BANNER;
+// } else if (Platform.OS === "android") {
+//   adUnitId = "ca-app-pub-5850018728161057/6524403480";
+// } else if (Platform.OS === "ios") {
+//   adUnitId = "ca-app-pub-5850018728161057/3269917700";
+// }
 
 export default function ViewArtwork() {
   const router = useRouter();
@@ -43,13 +43,13 @@ export default function ViewArtwork() {
   const [artwork, setArtwork] = useState<ArtworkType | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const bannerRef = useRef<BannerAd>(null);
+  // const bannerRef = useRef<BannerAd>(null);
 
-  useForeground(() => {
-    if (Platform.OS === "android" || Platform.OS === "ios") {
-      bannerRef.current?.load();
-    }
-  });
+  // useForeground(() => {
+  //   if (Platform.OS === "android" || Platform.OS === "ios") {
+  //     bannerRef.current?.load();
+  //   }
+  // });
 
   const fetchArtwork = async () => {
     setLoading(true);
@@ -114,12 +114,12 @@ export default function ViewArtwork() {
           </View>
         )}
       </ScrollView>
-      <BannerAd
+      {/* <BannerAd
         key={`ad-${id}`}
         ref={bannerRef}
         unitId={adUnitId}
         size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-      />
+      /> */}
     </>
   );
 }

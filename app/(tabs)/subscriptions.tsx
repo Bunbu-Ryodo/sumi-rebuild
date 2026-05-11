@@ -10,7 +10,10 @@ import {
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 import { useEffect, useState } from "react";
-import { getUserSession } from "../../supabase_queries/auth.js";
+import {
+  getUserSession,
+  hasActivePremiumSubscription,
+} from "../../supabase_queries/auth.js";
 import { getAllSeries, getStreak } from "../../supabase_queries/subscriptions";
 import { SeriesType, StreakType } from "../../types/types";
 import {
@@ -19,6 +22,7 @@ import {
   TestIds,
   useForeground,
 } from "react-native-google-mobile-ads";
+
 import React, { useRef } from "react";
 import Series from "../../components/series";
 import { Link } from "expo-router";
@@ -40,10 +44,13 @@ export default function Subscriptions() {
   const [series, setSeries] = useState<SeriesType[]>([]);
   const [streak, setStreak] = useState<StreakType | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasPremium, setHasPremium] = useState<boolean | null>(null);
 
   useForeground(() => {
     if (Platform.OS === "android" || Platform.OS === "ios") {
-      bannerRef.current?.load();
+      if (hasPremium !== null && !hasPremium) {
+        bannerRef.current?.load();
+      }
     }
   });
 
@@ -56,6 +63,8 @@ export default function Subscriptions() {
     }
     if (user) {
       const series = await getAllSeries(user.id);
+      const premiumStatus = await hasActivePremiumSubscription(user.id);
+      setHasPremium(premiumStatus);
       setSeries(series || []);
       setLoading(false);
     }
@@ -119,12 +128,14 @@ export default function Subscriptions() {
           </View>
         )}
       </ScrollView>
-      <BannerAd
-        key={`ad-subscriptions`}
-        ref={bannerRef}
-        unitId={adUnitId}
-        size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-      />
+      {hasPremium !== null && !hasPremium && (
+        <BannerAd
+          key={`ad-subscriptions`}
+          ref={bannerRef}
+          unitId={adUnitId}
+          size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+        />
+      )}
     </>
   );
 }

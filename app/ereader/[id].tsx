@@ -129,7 +129,9 @@ export default function EReader() {
 
   useForeground(() => {
     if (Platform.OS === "android" || Platform.OS === "ios") {
-      bannerRef.current?.load();
+      if (hasPremium !== null && !hasPremium) {
+        bannerRef.current?.load();
+      }
     }
   });
 
@@ -169,6 +171,7 @@ export default function EReader() {
   const [scrollPosition, setScrollPosition] = useState(0);
   const [streak, setStreak] = useState<StreakType | null>(null);
   const [needsPremium, setNeedsPremium] = useState(false);
+  const [hasPremium, setHasPremium] = useState<boolean | null>(null);
   const webViewRef = useRef<WebView>(null);
 
   const injectedJavaScript = `
@@ -667,6 +670,9 @@ export default function EReader() {
     if (user) {
       setUserid(user.id);
 
+      const premiumStatus = await hasActivePremiumSubscription(user.id);
+      setHasPremium(premiumStatus);
+
       const extract = await getExtract(id);
 
       if (extract) {
@@ -1071,12 +1077,14 @@ export default function EReader() {
           </View>
         )}
       </View>
-      <BannerAd
-        key={`ad-${id}`}
-        ref={bannerRef}
-        unitId={adUnitId}
-        size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-      />
+      {hasPremium !== null && !hasPremium && (
+        <BannerAd
+          key={`ad-${id}`}
+          ref={bannerRef}
+          unitId={adUnitId}
+          size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+        />
+      )}
 
       {/* Marginalia Modal */}
       <Modal
