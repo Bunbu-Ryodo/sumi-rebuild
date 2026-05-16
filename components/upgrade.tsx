@@ -51,9 +51,7 @@ export default function UpgradeButton() {
         }
       }}
     >
-      <Text style={styles.premiumButtonText}>
-        Upgrade to Premium (£5.99 per month)
-      </Text>
+      <Text style={styles.premiumButtonText}>Upgrade to Premium</Text>
     </TouchableOpacity>
   );
 }

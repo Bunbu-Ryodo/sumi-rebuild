@@ -42,7 +42,7 @@ export default function CancelButton() {
 
   return (
     <TouchableOpacity style={styles.cancelButton} onPress={cancelSubscription}>
-      <Text style={styles.cancelButtonText}>Cancel Subscription</Text>
+      <Text style={styles.cancelButtonText}>Cancel Premium</Text>
     </TouchableOpacity>
   );
 }

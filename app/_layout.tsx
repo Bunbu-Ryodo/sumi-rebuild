@@ -340,6 +340,10 @@ export default function RootLayout() {
               options={{ headerShown: false }}
             ></Stack.Screen>
             <Stack.Screen
+              name="getpremium"
+              options={{ headerShown: false }}
+            ></Stack.Screen>
+            <Stack.Screen
               name="changepassword"
               options={{ headerShown: false }}
             ></Stack.Screen>

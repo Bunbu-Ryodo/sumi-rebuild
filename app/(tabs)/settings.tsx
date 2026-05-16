@@ -275,10 +275,16 @@ export default function Settings() {
                 Manage Privacy Settings
               </Text>
             </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.premiumButton}
+              onPress={() => router.push("/getpremium")}
+            >
+              <Text style={styles.premiumButtonText}>Explore Premium Sumi</Text>
+            </TouchableOpacity>
             {deactivated ? (
               <>
                 <Text style={styles.selectedText}>
-                  Subscription will end on{" "}
+                  Premium will end on{" "}
                   {cancelAt
                     ? new Date(cancelAt).toLocaleDateString()
                     : "Unknown"}
@@ -547,6 +553,11 @@ const styles = StyleSheet.create({
   },
   privacyButtonText: {
     color: "#393E41",
+    fontFamily: "BeProVietnam",
+    fontSize: 16,
+  },
+  getPremiumText: {
+    color: "#F6F7EB",
     fontFamily: "BeProVietnam",
     fontSize: 16,
   },
