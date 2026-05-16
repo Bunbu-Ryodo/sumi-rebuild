@@ -25,18 +25,10 @@ export default function CancelButton() {
       });
 
       if (data) {
-        Toast.show({
-          type: "unsubscribed",
-          text1: "Subscription Cancelled",
-        });
+        router.replace("/cancelsuccess");
       } else {
-        Toast.show({
-          type: "settingsUpdateError",
-          text1: "Error Cancelling Subscription",
-        });
+        router.replace("/cancelfailure");
       }
-
-      router.replace("/(tabs)/feed");
     }
   };
 

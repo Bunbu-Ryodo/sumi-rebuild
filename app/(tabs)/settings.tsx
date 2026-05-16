@@ -275,12 +275,6 @@ export default function Settings() {
                 Manage Privacy Settings
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.premiumButton}
-              onPress={() => router.push("/getpremium")}
-            >
-              <Text style={styles.premiumButtonText}>Explore Premium Sumi</Text>
-            </TouchableOpacity>
             {deactivated ? (
               <>
                 <Text style={styles.selectedText}>
@@ -289,12 +283,33 @@ export default function Settings() {
                     ? new Date(cancelAt).toLocaleDateString()
                     : "Unknown"}
                 </Text>
-                <ReactivateButton />
+                <TouchableOpacity
+                  style={styles.privacyButton}
+                  onPress={() => router.push("/reactivatepremium")}
+                >
+                  <Text style={styles.privacyButtonText}>
+                    Reactivate Sumi Premium
+                  </Text>
+                </TouchableOpacity>
               </>
             ) : !premium && !deactivated ? (
-              <UpgradeButton />
+              <TouchableOpacity
+                style={styles.privacyButton}
+                onPress={() => router.push("/getpremium")}
+              >
+                <Text style={styles.privacyButtonText}>
+                  Explore Sumi Premium
+                </Text>
+              </TouchableOpacity>
             ) : (
-              <CancelButton />
+              <TouchableOpacity
+                style={styles.privacyButton}
+                onPress={() => router.push("/cancelpremium")}
+              >
+                <Text style={styles.privacyButtonText}>
+                  Cancel Sumi Premium
+                </Text>
+              </TouchableOpacity>
             )}
 
             <TouchableOpacity style={styles.logoutButton} onPress={Logout}>

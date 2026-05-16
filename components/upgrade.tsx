@@ -43,11 +43,11 @@ export default function UpgradeButton() {
           console.error(error, "CANCELLED PAYMENT SHEET");
         } else if (error) {
           console.error(error, "ERROR PRESENTING PAYMENT SHEET");
+          router.replace("/subscribefail");
           // Handle Failed
         } else {
           // Payment Succeeded
-          displaySubscribedToast("Subscribed to Premium");
-          router.replace("/(tabs)/feed");
+          router.replace("/subscribesuccess");
         }
       }}
     >

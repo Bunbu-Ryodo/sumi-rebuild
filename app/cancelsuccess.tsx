@@ -6,17 +6,14 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Linking,
 } from "react-native";
 import Checkbox from "expo-checkbox";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import UpgradeButton from "../components/upgrade";
+import ReactivateButton from "../components/reactivate";
 import { useRouter } from "expo-router";
 
-export default function GetPremium() {
+export default function SubscribeSuccess() {
   const router = useRouter();
-  const [isConsentChecked, setIsConsentChecked] = useState(false);
-
   return (
     <>
       <ScrollView contentContainerStyle={styles.getPremiumWrapper}>
@@ -24,57 +21,10 @@ export default function GetPremium() {
           <View style={styles.logoBook}>
             <View style={styles.logoTitle}></View>
           </View>
-          <Text style={styles.getPremiumText}>Sumi Premium</Text>
           <Text style={styles.getPremiumText}>
-            AI-assisted reading aids (chapter arguments, summaries,
-            explanations)
+            Your Sumi Premium has been cancelled. You will lose access to
+            members-only features at the end of the billing period.
           </Text>
-          <Text style={styles.getPremiumText}>
-            Access to future members-only features as they are released
-          </Text>
-          <Text style={styles.getPremiumText}>
-            £2.99 per month (cancel anytime in the app)
-          </Text>
-          <View style={styles.checkboxRow}>
-            <Checkbox
-              value={isConsentChecked}
-              onValueChange={setIsConsentChecked}
-              color={isConsentChecked ? "#363E41" : undefined}
-              style={styles.checkbox}
-            />
-            <Text style={styles.consentText}>
-              By ticking this box, you agree that Sumi will give you immediate
-              access to members-only digital content (AI reading aids and
-              ad-free experience). You acknowledge that you lose your 14-day
-              right to cancel once access begins. You accept the terms of the{" "}
-              <Text
-                style={styles.linkText}
-                onPress={() =>
-                  Linking.openURL("https://sumi.club/privacy-policy")
-                }
-              >
-                Sumi Privacy Policy
-              </Text>{" "}
-              and{" "}
-              <Text
-                style={styles.linkText}
-                onPress={() =>
-                  Linking.openURL("https://sumi.club/terms-and-conditions")
-                }
-              >
-                Terms and Conditions
-              </Text>
-              , and you understand that your subscription will automatically
-              renew until you cancel it in the app.
-            </Text>
-          </View>
-          {isConsentChecked ? (
-            <UpgradeButton />
-          ) : (
-            <TouchableOpacity style={styles.premiumButton} disabled={true}>
-              <Text style={styles.premiumButtonText}>Upgrade to Premium</Text>
-            </TouchableOpacity>
-          )}
           <Text
             onPress={() => router.push("/settings")}
             style={styles.backToSettings}
@@ -157,12 +107,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "100%",
     marginTop: 12,
-  },
-  linkText: {
-    color: "#8980F5",
-    fontFamily: "BeProVietnam",
-    fontSize: 14,
-    textDecorationLine: "underline",
   },
   premiumButtonText: {
     color: "#393E41",
