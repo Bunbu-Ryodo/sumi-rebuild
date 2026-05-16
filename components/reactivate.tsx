@@ -28,18 +28,10 @@ export default function ReactivateButton() {
       );
 
       if (data) {
-        Toast.show({
-          type: "subscribed",
-          text1: "Subscription Reactivated",
-        });
+        router.replace("/reactivatesuccess");
       } else {
-        Toast.show({
-          type: "settingsUpdateError",
-          text1: "Error Reactivating Subscription",
-        });
+        router.replace("/reactivatefailure");
       }
-
-      router.replace("/(tabs)/feed");
     }
   };
 

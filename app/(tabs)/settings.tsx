@@ -278,17 +278,38 @@ export default function Settings() {
             {deactivated ? (
               <>
                 <Text style={styles.selectedText}>
-                  Subscription will end on{" "}
+                  Premium will end on{" "}
                   {cancelAt
                     ? new Date(cancelAt).toLocaleDateString()
                     : "Unknown"}
                 </Text>
-                <ReactivateButton />
+                <TouchableOpacity
+                  style={styles.privacyButton}
+                  onPress={() => router.push("/reactivatepremium")}
+                >
+                  <Text style={styles.privacyButtonText}>
+                    Reactivate Sumi Premium
+                  </Text>
+                </TouchableOpacity>
               </>
             ) : !premium && !deactivated ? (
-              <UpgradeButton />
+              <TouchableOpacity
+                style={styles.privacyButton}
+                onPress={() => router.push("/getpremium")}
+              >
+                <Text style={styles.privacyButtonText}>
+                  Explore Sumi Premium
+                </Text>
+              </TouchableOpacity>
             ) : (
-              <CancelButton />
+              <TouchableOpacity
+                style={styles.privacyButton}
+                onPress={() => router.push("/cancelpremium")}
+              >
+                <Text style={styles.privacyButtonText}>
+                  Cancel Sumi Premium
+                </Text>
+              </TouchableOpacity>
             )}
 
             <TouchableOpacity style={styles.logoutButton} onPress={Logout}>
@@ -547,6 +568,11 @@ const styles = StyleSheet.create({
   },
   privacyButtonText: {
     color: "#393E41",
+    fontFamily: "BeProVietnam",
+    fontSize: 16,
+  },
+  getPremiumText: {
+    color: "#F6F7EB",
     fontFamily: "BeProVietnam",
     fontSize: 16,
   },

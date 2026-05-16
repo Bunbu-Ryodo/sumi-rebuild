@@ -340,6 +340,42 @@ export default function RootLayout() {
               options={{ headerShown: false }}
             ></Stack.Screen>
             <Stack.Screen
+              name="getpremium"
+              options={{ headerShown: false }}
+            ></Stack.Screen>
+            <Stack.Screen
+              name="subscribesuccess"
+              options={{ headerShown: false }}
+            ></Stack.Screen>
+            <Stack.Screen
+              name="subscribefail"
+              options={{ headerShown: false }}
+            ></Stack.Screen>
+            <Stack.Screen
+              name="cancelsuccess"
+              options={{ headerShown: false }}
+            ></Stack.Screen>
+            <Stack.Screen
+              name="cancelfailure"
+              options={{ headerShown: false }}
+            ></Stack.Screen>
+            <Stack.Screen
+              name="reactivatesuccess"
+              options={{ headerShown: false }}
+            ></Stack.Screen>
+            <Stack.Screen
+              name="reactivatefailure"
+              options={{ headerShown: false }}
+            ></Stack.Screen>
+            <Stack.Screen
+              name="reactivatepremium"
+              options={{ headerShown: false }}
+            ></Stack.Screen>
+            <Stack.Screen
+              name="cancelpremium"
+              options={{ headerShown: false }}
+            ></Stack.Screen>
+            <Stack.Screen
               name="changepassword"
               options={{ headerShown: false }}
             ></Stack.Screen>
