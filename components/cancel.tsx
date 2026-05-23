@@ -4,6 +4,9 @@ import supabase from "../lib/supabase";
 import { getUserSession, lookUpUserProfile } from "../supabase_queries/auth";
 import { useRouter } from "expo-router";
 
+const useTestPayment =
+  __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
+
 export default function CancelButton() {
   const router = useRouter();
   const cancelSubscription = async () => {
@@ -13,9 +16,16 @@ export default function CancelButton() {
       throw new Error("No valid session");
     }
 
+    let cancelSubscription;
+    if (useTestPayment) {
+      cancelSubscription = "cancel-subscription";
+    } else {
+      cancelSubscription = "prod-cancel-subscription";
+    }
+
     if (session.session.user.id) {
       const profile = await lookUpUserProfile(session.session.user.id);
-      const { data } = await supabase.functions.invoke("cancel-subscription", {
+      const { data } = await supabase.functions.invoke(cancelSubscription, {
         body: {
           subscriptionId: profile?.subscription_id,
         },

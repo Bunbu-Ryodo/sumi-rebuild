@@ -4,6 +4,9 @@ import supabase from "../lib/supabase";
 import { getUserSession, lookUpUserProfile } from "../supabase_queries/auth";
 import { useRouter } from "expo-router";
 
+const useTestPayment =
+  __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
+
 export default function ReactivateButton() {
   const router = useRouter();
   const reactivateSubscription = async () => {
@@ -13,19 +16,24 @@ export default function ReactivateButton() {
       throw new Error("No valid session");
     }
 
+    let reactivateSubscription;
+
+    if (useTestPayment) {
+      reactivateSubscription = "reactivate-subscription";
+    } else {
+      reactivateSubscription = "prod-reactivate-subscription";
+    }
+
     if (session.session.user.id) {
       const profile = await lookUpUserProfile(session.session.user.id);
-      const { data } = await supabase.functions.invoke(
-        "reactivate-subscription",
-        {
-          body: {
-            subscriptionId: profile?.subscription_id,
-          },
-          headers: {
-            Authorization: `Bearer ${session?.session?.access_token}`,
-          },
+      const { data } = await supabase.functions.invoke(reactivateSubscription, {
+        body: {
+          subscriptionId: profile?.subscription_id,
         },
-      );
+        headers: {
+          Authorization: `Bearer ${session?.session?.access_token}`,
+        },
+      });
 
       if (data) {
         router.push({

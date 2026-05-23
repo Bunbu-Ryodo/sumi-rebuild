@@ -49,6 +49,8 @@ import supabase from "../../lib/supabase.js";
 let adUnitId = "";
 
 const useTestAds = __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
+const useTestPayment =
+  __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
 
 if (useTestAds) {
   adUnitId = TestIds.ADAPTIVE_BANNER;
@@ -153,8 +155,16 @@ export default function FeedScreen() {
         throw new Error("No valid session");
       }
 
+      let createCustomer;
+
+      if (useTestPayment) {
+        createCustomer = "create-customer";
+      } else {
+        createCustomer = "prod-create-customer";
+      }
+
       const { data: customerData, error: customerError } =
-        await supabase.functions.invoke("create-customer", {
+        await supabase.functions.invoke(createCustomer, {
           headers: {
             Authorization: `Bearer ${session.session.access_token}`,
           },
@@ -186,9 +196,15 @@ export default function FeedScreen() {
       if (!session?.session?.access_token) {
         throw new Error("No valid session");
       }
-
+0
+      let createSubscription;
+      if (useTestPayment) {
+        createSubscription = "create-subscription";
+      } else {
+        createSubscription = "prod-create-subscription";
+      }
       const { data: subscriptionData, error: subscriptionError } =
-        await supabase.functions.invoke("create-subscription", {
+        await supabase.functions.invoke(createSubscription, {
           body: {
             customerId: customerId,
           },

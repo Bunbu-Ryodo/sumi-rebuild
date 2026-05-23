@@ -10,6 +10,9 @@ import Toast from "react-native-toast-message";
 import { useRouter } from "expo-router";
 import supabase from "../lib/supabase";
 
+const useTestPayment =
+  __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
+
 export default function UpgradeButton() {
   const router = useRouter();
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
@@ -34,8 +37,15 @@ export default function UpgradeButton() {
       throw new Error("No valid session");
     }
 
+    let createSubscription;
+    if (useTestPayment) {
+      createSubscription = "create-subscription";
+    } else {
+      createSubscription = "prod-create-subscription";
+    }
+
     const { data, error } = await supabase.functions.invoke(
-      "create-subscription",
+      createSubscription,
       {
         body: { customerId: stripeCustomerId },
         headers: {
