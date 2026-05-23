@@ -25,9 +25,21 @@ export default function CancelButton() {
       });
 
       if (data) {
-        router.replace("/cancelsuccess");
+        router.push({
+          pathname: "/billchangestatus",
+          params: {
+            message:
+              "Cancellation succeeded. We're sorry to see you go! If you have any feedback or need assistance, please contact support@sumi.club.",
+          },
+        });
       } else {
-        router.replace("/cancelfailure");
+        router.push({
+          pathname: "/billchangestatus",
+          params: {
+            message:
+              "Cancellation failed. Something went wrong. Please try again later or contact support@sumi.club.",
+          },
+        });
       }
     }
   };

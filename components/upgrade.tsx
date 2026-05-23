@@ -1,13 +1,19 @@
-import { useEffect } from "react";
+import { useState } from "react";
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
 import { useStripe, PaymentSheetError } from "@stripe/stripe-react-native";
-import { getUserSession, lookUpUserProfile } from "../supabase_queries/auth";
+import {
+  getUserSession,
+  lookUpUserProfile,
+  updateUserProfileSubscription,
+} from "../supabase_queries/auth";
 import Toast from "react-native-toast-message";
 import { useRouter } from "expo-router";
+import supabase from "../lib/supabase";
 
 export default function UpgradeButton() {
   const router = useRouter();
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
+  const [isLoading, setIsLoading] = useState(false);
 
   const displaySubscribedToast = (message: string) => {
     Toast.show({
@@ -16,38 +22,163 @@ export default function UpgradeButton() {
     });
   };
 
-  useEffect(() => {
-    const initializePaymentSheet = async () => {
-      const user = await getUserSession();
-      if (user) {
-        const profile = await lookUpUserProfile(user.id);
-        const { error } = await initPaymentSheet({
-          paymentIntentClientSecret: profile?.client_secret,
-          merchantDisplayName: "Sumi Rebuild",
-        });
+  const createFreshClientSecret = async (
+    stripeCustomerId: string,
+    userId: string,
+  ) => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-        if (error) {
-          console.error(error, "ERROR INITIALIZING PAYMENT SHEET");
-        }
-      }
-    };
-    initializePaymentSheet();
-  }, []);
+    if (!session?.access_token) {
+      throw new Error("No valid session");
+    }
+
+    const { data, error } = await supabase.functions.invoke(
+      "create-subscription",
+      {
+        body: { customerId: stripeCustomerId },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      },
+    );
+
+    if (error) {
+      throw error;
+    }
+
+    const { subscriptionId, status, clientSecret } = data || {};
+
+    if (!clientSecret) {
+      throw new Error("Missing client secret from create-subscription");
+    }
+
+    await updateUserProfileSubscription(
+      userId,
+      subscriptionId,
+      status,
+      clientSecret,
+    );
+
+    return clientSecret as string;
+  };
+
+  const initializePaymentSheet = async (forceRefreshClientSecret = false) => {
+    const user = await getUserSession();
+
+    if (!user) {
+      throw new Error("No authenticated user session");
+    }
+
+    const profile = await lookUpUserProfile(user.id);
+
+    if (!profile?.stripe_customer_id) {
+      throw new Error("Missing Stripe customer ID on profile");
+    }
+
+    const subscriptionStatus = String(
+      profile.subscription_status || "",
+    ).toLowerCase();
+    const shouldRefreshByStatus = [
+      "canceled",
+      "cancelled",
+      "past_due",
+      "unpaid",
+      "incomplete_expired",
+      "incomplete",
+    ].includes(subscriptionStatus);
+
+    const shouldRefreshClientSecret =
+      forceRefreshClientSecret ||
+      !profile.client_secret ||
+      shouldRefreshByStatus;
+
+    const clientSecret = shouldRefreshClientSecret
+      ? await createFreshClientSecret(profile.stripe_customer_id, user.id)
+      : profile.client_secret;
+
+    if (!clientSecret) {
+      throw new Error("Missing payment client secret on profile");
+    }
+
+    const { error } = await initPaymentSheet({
+      paymentIntentClientSecret: clientSecret,
+      merchantDisplayName: "Sumi Rebuild",
+    });
+
+    return error;
+  };
 
   return (
     <TouchableOpacity
       style={styles.premiumButton}
+      disabled={isLoading}
       onPress={async () => {
-        const { error } = await presentPaymentSheet();
-        if (error?.code === PaymentSheetError.Canceled) {
-          console.error(error, "CANCELLED PAYMENT SHEET");
-        } else if (error) {
-          console.error(error, "ERROR PRESENTING PAYMENT SHEET");
-          router.replace("/subscribefail");
-          // Handle Failed
-        } else {
-          // Payment Succeeded
-          router.replace("/subscribesuccess");
+        if (isLoading) {
+          return;
+        }
+
+        setIsLoading(true);
+
+        try {
+          let initError = await initializePaymentSheet(false);
+
+          const shouldRefreshIntent =
+            !!initError?.message &&
+            (initError.message.includes("status 'succeeded'") ||
+              initError.message.includes("status 'canceled'"));
+
+          if (shouldRefreshIntent) {
+            initError = await initializePaymentSheet(true);
+          }
+
+          if (initError) {
+            console.error(initError, "ERROR INITIALIZING PAYMENT SHEET");
+            router.push({
+              pathname: "/billchangestatus",
+              params: {
+                message:
+                  "Unable to start checkout. Please try again in a moment.",
+              },
+            });
+            return;
+          }
+
+          const { error } = await presentPaymentSheet();
+
+          if (error?.code === PaymentSheetError.Canceled) {
+            console.error(error, "CANCELLED PAYMENT SHEET");
+          } else if (error) {
+            console.error(error, "ERROR PRESENTING PAYMENT SHEET");
+            router.push({
+              pathname: "/billchangestatus",
+              params: {
+                message:
+                  "Something went wrong. Please try again later or contact support@sumi.club.",
+              },
+            });
+            // Handle Failed
+          } else {
+            // Payment Succeeded
+            router.push({
+              pathname: "/billchangestatus",
+              params: {
+                message: "Payment succeeded. Thank you for upgrading!",
+              },
+            });
+          }
+        } catch (error) {
+          console.error(error, "CHECKOUT INITIALIZATION FAILED");
+          router.push({
+            pathname: "/billchangestatus",
+            params: {
+              message:
+                "Unable to start checkout. Please try again later or contact support@sumi.club.",
+            },
+          });
+        } finally {
+          setIsLoading(false);
         }
       }}
     >
