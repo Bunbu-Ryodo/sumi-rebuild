@@ -28,9 +28,21 @@ export default function ReactivateButton() {
       );
 
       if (data) {
-        router.replace("/reactivatesuccess");
+        router.push({
+          pathname: "/billchangestatus",
+          params: {
+            message:
+              "Reactivation succeeded. You will now continue to enjoy premium features uninterrupted!",
+          },
+        });
       } else {
-        router.replace("/reactivatefailure");
+        router.push({
+          pathname: "/billchangestatus",
+          params: {
+            message:
+              "Reactivation failed. Something went wrong. Please try again later or contact support@sumi.club.",
+          },
+        });
       }
     }
   };

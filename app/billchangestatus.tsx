@@ -1,18 +1,11 @@
 import { useState } from "react";
 import { Platform } from "react-native";
-import {
-  View,
-  ScrollView,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-} from "react-native";
-import Checkbox from "expo-checkbox";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import ReactivateButton from "../components/reactivate";
+import { View, ScrollView, Text, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 
-export default function ReactivateFailure() {
+export default function SubscribeSuccess() {
+  const { message } = useLocalSearchParams<{ message: string }>();
   const router = useRouter();
   return (
     <>
@@ -21,10 +14,7 @@ export default function ReactivateFailure() {
           <View style={styles.logoBook}>
             <View style={styles.logoTitle}></View>
           </View>
-          <Text style={styles.getPremiumText}>
-            Something went wrong. Please try again later or contact
-            support@sumi.club if the issue persists.
-          </Text>
+          <Text style={styles.getPremiumText}>{message}</Text>
           <Text
             onPress={() => router.push("/settings")}
             style={styles.backToSettings}

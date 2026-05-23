@@ -76,9 +76,19 @@ export default function Settings() {
           const cancellationInfo = await getSubscriptionCancellationInfo(
             user.id,
           );
+
+          console.log(subscription, "Subscription Status");
+          console.log(cancellationInfo, "Cancellation Info");
+
           setPremium(subscription);
-          setDeactivated(cancellationInfo?.willCancel || false);
-          setCancelAt(cancellationInfo?.cancelAt || null);
+
+          if (subscription) {
+            setDeactivated(cancellationInfo?.willCancel || false);
+            setCancelAt(cancellationInfo?.cancelAt || null);
+          } else {
+            setDeactivated(false);
+            setCancelAt(null);
+          }
         }
         setLoading(false);
       }
