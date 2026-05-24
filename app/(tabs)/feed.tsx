@@ -196,7 +196,7 @@ export default function FeedScreen() {
       if (!session?.session?.access_token) {
         throw new Error("No valid session");
       }
-      0;
+
       let createSubscription;
       if (useTestPayment) {
         createSubscription = "create-subscription";
