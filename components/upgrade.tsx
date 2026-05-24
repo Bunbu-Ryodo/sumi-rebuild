@@ -7,14 +7,13 @@ import {
   updateUserProfileSubscription,
 } from "../supabase_queries/auth";
 import Toast from "react-native-toast-message";
-import { useRouter } from "expo-router";
+import { router } from "expo-router";
 import supabase from "../lib/supabase";
 
 const useTestPayment =
-  __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
+  __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
 
 export default function UpgradeButton() {
-  const router = useRouter();
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -115,6 +114,7 @@ export default function UpgradeButton() {
     const { error } = await initPaymentSheet({
       paymentIntentClientSecret: clientSecret,
       merchantDisplayName: "Sumi Rebuild",
+      returnURL: "sumirebuild://stripe-redirect",
     });
 
     return error;
@@ -145,7 +145,7 @@ export default function UpgradeButton() {
 
           if (initError) {
             console.error(initError, "ERROR INITIALIZING PAYMENT SHEET");
-            router.push({
+            router.replace({
               pathname: "/billchangestatus",
               params: {
                 message:
@@ -161,7 +161,7 @@ export default function UpgradeButton() {
             console.error(error, "CANCELLED PAYMENT SHEET");
           } else if (error) {
             console.error(error, "ERROR PRESENTING PAYMENT SHEET");
-            router.push({
+            router.replace({
               pathname: "/billchangestatus",
               params: {
                 message:
@@ -171,7 +171,7 @@ export default function UpgradeButton() {
             // Handle Failed
           } else {
             // Payment Succeeded
-            router.push({
+            router.replace({
               pathname: "/billchangestatus",
               params: {
                 message: "Payment succeeded. Thank you for upgrading!",
@@ -180,7 +180,7 @@ export default function UpgradeButton() {
           }
         } catch (error) {
           console.error(error, "CHECKOUT INITIALIZATION FAILED");
-          router.push({
+          router.replace({
             pathname: "/billchangestatus",
             params: {
               message:

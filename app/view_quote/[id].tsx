@@ -15,38 +15,12 @@ import { useLocalSearchParams } from "expo-router";
 import { getQuoteById, deleteUserQuote } from "../../supabase_queries/quotes";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
-import {
-  BannerAd,
-  BannerAdSize,
-  TestIds,
-  useForeground,
-} from "react-native-google-mobile-ads";
-
-let adUnitId = "";
-
-const useTestAds = __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
-
-if (useTestAds) {
-  adUnitId = TestIds.ADAPTIVE_BANNER;
-} else if (Platform.OS === "android") {
-  adUnitId = "ca-app-pub-5850018728161057/6524403480";
-} else if (Platform.OS === "ios") {
-  adUnitId = "ca-app-pub-5850018728161057/3269917700";
-}
 
 export default function ViewQuote() {
   const router = useRouter();
   let { id } = useLocalSearchParams();
   const [quote, setQuote] = useState<QuoteType | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const bannerRef = useRef<BannerAd>(null);
-
-  useForeground(() => {
-    if (Platform.OS === "android" || Platform.OS === "ios") {
-      bannerRef.current?.load();
-    }
-  });
 
   const fetchQuote = async () => {
     setLoading(true);
@@ -117,12 +91,6 @@ export default function ViewQuote() {
           </View>
         )}
       </ScrollView>
-      <BannerAd
-        key={`ad-${id}`}
-        ref={bannerRef}
-        unitId={adUnitId}
-        size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-      />
     </>
   );
 }

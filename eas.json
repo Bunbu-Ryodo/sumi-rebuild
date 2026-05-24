@@ -24,6 +24,12 @@
         "buildType": "app-bundle"
       }
     },
+    "test-stripe": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_USE_TEST_ADS": "true"
+      }
+    },
     "preview": {
       "distribution": "internal"
     },

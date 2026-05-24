@@ -8,7 +8,8 @@ export default function StripeProviderComponent(
 ) {
   let key = "";
 
-  const useTestKey = __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
+  const useTestKey =
+    __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
 
   if (useTestKey) {
     key =
@@ -20,10 +21,8 @@ export default function StripeProviderComponent(
 
   return (
     <StripeProvider
-      publishableKey={
-        "pk_test_51RaGupQZ7SqqoiIZzmmmBAc5PVihFmt7WpBvFjDj6W2YRZs6HN18i8uEXDtTsosa5eceA4d5MIqdR60RHtoVArsa001oNfkQM5"
-      }
-      urlScheme="sumirebuild://" // required for 3D Secure and bank redirects
+      publishableKey={key}
+      urlScheme="sumirebuild" // required for 3D Secure and bank redirects
       {...props}
     />
   );

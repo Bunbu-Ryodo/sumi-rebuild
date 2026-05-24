@@ -50,7 +50,7 @@ let adUnitId = "";
 
 const useTestAds = __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
 const useTestPayment =
-  __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
+  __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
 
 if (useTestAds) {
   adUnitId = TestIds.ADAPTIVE_BANNER;
@@ -196,7 +196,7 @@ export default function FeedScreen() {
       if (!session?.session?.access_token) {
         throw new Error("No valid session");
       }
-0
+
       let createSubscription;
       if (useTestPayment) {
         createSubscription = "create-subscription";

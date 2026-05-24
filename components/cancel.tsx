@@ -5,7 +5,7 @@ import { getUserSession, lookUpUserProfile } from "../supabase_queries/auth";
 import { useRouter } from "expo-router";
 
 const useTestPayment =
-  __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
+  __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
 
 export default function CancelButton() {
   const router = useRouter();

@@ -4,12 +4,13 @@ import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import supabase from "../lib/supabase";
 import { createContext, useContext } from "react";
-import { View, Text } from "react-native";
+import { View, Text, Linking } from "react-native";
 import { StatusBar } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Toast from "react-native-toast-message";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import StripeProvider from "../components/stripe-provider";
+import { useStripe } from "@stripe/stripe-react-native";
 
 const SupabaseContext = createContext(supabase);
 
@@ -323,6 +324,40 @@ export default function RootLayout() {
 
   return (
     <StripeProvider>
+      <RootNavigator toastConfig={toastConfig} />
+    </StripeProvider>
+  );
+}
+
+function RootNavigator({ toastConfig }: { toastConfig: any }) {
+  const { handleURLCallback } = useStripe();
+
+  useEffect(() => {
+    const handleDeepLink = async ({ url }: { url: string }) => {
+      if (!url) {
+        return;
+      }
+
+      await handleURLCallback(url);
+    };
+
+    const subscription = Linking.addEventListener("url", handleDeepLink);
+
+    Linking.getInitialURL().then((url) => {
+      if (url) {
+        handleURLCallback(url).catch((error) => {
+          console.error("Failed to process initial URL callback", error);
+        });
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [handleURLCallback]);
+
+  return (
+    <>
       <SupabaseContext.Provider value={supabase}>
         <GestureHandlerRootView>
           <StatusBar backgroundColor="#393E41" barStyle="light-content" />
@@ -353,6 +388,10 @@ export default function RootLayout() {
             ></Stack.Screen>
             <Stack.Screen
               name="billchangestatus"
+              options={{ headerShown: false }}
+            ></Stack.Screen>
+            <Stack.Screen
+              name="stripe-redirect"
               options={{ headerShown: false }}
             ></Stack.Screen>
             <Stack.Screen
@@ -404,6 +443,6 @@ export default function RootLayout() {
           <Toast config={toastConfig} />
         </GestureHandlerRootView>
       </SupabaseContext.Provider>
-    </StripeProvider>
+    </>
   );
 }
