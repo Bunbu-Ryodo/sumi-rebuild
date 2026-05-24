@@ -11,7 +11,7 @@ import { useRouter } from "expo-router";
 import supabase from "../lib/supabase";
 
 const useTestPayment =
-  __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
+  __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
 
 export default function UpgradeButton() {
   const router = useRouter();
@@ -115,6 +115,7 @@ export default function UpgradeButton() {
     const { error } = await initPaymentSheet({
       paymentIntentClientSecret: clientSecret,
       merchantDisplayName: "Sumi Rebuild",
+      returnURL: "sumirebuild://stripe-redirect",
     });
 
     return error;

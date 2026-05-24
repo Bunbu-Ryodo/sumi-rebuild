@@ -50,7 +50,7 @@
       [
         "@stripe/stripe-react-native",
         {
-          "urlScheme": "sumirebuild://"
+          "urlScheme": "sumirebuild"
         }
       ]
     ],
