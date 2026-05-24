@@ -391,6 +391,10 @@ function RootNavigator({ toastConfig }: { toastConfig: any }) {
               options={{ headerShown: false }}
             ></Stack.Screen>
             <Stack.Screen
+              name="stripe-redirect"
+              options={{ headerShown: false }}
+            ></Stack.Screen>
+            <Stack.Screen
               name="changepassword"
               options={{ headerShown: false }}
             ></Stack.Screen>
