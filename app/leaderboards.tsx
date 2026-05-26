@@ -71,22 +71,9 @@ export default function Leaderboards() {
       >
         <View style={styles.streakWrapper}>
           <View style={styles.leaderBoardHeader}>
-            <Text style={styles.newInstallmentsHeader}>Global Leaderboard</Text>
             <View style={styles.headerIconContainer}>
               <Ionicons name="globe" size={24} color={"#393E41"} />
             </View>
-          </View>
-          <View
-            style={{ width: "100%", alignItems: "center", marginBottom: 12 }}
-          >
-            <Link href="/subscriptions" asChild>
-              <TouchableOpacity style={styles.seeLeaderboardButton}>
-                <Ionicons name="arrow-back" size={20} color={"#393E41"} />
-                <Text style={styles.secondaryButtonText}>
-                  Back to Subscriptions
-                </Text>
-              </TouchableOpacity>
-            </Link>
           </View>
           {!loading &&
             leaderboard.map((streak, index) => (
@@ -186,7 +173,7 @@ const styles = StyleSheet.create({
   },
   streakWrapper: {
     padding: 16,
-    marginTop: 24,
+    marginTop: 8,
     width: "100%",
   },
   subscriptionSection: {

@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   },
   extractWrapper: {
     padding: 16,
-    marginTop: 24,
+    marginTop: 12,
     width: "100%",
   },
   subscriptionSection: {

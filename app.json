@@ -16,7 +16,10 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.sumisupabase",
-      "icon": "./assets/images/icon.png"
+      "icon": "./assets/images/icon.png",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -33,7 +36,7 @@
     },
     "plugins": [
       "expo-router",
-            [
+      [
         "expo-splash-screen",
         {
           "image": "./assets/images/sumi-splash-icon.png",
