@@ -6,10 +6,9 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { updatePassword } from "../supabase_queries/auth.js";
 import Toast from "react-native-toast-message";
-import { makeRedirectUri } from "expo-auth-session";
 import * as QueryParams from "expo-auth-session/build/QueryParams";
 import * as Linking from "expo-linking";
 import supabase from "../lib/supabase";

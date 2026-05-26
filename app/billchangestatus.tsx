@@ -1,5 +1,3 @@
-import { useState } from "react";
-import { Platform } from "react-native";
 import { View, ScrollView, Text, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { useLocalSearchParams } from "expo-router";

@@ -4,12 +4,10 @@ import {
   ScrollView,
   ActivityIndicator,
   TouchableOpacity,
-  Platform,
   StyleSheet,
   Image,
-  Dimensions,
 } from "react-native";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { QuoteType } from "@/types/types";
 import { useLocalSearchParams } from "expo-router";
 import { getQuoteById, deleteUserQuote } from "../../supabase_queries/quotes";
@@ -72,14 +70,6 @@ export default function ViewQuote() {
                   </View>
                 </View>
                 <Text style={styles.quoteText}>{quote.quote}</Text>
-                {/* <Image
-                  source={{ uri: quote.portrait }}
-                  style={{
-                    width: 80,
-                    height: 80,
-                    borderRadius: 40,
-                  }}
-                /> */}
               </>
             ) : (
               <Text>Quote failed to load.</Text>

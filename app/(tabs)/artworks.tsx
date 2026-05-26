@@ -22,7 +22,6 @@ import {
   getUserSession,
   hasActivePremiumSubscription,
 } from "../../supabase_queries/auth.js";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import Carousel, {
   ICarouselInstance,
   Pagination,
@@ -62,13 +61,6 @@ export default function Artwork() {
   const onPressPaginationArtworks = (index: number) => {
     artworkCarousel.current?.scrollTo({
       count: index - artworkProgress.value,
-      animated: true,
-    });
-  };
-
-  const onPressPaginationQuotes = (index: number) => {
-    quoteCarousel.current?.scrollTo({
-      count: index - quoteProgress.value,
       animated: true,
     });
   };
@@ -128,19 +120,6 @@ export default function Artwork() {
       >
         {!loading && (
           <View style={styles.artWrapper}>
-            <View style={styles.artworksHeader}>
-              {/* <Text style={styles.yourArtworks}>{"Artworks and Quotes"}</Text> */}
-              {/* <View style={styles.headerIconContainer}>
-                <View style={styles.iconContainer}>
-                  <Ionicons name="color-palette" size={24} color={"#393E41"} />
-                  <Ionicons
-                    name="chatbubble-ellipses"
-                    size={24}
-                    color={"#393E41"}
-                  />
-                </View>
-              </View> */}
-            </View>
             {artworks && artworks.length > 0 ? (
               <View
                 style={{
@@ -194,9 +173,6 @@ export default function Artwork() {
                 />
               </View>
             ) : null}
-            <View style={styles.artworksHeader}>
-              <View style={styles.headerIconContainer}></View>
-            </View>
             {quotes && quotes.length > 0 ? (
               <View
                 style={{

@@ -31,7 +31,6 @@ import {
   resetStreak,
   createStreak,
 } from "../../supabase_queries/subscriptions";
-import { setStreakChecking } from "../../supabase_queries/profiles";
 import { ExtractType } from "../../types/types.js";
 import Extract from "../../components/extract";
 import {
