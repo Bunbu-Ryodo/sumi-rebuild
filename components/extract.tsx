@@ -71,6 +71,7 @@ export default function Extract({
   coverartTitle,
   userid,
 }: ExtractComponent) {
+  const dividerDots = Array.from({ length: 48 });
   const [preview, setPreview] = useState(fulltext.slice(0, 420));
   const [saved, setSaved] = useState(false);
   const router = useRouter();
@@ -129,6 +130,11 @@ export default function Extract({
             <Text style={styles.headerText}>({year})</Text>
           </View>
         </TouchableOpacity>
+      </View>
+      <View style={styles.headerDivider}>
+        {dividerDots.map((_, index) => (
+          <View key={index} style={styles.headerDividerDot} />
+        ))}
       </View>
       <TouchableOpacity onPress={handleNavigation}>
         <View style={styles.previewText}>
@@ -202,10 +208,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingTop: 8,
     paddingBottom: 8,
-    borderBottomColor: "#393E41",
-    borderBottomWidth: 1,
-    borderStyle: "dotted",
     width: "100%",
+  },
+  headerDivider: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+    marginTop: 8
+  },
+  headerDividerDot: {
+    width: 3,
+    height: 3,
+    borderRadius: 999,
+    backgroundColor: "#393E41",
   },
   headerContainer: {
     padding: 8,

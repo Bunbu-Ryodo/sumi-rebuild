@@ -92,7 +92,7 @@ export default function Subscriptions() {
             <View style={styles.subscriptionsHeader}>
               <Text style={styles.newInstallmentsHeader}>
                 {series.length > 0
-                  ? "Your Subscriptions"
+                  ? ""
                   : "Subscribe To A Series!"}
               </Text>
               <View style={styles.headerIconContainer}>

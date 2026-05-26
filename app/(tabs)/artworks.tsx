@@ -129,8 +129,8 @@ export default function Artwork() {
         {!loading && (
           <View style={styles.artWrapper}>
             <View style={styles.artworksHeader}>
-              <Text style={styles.yourArtworks}>{"Artworks and Quotes"}</Text>
-              <View style={styles.headerIconContainer}>
+              {/* <Text style={styles.yourArtworks}>{"Artworks and Quotes"}</Text> */}
+              {/* <View style={styles.headerIconContainer}>
                 <View style={styles.iconContainer}>
                   <Ionicons name="color-palette" size={24} color={"#393E41"} />
                   <Ionicons
@@ -139,7 +139,7 @@ export default function Artwork() {
                     color={"#393E41"}
                   />
                 </View>
-              </View>
+              </View> */}
             </View>
             {artworks && artworks.length > 0 ? (
               <View
