@@ -361,7 +361,20 @@ function RootNavigator({ toastConfig }: { toastConfig: any }) {
       <SupabaseContext.Provider value={supabase}>
         <GestureHandlerRootView>
           <StatusBar backgroundColor="#393E41" barStyle="light-content" />
-          <Stack>
+          <Stack
+            screenOptions={{
+              headerStyle: {
+                backgroundColor: "#393E41",
+              },
+              headerTitleStyle: {
+                fontFamily: "BeProVietnam",
+                color: "#F6F7EB",
+              },
+              headerTintColor: "#F6F7EB",
+              headerShadowVisible: false,
+              headerBackButtonDisplayMode: "minimal",
+            }}
+          >
             <Stack.Screen
               name="index"
               options={{ headerShown: false }}
@@ -404,7 +417,7 @@ function RootNavigator({ toastConfig }: { toastConfig: any }) {
             ></Stack.Screen>
             <Stack.Screen
               name="ereader/[id]"
-              options={{ headerShown: false }}
+              options={{ headerShown: true, title: "Reader" }}
             ></Stack.Screen>
             <Stack.Screen
               name="view_artwork/[id]"
@@ -438,7 +451,10 @@ function RootNavigator({ toastConfig }: { toastConfig: any }) {
                 headerShadowVisible: false,
               }}
             ></Stack.Screen>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="(tabs)"
+              options={{ headerShown: false, title: "Home" }}
+            />
           </Stack>
           <Toast config={toastConfig} />
         </GestureHandlerRootView>
