@@ -65,9 +65,6 @@ export default function Settings() {
             user.id,
           );
 
-          console.log(subscription, "Subscription Status");
-          console.log(cancellationInfo, "Cancellation Info");
-
           setPremium(subscription);
 
           if (subscription) {

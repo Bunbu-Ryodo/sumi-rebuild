@@ -439,9 +439,6 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "auto",
     alignItems: "flex-start",
-    borderColor: "#393E41",
-    borderBottomWidth: 1,
-    borderStyle: "dotted",
   },
   artContainer: {
     width: 100,

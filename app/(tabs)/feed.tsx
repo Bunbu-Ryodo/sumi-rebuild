@@ -322,7 +322,7 @@ export default function FeedScreen() {
         const preciseDate = new Date(duedate);
         const dueDateMidnight = preciseDate.setHours(0, 0, 0, 0);
 
-        console.log(new Date(dueDateMidnight).toString(), "Next due date");
+        console.log("Set new due date");
 
         if (extract) {
           console.log("Creating new instalment");

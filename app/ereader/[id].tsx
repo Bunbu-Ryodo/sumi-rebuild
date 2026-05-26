@@ -504,9 +504,9 @@ export default function EReader() {
         : null;
       const today = new Date();
       if (lastUpdated !== null && isSameDay(lastUpdated, today)) {
-        console.log("Already ready today, streak not incremented");
+        console.log("Already read today, streak not incremented");
       } else {
-        console.log("Incrementing streak from", streak.current_streak);
+        console.log("Incrementing streak from");
         const updatedStreak = await updateStreak(
           userid,
           streak.current_streak + 1,
@@ -714,12 +714,12 @@ export default function EReader() {
     const dueToUse = currentDue.current;
 
     if (subscribed) {
-      console.log("Subscription deactivated", subid);
+      console.log("Subscription deactivated");
       await deactivateSubscription(subid);
 
       await hideSeries(userid, subid);
     } else {
-      console.log("Subscription activated", subid);
+      console.log("Subscription activated");
       await activateSubscription(subid, dueToUse);
       await updateSeriesDueDate(userid, subid, dueToUse);
 
@@ -734,7 +734,7 @@ export default function EReader() {
   useEffect(() => {
     if (!subid || subid === 0) return;
 
-    console.log("Setting up listener for subscription:", subid);
+    console.log("Setting up listener for subscription");
     supabase
       .channel(`subscription-updates-${subid}`)
       .on(
@@ -760,7 +760,7 @@ export default function EReader() {
         console.log("Screen unfocused, cleaning up any active listeners");
         supabase.getChannels().forEach((channel) => {
           if (channel.topic.includes("subscription-updates")) {
-            console.log("Force cleaning up channel:", channel.topic);
+            console.log("Force cleaning up channel");
             supabase.removeChannel(channel);
           }
         });
@@ -1247,7 +1247,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: "#393E41",
     paddingBottom: 16,
-    borderStyle: "dotted",
   },
   engagementButtons: {
     marginTop: 12,
