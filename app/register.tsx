@@ -83,7 +83,7 @@ export default function Register() {
       </View>
       <View style={styles.titleTaglineContainer}>
         <Text style={styles.header}>Sumi</Text>
-        <Text style={styles.tagline}>Just One More Chapter</Text>
+        <Text style={styles.tagline}>Join for Free</Text>
       </View>
       <View style={styles.form}>
         <Text style={styles.formLabel}>Email</Text>

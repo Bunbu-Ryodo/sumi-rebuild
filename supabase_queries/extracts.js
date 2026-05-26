@@ -16,7 +16,7 @@ export async function getExtract(extractId){
 }
 
 export async function checkForReadingProgress(userId, extractId) {
-    const { data: progress, error } = await supabase
+    const { data: progress } = await supabase
         .from('reading_progress')
         .select('*')
         .eq('extract_id', extractId)

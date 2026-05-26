@@ -6,14 +6,13 @@ import {
   ActivityIndicator,
   StyleSheet,
   TouchableOpacity,
-  Modal,
-  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useState, useEffect } from "react";
 import {
   updatePassword,
   updateUsername,
+  updateEmail
 } from "../../supabase_queries/settings";
 import { getUserSession, lookUpUserProfile } from "../../supabase_queries/auth";
 import {
@@ -25,9 +24,6 @@ import supabase from "../../lib/supabase.js";
 import { updateSubscriptionInterval } from "../../supabase_queries/profiles";
 import Toast from "react-native-toast-message";
 import { AdsConsent } from "react-native-google-mobile-ads";
-import UpgradeButton from "../../components/upgrade";
-import CancelButton from "../../components/cancel";
-import ReactivateButton from "../../components/reactivate";
 
 export default function Settings() {
   const router = useRouter();
@@ -35,16 +31,10 @@ export default function Settings() {
   const [username, setUsername] = useState("");
   const [readerTag, setReaderTag] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [email, setEmail] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [passwordChangeError, setPasswordChangeError] = useState("");
   const [interval, setInterval] = useState<number | null>(null);
-
-  // Feedback form states
-  const [feedbackName, setFeedbackName] = useState("");
-  const [feedbackEmail, setFeedbackEmail] = useState("");
-  const [feedbackMessage, setFeedbackMessage] = useState("");
-  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [premium, setPremium] = useState(false);
   const [deactivated, setDeactivated] = useState(false);
   const [cancelAt, setCancelAt] = useState<Date | null>(null);
@@ -76,9 +66,6 @@ export default function Settings() {
           const cancellationInfo = await getSubscriptionCancellationInfo(
             user.id,
           );
-
-          console.log(subscription, "Subscription Status");
-          console.log(cancellationInfo, "Cancellation Info");
 
           setPremium(subscription);
 
@@ -143,6 +130,29 @@ export default function Settings() {
     }
   };
 
+   const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const checkEmail = (email: string) => {
+    return validateEmail(email);
+  };
+
+  const changeEmail = async () => {
+    if (!checkEmail(email)) {
+      displayErrorToast("Invalid email address");
+      return;
+    } else {
+      const emailUpdated = await updateEmail(email);
+      if (emailUpdated) {
+        displayToast("Verification email sent");
+      } else {
+        displayErrorToast("Error updating email");
+      }
+    }
+  };
+
   const handleConsent = async () => {
     try {
       const consentInfo = await AdsConsent.requestInfoUpdate();
@@ -157,45 +167,6 @@ export default function Settings() {
       console.error("Error showing privacy options form:", error);
       displayErrorToast("Unable to show privacy options");
     }
-  };
-
-  const sendFeedback = async () => {
-    if (
-      !feedbackName.trim() ||
-      !feedbackEmail.trim() ||
-      !feedbackMessage.trim()
-    ) {
-      Alert.alert("Error", "Please fill in all fields");
-      return;
-    }
-
-    if (!feedbackEmail.includes("@")) {
-      Alert.alert("Error", "Please enter a valid email address");
-      return;
-    }
-
-    setFeedbackLoading(true);
-    try {
-      // Here you would typically send the feedback to your backend or email service
-      // For now, we'll simulate the sending process
-      await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate API call
-
-      setShowFeedbackModal(true);
-      setFeedbackName("");
-      setFeedbackEmail("");
-      setFeedbackMessage("");
-
-      displayToast("Feedback sent successfully!");
-    } catch (error) {
-      console.error("Error sending feedback:", error);
-      displayErrorToast("Failed to send feedback. Please try again.");
-    } finally {
-      setFeedbackLoading(false);
-    }
-  };
-
-  const closeFeedbackModal = () => {
-    setShowFeedbackModal(false);
   };
 
   const intervals = [
@@ -224,6 +195,20 @@ export default function Settings() {
             >
               <Text style={styles.changeReaderTagButtonText}>
                 Change ReaderTag
+              </Text>
+            </TouchableOpacity>
+            <Text style={styles.formLabel}>Change Email</Text>
+            <TextInput
+              defaultValue={email}
+              style={styles.formInput}
+              onChangeText={setEmail}
+            ></TextInput>
+            <TouchableOpacity
+              style={styles.changeEmailButton}
+              onPress={changeEmail}
+            >
+              <Text style={styles.changeEmailButtonText}>
+                Change Email
               </Text>
             </TouchableOpacity>
             <Text style={styles.formLabel}>Change Password</Text>
@@ -328,30 +313,6 @@ export default function Settings() {
           </View>
         )}
       </ScrollView>
-
-      {/* Success Modal */}
-      {/* <Modal
-        animationType="fade"
-        transparent={true}
-        visible={showFeedbackModal}
-        onRequestClose={closeFeedbackModal}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Feedback Sent!</Text>
-            <Text style={styles.modalMessage}>
-              Thank you for your feedback. We'll review it and get back to you
-              at the email address you provided.
-            </Text>
-            <TouchableOpacity
-              style={styles.modalButton}
-              onPress={closeFeedbackModal}
-            >
-              <Text style={styles.modalButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal> */}
     </>
   );
 }
@@ -450,6 +411,15 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     marginTop: 16,
   },
+  changeEmailButton: {
+    paddingVertical: 16,
+    backgroundColor: "#F6F7EB",
+    borderRadius: 8,
+    alignItems: "center",
+    width: "100%",
+    marginBottom: 12,
+    marginTop: 16,
+  },
   buttonLogout: {
     paddingVertical: 16,
     color: "#F6F7EB",
@@ -469,6 +439,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   changeReaderTagButtonText: {
+    color: "#393E41",
+    fontFamily: "BeProVietnam",
+    fontSize: 16,
+  },
+  changeEmailButtonText: {
     color: "#393E41",
     fontFamily: "BeProVietnam",
     fontSize: 16,

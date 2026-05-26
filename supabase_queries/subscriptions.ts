@@ -5,7 +5,7 @@ export async function getStreak(userId: string){
     throw new Error("Missing required parameters");
   } 
 
-  const { data: streak, error } = await supabase
+  const { data: streak } = await supabase
     .from('streaks')
     .select()
     .eq('user_id', userId)
@@ -19,7 +19,7 @@ export async function createStreak(userId: string, username: string){
     throw new Error("Missing required parameters");
   } 
 
-  const { data: newStreak, error } = await supabase
+  const { data: newStreak } = await supabase
     .from('streaks')
     .insert({ user_id: userId,  current_streak: 0, longest_streak: 0, username: username})
     .select()
@@ -65,7 +65,7 @@ export async function changeUserNameOnStreak(userId: string, newUsername: string
   if(!userId || !newUsername){  
     throw new Error("Missing required parameters");
   }
-  const { data: updatedStreaks, error } = await supabase
+   await supabase
     .from('streaks')
     .update({ username: newUsername})
     .eq('user_id', userId)
@@ -91,7 +91,7 @@ export async function createSubscription(userId: string, textId: number, chapter
     throw new Error("Missing required parameters");
   }
 
-  const { data: newSubscription, error } = await supabase
+  const { data: newSubscription } = await supabase
   .from('subscriptions')
   .insert({ userid: userId, textid: textId, chapter: chapter, due: due, subscribeart: subscribeart }).select().single()
 

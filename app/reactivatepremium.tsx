@@ -1,14 +1,9 @@
-import { useState } from "react";
-import { Platform } from "react-native";
 import {
   View,
   ScrollView,
   Text,
   StyleSheet,
-  TouchableOpacity,
 } from "react-native";
-import Checkbox from "expo-checkbox";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import ReactivateButton from "../components/reactivate";
 import { useRouter } from "expo-router";
 

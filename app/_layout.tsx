@@ -413,7 +413,7 @@ function RootNavigator({ toastConfig }: { toastConfig: any }) {
             ></Stack.Screen>
             <Stack.Screen
               name="leaderboards"
-              options={{ headerShown: false }}
+              options={{ headerShown: true, title: "Leaderboards" }}
             ></Stack.Screen>
             <Stack.Screen
               name="ereader/[id]"

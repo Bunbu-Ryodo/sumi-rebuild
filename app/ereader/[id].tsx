@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   ActivityIndicator,
   Animated,
@@ -45,7 +44,6 @@ import {
   updateStreak,
   getStreak,
 } from "../../supabase_queries/subscriptions";
-import { setStreakChecking } from "../../supabase_queries/profiles";
 import {
   getUserSession,
   hasActivePremiumSubscription,
@@ -70,7 +68,6 @@ import {
   saveMarginalia,
 } from "../../supabase_queries/marginalia";
 import Toast from "react-native-toast-message";
-import Upgrade from "../../components/upgrade";
 
 let adUnitId = "";
 
@@ -288,7 +285,6 @@ export default function EReader() {
     );
   };
 
-  // Function to highlight saved quotes in the text
   const highlightSavedQuotes = (
     fulltext: string,
     savedQuotes: QuoteType[],
@@ -298,23 +294,19 @@ export default function EReader() {
 
     let highlightedText = fulltext;
 
-    // Sort quotes by length (longest first) to avoid partial replacements
     const sortedQuotes = savedQuotes.sort(
       (a, b) => b.quote.length - a.quote.length,
     );
 
-    // Dynamic styling based on warmth level
     const highlightStyles =
       warmthLevel === 4
         ? "background-color: #F6F7EB; color: #393E41; padding: 2px 4px; border-radius: 3px; font-weight: bold; border: 1px solid #393E41;"
         : "background-color: #393E41; color: white; padding: 2px 4px; border-radius: 3px; font-weight: bold; box-shadow: 0 1px 3px rgba(0,0,0,0.2);";
 
     sortedQuotes.forEach((quote) => {
-      // Escape special regex characters in the quote
       const escapedQuote = quote.quote.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const regex = new RegExp(escapedQuote, "gi");
 
-      // Replace with highlighted version using dynamic styles
       highlightedText = highlightedText.replace(regex, (match) => {
         return `<mark style="${highlightStyles}">${match}</mark>`;
       });
@@ -348,7 +340,6 @@ export default function EReader() {
           text1: "Quote saved successfully",
         });
 
-        // Refresh quotes to show the new highlight
         const extractQuotes = await getQuoteByUserAndExtract(
           userid,
           extract.id,
@@ -357,7 +348,7 @@ export default function EReader() {
         setQuotes(extractQuotes || []);
       }
 
-      setSelectedText(""); // Clear selection after saving
+      setSelectedText("");
     } catch (error) {
       console.error("Error saving quote:", error);
     }
@@ -419,7 +410,6 @@ export default function EReader() {
   };
 
   const closeMarginaliaModal = () => {
-    // Start fade-out animation
     Animated.parallel([
       Animated.timing(modalOpacity, {
         toValue: 0,
@@ -432,13 +422,11 @@ export default function EReader() {
         useNativeDriver: true,
       }),
     ]).start(() => {
-      // Hide modal after animation completes
       setShowMarginaliaModal(false);
       setMarginaliaText("");
     });
   };
 
-  // Add a ref to store the current due date immediately
   const currentDue = useRef(new Date().getTime());
 
   const router = useRouter();
@@ -516,9 +504,9 @@ export default function EReader() {
         : null;
       const today = new Date();
       if (lastUpdated !== null && isSameDay(lastUpdated, today)) {
-        console.log("Already ready today, streak not incremented");
+        console.log("Already read today, streak not incremented");
       } else {
-        console.log("Incrementing streak from", streak.current_streak);
+        console.log("Incrementing streak from");
         const updatedStreak = await updateStreak(
           userid,
           streak.current_streak + 1,
@@ -723,16 +711,15 @@ export default function EReader() {
       bounceRef.current.bounce();
     }
 
-    // Use the ref value which is updated immediately
     const dueToUse = currentDue.current;
 
     if (subscribed) {
-      console.log("Subscription deactivated", subid);
+      console.log("Subscription deactivated");
       await deactivateSubscription(subid);
 
       await hideSeries(userid, subid);
     } else {
-      console.log("Subscription activated", subid);
+      console.log("Subscription activated");
       await activateSubscription(subid, dueToUse);
       await updateSeriesDueDate(userid, subid, dueToUse);
 
@@ -747,7 +734,7 @@ export default function EReader() {
   useEffect(() => {
     if (!subid || subid === 0) return;
 
-    console.log("Setting up listener for subscription:", subid);
+    console.log("Setting up listener for subscription");
     supabase
       .channel(`subscription-updates-${subid}`)
       .on(
@@ -773,7 +760,7 @@ export default function EReader() {
         console.log("Screen unfocused, cleaning up any active listeners");
         supabase.getChannels().forEach((channel) => {
           if (channel.topic.includes("subscription-updates")) {
-            console.log("Force cleaning up channel:", channel.topic);
+            console.log("Force cleaning up channel");
             supabase.removeChannel(channel);
           }
         });
@@ -996,7 +983,6 @@ export default function EReader() {
                   onLoad={() => console.log("WebView loaded successfully")}
                 />
 
-                {/* Add the Save Quote button outside the WebView */}
                 {selectedText && (
                   <TouchableOpacity
                     style={[
@@ -1261,7 +1247,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: "#393E41",
     paddingBottom: 16,
-    borderStyle: "dotted",
   },
   engagementButtons: {
     marginTop: 12,
@@ -1479,7 +1464,7 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center", // Change from alignItems: center
+    justifyContent: "center", 
     alignItems: "center",
     padding: 20,
   },
@@ -1526,16 +1511,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: "#F6F7EB",
     color: "#393E41",
-    minHeight: 120, // Reduce from 150 to save space
-    maxHeight: 200, // Add max height to prevent overflow
-    marginBottom: 15, // Reduce from 20
+    minHeight: 120, 
+    maxHeight: 200,
+    marginBottom: 15,
   },
   modalButtons: {
     flexDirection: "row",
     justifyContent: "space-between",
     gap: 12,
-    paddingTop: 10, // Add padding to separate from scroll content
-    backgroundColor: "inherit", // Ensure buttons stay visible
+    paddingTop: 10,
+    backgroundColor: "inherit", 
   },
   cancelButton: {
     flex: 1,

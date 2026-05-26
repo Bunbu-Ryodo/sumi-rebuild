@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Platform } from "react-native";
 import {
   View,
   ScrollView,
@@ -9,7 +8,6 @@ import {
   Linking,
 } from "react-native";
 import Checkbox from "expo-checkbox";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import UpgradeButton from "../components/upgrade";
 import { useRouter } from "expo-router";
 

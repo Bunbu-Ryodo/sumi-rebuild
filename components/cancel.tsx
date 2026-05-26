@@ -1,7 +1,6 @@
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
-import Toast from "react-native-toast-message";
 import supabase from "../lib/supabase";
-import { getUserSession, lookUpUserProfile } from "../supabase_queries/auth";
+import { lookUpUserProfile } from "../supabase_queries/auth";
 import { useRouter } from "expo-router";
 
 const useTestPayment =

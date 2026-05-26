@@ -63,7 +63,13 @@ export default function Series({
     }, 100);
   }, []);
 
-  const progress = (earnedchapters / totalchapters) * progressBarWidth;
+  let progress; 
+
+  if (earnedchapters > totalchapters){
+    progress = progressBarWidth;
+  } else {
+    progress = (earnedchapters / totalchapters) * progressBarWidth;
+  }
 
   return (
     <View style={styles.bookWrapper}>
@@ -73,7 +79,7 @@ export default function Series({
       </View>
 
       <Text style={styles.progressText}>
-        {earnedchapters} out of {totalchapters} instalments
+        {earnedchapters > totalchapters ? totalchapters : earnedchapters} out of {totalchapters} instalments
       </Text>
       <View style={styles.progressBarContainer}>
         <View ref={progressBarRef} style={styles.progressBar}>
