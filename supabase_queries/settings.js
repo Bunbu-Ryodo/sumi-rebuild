@@ -50,3 +50,14 @@ export async function getUsername(){
 
      return data.username;
 }
+
+export async function updateEmail(email){
+    const { data: emailUpdated, error } = await supabase.auth.updateUser({ email: email })
+
+    if(error){
+        console.error('Error updating email:', error.message);
+        return null;
+    }
+
+    return emailUpdated;
+}

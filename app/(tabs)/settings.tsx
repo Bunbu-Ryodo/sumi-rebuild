@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import {
   updatePassword,
   updateUsername,
+  updateEmail
 } from "../../supabase_queries/settings";
 import { getUserSession, lookUpUserProfile } from "../../supabase_queries/auth";
 import {
@@ -30,6 +31,7 @@ export default function Settings() {
   const [username, setUsername] = useState("");
   const [readerTag, setReaderTag] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [email, setEmail] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [passwordChangeError, setPasswordChangeError] = useState("");
   const [interval, setInterval] = useState<number | null>(null);
@@ -128,6 +130,29 @@ export default function Settings() {
     }
   };
 
+   const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const checkEmail = (email: string) => {
+    return validateEmail(email);
+  };
+
+  const changeEmail = async () => {
+    if (!checkEmail(email)) {
+      displayErrorToast("Invalid email address");
+      return;
+    } else {
+      const emailUpdated = await updateEmail(email);
+      if (emailUpdated) {
+        displayToast("Verification email sent");
+      } else {
+        displayErrorToast("Error updating email");
+      }
+    }
+  };
+
   const handleConsent = async () => {
     try {
       const consentInfo = await AdsConsent.requestInfoUpdate();
@@ -170,6 +195,20 @@ export default function Settings() {
             >
               <Text style={styles.changeReaderTagButtonText}>
                 Change ReaderTag
+              </Text>
+            </TouchableOpacity>
+            <Text style={styles.formLabel}>Change Email</Text>
+            <TextInput
+              defaultValue={email}
+              style={styles.formInput}
+              onChangeText={setEmail}
+            ></TextInput>
+            <TouchableOpacity
+              style={styles.changeEmailButton}
+              onPress={changeEmail}
+            >
+              <Text style={styles.changeEmailButtonText}>
+                Change Email
               </Text>
             </TouchableOpacity>
             <Text style={styles.formLabel}>Change Password</Text>
@@ -372,6 +411,15 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     marginTop: 16,
   },
+  changeEmailButton: {
+    paddingVertical: 16,
+    backgroundColor: "#F6F7EB",
+    borderRadius: 8,
+    alignItems: "center",
+    width: "100%",
+    marginBottom: 12,
+    marginTop: 16,
+  },
   buttonLogout: {
     paddingVertical: 16,
     color: "#F6F7EB",
@@ -391,6 +439,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   changeReaderTagButtonText: {
+    color: "#393E41",
+    fontFamily: "BeProVietnam",
+    fontSize: 16,
+  },
+  changeEmailButtonText: {
     color: "#393E41",
     fontFamily: "BeProVietnam",
     fontSize: 16,
