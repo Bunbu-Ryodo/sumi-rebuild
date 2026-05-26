@@ -8,8 +8,7 @@ export default function StripeProviderComponent(
 ) {
   let key = "";
 
-  const useTestKey =
-    __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
+  const useTestKey = process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
 
   if (useTestKey) {
     key =

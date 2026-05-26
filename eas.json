@@ -9,19 +9,25 @@
       "distribution": "internal",
       "ios": {
         "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_USE_TEST_ADS": "true",
+        "EXPO_PUBLIC_USE_TEST_PAYMENTS": "true"
       }
     },
     "testing": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_USE_TEST_ADS": "true"
+        "EXPO_PUBLIC_USE_TEST_ADS": "true",
+        "EXPO_PUBLIC_USE_TEST_PAYMENTS": "true"
       }
     },
     "beta": {
       "distribution": "internal",
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_USE_TEST_ADS": "true"
+        "EXPO_PUBLIC_USE_TEST_ADS": "true",
+        "EXPO_PUBLIC_USE_TEST_PAYMENTS": "true"
       },
       "android": {
         "buildType": "app-bundle"
@@ -30,7 +36,8 @@
     "test-stripe": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_USE_TEST_ADS": "true"
+        "EXPO_PUBLIC_USE_TEST_ADS": "true",
+        "EXPO_PUBLIC_USE_TEST_PAYMENTS": "false"
       }
     },
     "preview": {
