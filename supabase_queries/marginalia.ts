@@ -7,7 +7,7 @@ export async function getMarginaliaByExtractAndUser(
       throw Error("Missing extractid or userid");
     }
 
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("marginalia")
       .select("*")
       .eq("extractid", extractid)
@@ -25,11 +25,9 @@ export async function saveMarginalia(
       throw Error("Missing extractid, userid, or marginalia text");
     }
 
-    // First check if marginalia already exists
     const existing = await getMarginaliaByExtractAndUser(extractid, userid);
     
     if (existing) {
-      // Update existing marginalia
       const { data, error } = await supabase
         .from("marginalia")
         .update({
@@ -46,7 +44,6 @@ export async function saveMarginalia(
       }
       return data;
     } else {
-      // Create new marginalia
       const { data, error } = await supabase
         .from("marginalia")
         .insert({

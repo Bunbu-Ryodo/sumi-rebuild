@@ -83,7 +83,6 @@ export async function willCancelAtPeriodEnd(user_id) {
   
   if (!profile) return false;
   
-  // Check if cancel_at_period_end field exists and is true
   return profile.cancel_at_period_end === true;
 }
 

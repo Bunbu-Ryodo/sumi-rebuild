@@ -6,7 +6,6 @@ import {
   lookUpUserProfile,
   updateUserProfileSubscription,
 } from "../supabase_queries/auth";
-import Toast from "react-native-toast-message";
 import { router } from "expo-router";
 import supabase from "../lib/supabase";
 
@@ -16,13 +15,6 @@ const useTestPayment =
 export default function UpgradeButton() {
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const [isLoading, setIsLoading] = useState(false);
-
-  const displaySubscribedToast = (message: string) => {
-    Toast.show({
-      type: "subscribed",
-      text1: message,
-    });
-  };
 
   const createFreshClientSecret = async (
     stripeCustomerId: string,
@@ -168,9 +160,7 @@ export default function UpgradeButton() {
                   "Something went wrong. Please try again later or contact support@sumi.club.",
               },
             });
-            // Handle Failed
           } else {
-            // Payment Succeeded
             router.replace({
               pathname: "/billchangestatus",
               params: {

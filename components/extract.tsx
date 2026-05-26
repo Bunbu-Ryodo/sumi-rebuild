@@ -72,7 +72,7 @@ export default function Extract({
   userid,
 }: ExtractComponent) {
   const dividerDots = Array.from({ length: 48 });
-  const [preview, setPreview] = useState(fulltext.slice(0, 420));
+  const [preview] = useState(fulltext.slice(0, 420));
   const [saved, setSaved] = useState(false);
   const router = useRouter();
 
