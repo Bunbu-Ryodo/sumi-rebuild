@@ -47,9 +47,8 @@ import supabase from "../../lib/supabase.js";
 
 let adUnitId = "";
 
-const useTestAds = __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
-const useTestPayment =
-  __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
+const useTestAds = process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
+const useTestPayment = process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
 
 if (useTestAds) {
   adUnitId = TestIds.ADAPTIVE_BANNER;

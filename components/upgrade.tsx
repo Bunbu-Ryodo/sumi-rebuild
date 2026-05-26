@@ -9,8 +9,7 @@ import {
 import { router } from "expo-router";
 import supabase from "../lib/supabase";
 
-const useTestPayment =
-  __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
+const useTestPayment = process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
 
 export default function UpgradeButton() {
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
