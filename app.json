@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.sumisupabase",
-      "icon": "./assets/images/icon.png",
+      "icon": "./assets/images/sumi-android-icon.png",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
