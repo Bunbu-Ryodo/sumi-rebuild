@@ -4,7 +4,7 @@
     "slug": "sumi-rebuild",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/sumi-ios-icon.png",
+    "icon": "./assets/images/icon.png",
     "scheme": "sumirebuild",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.sumisupabase",
-      "icon": "./assets/images/sumi-ios-icon.png",
+      "icon": "./assets/images/ios-icon.png",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
