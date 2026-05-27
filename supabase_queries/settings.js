@@ -1,5 +1,7 @@
 import supabase from '../lib/supabase';
 
+const useTestPayment = process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
+
 export async function updatePassword(password){
     const { data: passwordUpdated, error } = await supabase.auth.updateUser({ password: password })
 
@@ -60,4 +62,57 @@ export async function updateEmail(email){
     }
 
     return emailUpdated;
+}
+
+export async function syncStripeCustomerEmailForCurrentUser() {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData?.session?.access_token;
+
+    if (!accessToken) {
+        return null;
+    }
+
+    const { data: userData } = await supabase.auth.getUser();
+    const user = userData?.user;
+
+    if (!user?.id || !user?.email) {
+        return null;
+    }
+
+    const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('stripe_customer_id')
+        .eq('user_id', user.id)
+        .single();
+
+    if (profileError) {
+        console.error('Error finding profile for Stripe email sync:', profileError.message);
+        return null;
+    }
+
+    if (!profile?.stripe_customer_id) {
+        return null;
+    }
+
+    const syncCustomerEmailFunction = useTestPayment
+        ? 'update-customer-email'
+        : 'prod-update-customer-email';
+
+    const { data, error } = await supabase.functions.invoke(syncCustomerEmailFunction, {
+        body: {
+            customerId: profile.stripe_customer_id,
+            email: user.email,
+            userId: user.id,
+        },
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+        },
+    });
+
+    if (error) {
+        console.error('Error syncing Stripe customer email:', error.message);
+        return null;
+    }
+
+    return data;
 }
