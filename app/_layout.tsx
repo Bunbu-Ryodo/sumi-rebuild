@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import supabase from "../lib/supabase";
@@ -11,6 +11,7 @@ import Toast from "react-native-toast-message";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import StripeProvider from "../components/stripe-provider";
 import { useStripe } from "@stripe/stripe-react-native";
+import { syncStripeCustomerEmailForCurrentUser } from "../supabase_queries/settings";
 
 const SupabaseContext = createContext(supabase);
 
@@ -331,6 +332,31 @@ export default function RootLayout() {
 
 function RootNavigator({ toastConfig }: { toastConfig: any }) {
   const { handleURLCallback } = useStripe();
+  const lastSyncedEmailRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event !== "USER_UPDATED") {
+          return;
+        }
+
+        const updatedEmail = session?.user?.email ?? null;
+        if (!updatedEmail || updatedEmail === lastSyncedEmailRef.current) {
+          return;
+        }
+
+        lastSyncedEmailRef.current = updatedEmail;
+        syncStripeCustomerEmailForCurrentUser().catch((error) => {
+          console.error("Failed to sync Stripe customer email", error);
+        });
+      },
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     const handleDeepLink = async ({ url }: { url: string }) => {
