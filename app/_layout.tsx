@@ -12,6 +12,8 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import StripeProvider from "../components/stripe-provider";
 import { useStripe } from "@stripe/stripe-react-native";
 import { syncStripeCustomerEmailForCurrentUser } from "../supabase_queries/settings";
+import { Platform } from 'react-native';
+import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 
 const SupabaseContext = createContext(supabase);
 
@@ -322,6 +324,20 @@ export default function RootLayout() {
       </View>
     ),
   };
+
+  useEffect(() => {
+    Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+
+    // Platform-specific API keys
+    const iosApiKey = 'test_DkaAhSsJoYPzSMJyXzrHxpLMnIZ';
+    const androidApiKey = 'test_DkaAhSsJoYPzSMJyXzrHxpLMnIZ';
+
+    if (Platform.OS === 'ios') {
+       Purchases.configure({apiKey: iosApiKey});
+    } else if (Platform.OS === 'android') {
+       Purchases.configure({apiKey: androidApiKey});
+    }
+  }, []);
 
   return (
     <StripeProvider>
