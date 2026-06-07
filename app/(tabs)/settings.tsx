@@ -24,6 +24,9 @@ import supabase from "../../lib/supabase.js";
 import { updateSubscriptionInterval } from "../../supabase_queries/profiles";
 import Toast from "react-native-toast-message";
 import { AdsConsent } from "react-native-google-mobile-ads";
+import Purchases from "react-native-purchases";
+import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
+
 
 export default function Settings() {
   const router = useRouter();
@@ -35,9 +38,38 @@ export default function Settings() {
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [passwordChangeError, setPasswordChangeError] = useState("");
   const [interval, setInterval] = useState<number | null>(null);
-  const [premium, setPremium] = useState(false);
-  const [deactivated, setDeactivated] = useState(false);
-  const [cancelAt, setCancelAt] = useState<Date | null>(null);
+  // Old stripe premium state management, to be restored on Android release
+  // const [premium, setPremium] = useState(false);
+  // const [deactivated, setDeactivated] = useState(false);
+  // const [cancelAt, setCancelAt] = useState<Date | null>(null);
+
+  async function presentPaywall() {
+    try {
+      const offerings = await Purchases.getOfferings();
+
+      if (!offerings.current) {
+        displayErrorToast("No paywall is configured in RevenueCat yet");
+        return;
+      }
+
+      const result = await RevenueCatUI.presentPaywall();
+
+      if (result === PAYWALL_RESULT.PURCHASED) {
+        displayToast("Premium activated successfully");
+      } else if (result === PAYWALL_RESULT.RESTORED) {
+        displayToast("Purchases restored");
+      } else if (result === PAYWALL_RESULT.CANCELLED) {
+        displayToast("Paywall closed");
+      } else if (result === PAYWALL_RESULT.NOT_PRESENTED) {
+        displayErrorToast("Paywall could not be shown");
+      }
+
+      console.log("Paywall result:", result);
+    } catch (error) {
+      console.error("Failed to present paywall", error);
+      displayErrorToast("Unable to open paywall right now");
+    }
+  }
 
   const displayToast = (message: string) => {
     Toast.show({
@@ -62,20 +94,21 @@ export default function Settings() {
           setUsername(profile.username);
           setReaderTag(profile.readertag);
           setInterval(profile.subscriptioninterval);
-          const subscription = await hasActivePremiumSubscription(user.id);
-          const cancellationInfo = await getSubscriptionCancellationInfo(
-            user.id,
-          );
+          // Old Stripe implementation commented out, to be restored on Android release
+          // const subscription = await hasActivePremiumSubscription(user.id);
+          // const cancellationInfo = await getSubscriptionCancellationInfo(
+          //   user.id,
+          // );
 
-          setPremium(subscription);
+          // setPremium(subscription);
 
-          if (subscription) {
-            setDeactivated(cancellationInfo?.willCancel || false);
-            setCancelAt(cancellationInfo?.cancelAt || null);
-          } else {
-            setDeactivated(false);
-            setCancelAt(null);
-          }
+          // if (subscription) {
+          //   setDeactivated(cancellationInfo?.willCancel || false);
+          //   setCancelAt(cancellationInfo?.cancelAt || null);
+          // } else {
+          //   setDeactivated(false);
+          //   setCancelAt(null);
+          // }
         }
         setLoading(false);
       }
@@ -270,7 +303,7 @@ export default function Settings() {
                 Manage Privacy Settings
               </Text>
             </TouchableOpacity>
-            {deactivated ? (
+            {/* {deactivated ? (
               <>
                 <Text style={styles.selectedText}>
                   Premium will end on{" "}
@@ -305,7 +338,15 @@ export default function Settings() {
                   Cancel Sumi Premium
                 </Text>
               </TouchableOpacity>
-            )}
+            )} */}
+              <TouchableOpacity
+                style={styles.privacyButton}
+                onPress={presentPaywall}
+              >
+                <Text style={styles.privacyButtonText}>
+                  Explore Sumi Premium
+                </Text>
+              </TouchableOpacity>
 
             <TouchableOpacity style={styles.logoutButton} onPress={Logout}>
               <Text style={styles.logoutButtonText}>Logout</Text>

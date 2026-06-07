@@ -48,6 +48,19 @@ export default function RootLayout() {
     }
   }, [loaded, error]);
 
+  useEffect(() => {
+    Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+
+    const iosApiKey = 'test_DkaAhSsJoYPzSMJyXzrHxpLMnIZ';
+    const androidApiKey = 'test_DkaAhSsJoYPzSMJyXzrHxpLMnIZ';
+
+    if (Platform.OS === 'ios') {
+       Purchases.configure({apiKey: iosApiKey});
+    } else if (Platform.OS === 'android') {
+       Purchases.configure({apiKey: androidApiKey});
+    }
+  }, []);
+
   if (!loaded && !error) {
     return null;
   }
@@ -324,20 +337,6 @@ export default function RootLayout() {
       </View>
     ),
   };
-
-  useEffect(() => {
-    Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
-
-    // Platform-specific API keys
-    const iosApiKey = 'test_DkaAhSsJoYPzSMJyXzrHxpLMnIZ';
-    const androidApiKey = 'test_DkaAhSsJoYPzSMJyXzrHxpLMnIZ';
-
-    if (Platform.OS === 'ios') {
-       Purchases.configure({apiKey: iosApiKey});
-    } else if (Platform.OS === 'android') {
-       Purchases.configure({apiKey: androidApiKey});
-    }
-  }, []);
 
   return (
     <StripeProvider>
