@@ -19,7 +19,7 @@ import {
   getUserSession,
   setLoginDateTime,
   updateUserProfileSubscription,
-  hasActivePremiumSubscription,
+  // hasActivePremiumSubscription,
 } from "../../supabase_queries/auth.js";
 import { getExtracts } from "../../supabase_queries/feed";
 import {
@@ -44,6 +44,7 @@ import { useFocusEffect } from "expo-router";
 import Toast from "react-native-toast-message";
 import { AdsConsent, AdsConsentStatus } from "react-native-google-mobile-ads";
 import supabase from "../../lib/supabase.js";
+import Purchases from "react-native-purchases";
 
 let adUnitId = "";
 
@@ -274,7 +275,9 @@ export default function FeedScreen() {
       }
       await setLoginDateTime(userId, new Date());
 
-      const hasSubscription = await hasActivePremiumSubscription(userId);
+      const customerInfo = await Purchases.getCustomerInfo();
+      const hasSubscription =
+        !!customerInfo.entitlements.active["Sumi Premium"];
       setHasPremium(hasSubscription);
     }
   };

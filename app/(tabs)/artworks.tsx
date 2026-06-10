@@ -20,7 +20,7 @@ import { ArtworkType, QuoteType } from "../../types/types";
 import { getUserArtworks } from "../../supabase_queries/artworks";
 import {
   getUserSession,
-  hasActivePremiumSubscription,
+  // hasActivePremiumSubscription,
 } from "../../supabase_queries/auth.js";
 import Carousel, {
   ICarouselInstance,
@@ -29,6 +29,7 @@ import Carousel, {
 import { useSharedValue } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { getUserQuotes } from "../../supabase_queries/quotes";
+import Purchases from "react-native-purchases";
 
 let adUnitId = "";
 
@@ -97,10 +98,12 @@ export default function Artwork() {
     if (user) {
       const artworks = await getUserArtworks(user.id);
       const quotes = await getUserQuotes(user.id);
-      const premiumStatus = await hasActivePremiumSubscription(user.id);
+      const customerInfo = await Purchases.getCustomerInfo();
+      const hasSubscription =
+        !!customerInfo.entitlements.active["Sumi Premium"];
       setArtworks(artworks);
       setQuotes(quotes);
-      setHasPremium(premiumStatus);
+      setHasPremium(hasSubscription);
     }
     setLoading(false);
   };

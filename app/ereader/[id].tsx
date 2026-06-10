@@ -46,7 +46,7 @@ import {
 } from "../../supabase_queries/subscriptions";
 import {
   getUserSession,
-  hasActivePremiumSubscription,
+  // hasActivePremiumSubscription,
 } from "../../supabase_queries/auth.js";
 import supabase from "../../lib/supabase.js";
 import { lookUpUserProfile } from "../../supabase_queries/auth";
@@ -68,6 +68,7 @@ import {
   saveMarginalia,
 } from "../../supabase_queries/marginalia";
 import Toast from "react-native-toast-message";
+import Purchases from "react-native-purchases";
 
 let adUnitId = "";
 
@@ -454,7 +455,9 @@ export default function EReader() {
         throw new Error("No valid session");
       }
 
-      const hasSubscription = await hasActivePremiumSubscription(userid);
+      const customerInfo = await Purchases.getCustomerInfo();
+      const hasSubscription =
+        !!customerInfo.entitlements.active["Sumi Premium"];
 
       if (!hasSubscription) {
         setArgument(
@@ -658,8 +661,11 @@ export default function EReader() {
     if (user) {
       setUserid(user.id);
 
-      const premiumStatus = await hasActivePremiumSubscription(user.id);
-      setHasPremium(premiumStatus);
+      // const premiumStatus = await hasActivePremiumSubscription(user.id);
+      // setHasPremium(premiumStatus);
+
+      const premiumStatus = await Purchases.getCustomerInfo();
+      setHasPremium(!!premiumStatus.entitlements.active["Sumi Premium"]);
 
       const extract = await getExtract(id);
 
@@ -1464,7 +1470,7 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center", 
+    justifyContent: "center",
     alignItems: "center",
     padding: 20,
   },
@@ -1511,7 +1517,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: "#F6F7EB",
     color: "#393E41",
-    minHeight: 120, 
+    minHeight: 120,
     maxHeight: 200,
     marginBottom: 15,
   },
@@ -1520,7 +1526,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 12,
     paddingTop: 10,
-    backgroundColor: "inherit", 
+    backgroundColor: "inherit",
   },
   cancelButton: {
     flex: 1,

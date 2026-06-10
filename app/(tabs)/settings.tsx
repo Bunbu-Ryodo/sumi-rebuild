@@ -6,19 +6,20 @@ import {
   ActivityIndicator,
   StyleSheet,
   TouchableOpacity,
+  Linking,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useState, useEffect } from "react";
 import {
   updatePassword,
   updateUsername,
-  updateEmail
+  updateEmail,
 } from "../../supabase_queries/settings";
 import { getUserSession, lookUpUserProfile } from "../../supabase_queries/auth";
-import {
-  hasActivePremiumSubscription,
-  getSubscriptionCancellationInfo,
-} from "../../supabase_queries/auth";
+// import {
+//   hasActivePremiumSubscription,
+//   getSubscriptionCancellationInfo,
+// } from "../../supabase_queries/auth";
 import { changeUserNameOnStreak } from "../../supabase_queries/subscriptions";
 import supabase from "../../lib/supabase.js";
 import { updateSubscriptionInterval } from "../../supabase_queries/profiles";
@@ -26,7 +27,6 @@ import Toast from "react-native-toast-message";
 import { AdsConsent } from "react-native-google-mobile-ads";
 import Purchases from "react-native-purchases";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
-
 
 export default function Settings() {
   const router = useRouter();
@@ -42,6 +42,7 @@ export default function Settings() {
   // const [premium, setPremium] = useState(false);
   // const [deactivated, setDeactivated] = useState(false);
   // const [cancelAt, setCancelAt] = useState<Date | null>(null);
+  const [hasPremium, setHasPremium] = useState(false);
 
   async function presentPaywall() {
     try {
@@ -55,13 +56,37 @@ export default function Settings() {
       const result = await RevenueCatUI.presentPaywall();
 
       if (result === PAYWALL_RESULT.PURCHASED) {
-        displayToast("Premium activated successfully");
+        router.replace({
+          pathname: "/billchangestatus",
+          params: {
+            message:
+              "Your Sumi Premium subscription is now active! Enjoy your enhanced reading experience.",
+          },
+        });
       } else if (result === PAYWALL_RESULT.RESTORED) {
-        displayToast("Purchases restored");
+        router.replace({
+          pathname: "/billchangestatus",
+          params: {
+            message:
+              "Your Sumi Premium subscription is active again. Enjoy your enhanced reading experience.",
+          },
+        });
       } else if (result === PAYWALL_RESULT.CANCELLED) {
-        displayToast("Paywall closed");
+        router.replace({
+          pathname: "/billchangestatus",
+          params: {
+            message:
+              "Your Sumi Premium subscription has been cancelled. You will retain access until the end of your billing period.",
+          },
+        });
       } else if (result === PAYWALL_RESULT.NOT_PRESENTED) {
-        displayErrorToast("Paywall could not be shown");
+        router.replace({
+          pathname: "/billchangestatus",
+          params: {
+            message:
+              "Something went wrong. Please try again later, or contact support@sumi.club if the problem persists.",
+          },
+        });
       }
 
       console.log("Paywall result:", result);
@@ -69,6 +94,14 @@ export default function Settings() {
       console.error("Failed to present paywall", error);
       displayErrorToast("Unable to open paywall right now");
     }
+  }
+
+  async function manageSubscription() {
+    const customerInfo = await Purchases.getCustomerInfo();
+    await Linking.openURL(
+      customerInfo.managementURL ||
+        "https://apps.apple.com/account/subscriptions",
+    );
   }
 
   const displayToast = (message: string) => {
@@ -109,6 +142,11 @@ export default function Settings() {
           //   setDeactivated(false);
           //   setCancelAt(null);
           // }
+
+          const customerInfo = await Purchases.getCustomerInfo();
+          const premiumStatus =
+            !!customerInfo.entitlements.active["Sumi Premium"];
+          setHasPremium(premiumStatus);
         }
         setLoading(false);
       }
@@ -163,7 +201,7 @@ export default function Settings() {
     }
   };
 
-   const validateEmail = (email: string) => {
+  const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
@@ -240,9 +278,7 @@ export default function Settings() {
               style={styles.changeEmailButton}
               onPress={changeEmail}
             >
-              <Text style={styles.changeEmailButtonText}>
-                Change Email
-              </Text>
+              <Text style={styles.changeEmailButtonText}>Change Email</Text>
             </TouchableOpacity>
             <Text style={styles.formLabel}>Change Password</Text>
             <TextInput
@@ -274,7 +310,6 @@ export default function Settings() {
                 Change Password
               </Text>
             </TouchableOpacity>
-
             <Text style={styles.subscriptionFrequencyLabel}>
               Set Subscription Frequency
             </Text>
@@ -339,6 +374,7 @@ export default function Settings() {
                 </Text>
               </TouchableOpacity>
             )} */}
+            {!hasPremium && (
               <TouchableOpacity
                 style={styles.privacyButton}
                 onPress={presentPaywall}
@@ -347,7 +383,17 @@ export default function Settings() {
                   Explore Sumi Premium
                 </Text>
               </TouchableOpacity>
-
+            )}{" "}
+            {hasPremium && (
+              <TouchableOpacity
+                style={styles.privacyButton}
+                onPress={manageSubscription}
+              >
+                <Text style={styles.privacyButtonText}>
+                  Manage Sumi Premium
+                </Text>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity style={styles.logoutButton} onPress={Logout}>
               <Text style={styles.logoutButtonText}>Logout</Text>
             </TouchableOpacity>
