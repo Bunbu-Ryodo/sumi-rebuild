@@ -43,6 +43,8 @@ export default function Settings() {
   // const [deactivated, setDeactivated] = useState(false);
   // const [cancelAt, setCancelAt] = useState<Date | null>(null);
   const [hasPremium, setHasPremium] = useState(false);
+  const useTestPayment = process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
+  const premiumEntitlementId = useTestPayment ? "Sumi Premium" : "premium";
 
   async function presentPaywall() {
     try {
@@ -145,7 +147,7 @@ export default function Settings() {
 
           const customerInfo = await Purchases.getCustomerInfo();
           const premiumStatus =
-            !!customerInfo.entitlements.active["Sumi Premium"];
+            !!customerInfo.entitlements.active[premiumEntitlementId];
           console.log(customerInfo, "customerInfo in settings");
           console.log(premiumStatus, "premiumStatus in settings");
 
