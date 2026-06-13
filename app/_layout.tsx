@@ -12,8 +12,8 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import StripeProvider from "../components/stripe-provider";
 import { useStripe } from "@stripe/stripe-react-native";
 import { syncStripeCustomerEmailForCurrentUser } from "../supabase_queries/settings";
-import { Platform } from 'react-native';
-import Purchases, { LOG_LEVEL } from 'react-native-purchases';
+import { Platform } from "react-native";
+import Purchases, { LOG_LEVEL } from "react-native-purchases";
 
 const SupabaseContext = createContext(supabase);
 const useTestPayments = process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
@@ -55,18 +55,18 @@ export default function RootLayout() {
   useEffect(() => {
     Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
 
-     const testApiKey = 'test_DkaAhSsJoYPzSMJyXzrHxpLMnIZ';
-     const apiKey = useTestPayments ? testApiKey : revenueCatApiKey;
+    const testApiKey = process.env.EXPO_PUBLIC_REVENUECAT_TEST_KEY;
+    const apiKey = useTestPayments ? testApiKey : revenueCatApiKey;
 
-     if (!apiKey) {
+    if (!apiKey) {
       console.warn("RevenueCat API key is missing");
       return;
-     }
+    }
 
-    if (Platform.OS === 'ios') {
-       Purchases.configure({apiKey});
-    } else if (Platform.OS === 'android') {
-       Purchases.configure({apiKey});
+    if (Platform.OS === "ios") {
+      Purchases.configure({ apiKey });
+    } else if (Platform.OS === "android") {
+      Purchases.configure({ apiKey });
     }
 
     const syncRevenueCatUser = async (userId: string | null) => {
