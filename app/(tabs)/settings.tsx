@@ -383,7 +383,7 @@ export default function Settings() {
                   Explore Sumi Premium
                 </Text>
               </TouchableOpacity>
-            )}{" "}
+            )}
             {hasPremium && (
               <TouchableOpacity
                 style={styles.privacyButton}
