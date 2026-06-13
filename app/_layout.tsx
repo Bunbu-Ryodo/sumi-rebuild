@@ -16,6 +16,10 @@ import { Platform } from 'react-native';
 import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 
 const SupabaseContext = createContext(supabase);
+const useTestPayments = process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
+const revenueCatApiKey =
+  process.env.EXPO_PUBLIC_REVENUECAT_API ??
+  process.env.EXPO_PUBLIC_REVENUECAT_API_KEY;
 
 import mobileAds from "react-native-google-mobile-ads";
 
@@ -51,14 +55,45 @@ export default function RootLayout() {
   useEffect(() => {
     Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
 
-    const iosApiKey = 'test_DkaAhSsJoYPzSMJyXzrHxpLMnIZ';
-    const androidApiKey = 'test_DkaAhSsJoYPzSMJyXzrHxpLMnIZ';
+     const testApiKey = 'test_DkaAhSsJoYPzSMJyXzrHxpLMnIZ';
+     const apiKey = useTestPayments ? testApiKey : revenueCatApiKey;
+
+     if (!apiKey) {
+      console.warn("RevenueCat API key is missing");
+      return;
+     }
 
     if (Platform.OS === 'ios') {
-       Purchases.configure({apiKey: iosApiKey});
+       Purchases.configure({apiKey});
     } else if (Platform.OS === 'android') {
-       Purchases.configure({apiKey: androidApiKey});
+       Purchases.configure({apiKey});
     }
+
+    const syncRevenueCatUser = async (userId: string | null) => {
+      try {
+        if (userId) {
+          await Purchases.logIn(userId);
+        } else {
+          await Purchases.logOut();
+        }
+      } catch (syncError) {
+        console.error("Failed to sync RevenueCat user", syncError);
+      }
+    };
+
+    supabase.auth
+      .getSession()
+      .then(({ data }) => syncRevenueCatUser(data.session?.user?.id ?? null));
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        syncRevenueCatUser(session?.user?.id ?? null);
+      },
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   if (!loaded && !error) {
