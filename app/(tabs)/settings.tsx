@@ -146,6 +146,9 @@ export default function Settings() {
           const customerInfo = await Purchases.getCustomerInfo();
           const premiumStatus =
             !!customerInfo.entitlements.active["Sumi Premium"];
+          console.log(customerInfo, "customerInfo in settings");
+          console.log(premiumStatus, "premiumStatus in settings");
+
           setHasPremium(premiumStatus);
         }
         setLoading(false);
@@ -163,6 +166,12 @@ export default function Settings() {
   };
 
   const Logout = async function () {
+    try {
+      await Purchases.logOut();
+    } catch (error) {
+      console.error("Failed to log out from RevenueCat", error);
+    }
+
     await supabase.auth.signOut();
     router.push("/");
   };

@@ -68,6 +68,32 @@ export default function RootLayout() {
     } else if (Platform.OS === 'android') {
        Purchases.configure({apiKey});
     }
+
+    const syncRevenueCatUser = async (userId: string | null) => {
+      try {
+        if (userId) {
+          await Purchases.logIn(userId);
+        } else {
+          await Purchases.logOut();
+        }
+      } catch (syncError) {
+        console.error("Failed to sync RevenueCat user", syncError);
+      }
+    };
+
+    supabase.auth
+      .getSession()
+      .then(({ data }) => syncRevenueCatUser(data.session?.user?.id ?? null));
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        syncRevenueCatUser(session?.user?.id ?? null);
+      },
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   if (!loaded && !error) {
