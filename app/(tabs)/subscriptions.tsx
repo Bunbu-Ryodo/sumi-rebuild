@@ -12,7 +12,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useEffect, useState } from "react";
 import {
   getUserSession,
-  hasActivePremiumSubscription,
+  // hasActivePremiumSubscription,
 } from "../../supabase_queries/auth.js";
 import { getAllSeries, getStreak } from "../../supabase_queries/subscriptions";
 import { SeriesType, StreakType } from "../../types/types";
@@ -26,6 +26,7 @@ import {
 import React, { useRef } from "react";
 import Series from "../../components/series";
 import { Link } from "expo-router";
+import Purchases from "react-native-purchases";
 
 let adUnitId = "";
 
@@ -63,8 +64,10 @@ export default function Subscriptions() {
     }
     if (user) {
       const series = await getAllSeries(user.id);
-      const premiumStatus = await hasActivePremiumSubscription(user.id);
-      setHasPremium(premiumStatus);
+      const customerInfo = await Purchases.getCustomerInfo();
+      const hasSubscription =
+        !!customerInfo.entitlements.active["Sumi Premium"];
+      setHasPremium(hasSubscription);
       setSeries(series || []);
       setLoading(false);
     }
@@ -91,9 +94,7 @@ export default function Subscriptions() {
           <View style={styles.extractWrapper}>
             <View style={styles.subscriptionsHeader}>
               <Text style={styles.newInstallmentsHeader}>
-                {series.length > 0
-                  ? ""
-                  : "Subscribe To A Series!"}
+                {series.length > 0 ? "" : "Subscribe To A Series!"}
               </Text>
               <View style={styles.headerIconContainer}>
                 <Ionicons name="mail-unread" size={24} color={"#393E41"} />
