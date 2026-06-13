@@ -73,6 +73,8 @@ import Purchases from "react-native-purchases";
 let adUnitId = "";
 
 const useTestAds = __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
+const useTestPayment = process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
+const premiumEntitlementId = useTestPayment ? "Sumi Premium" : "premium";
 
 if (useTestAds) {
   adUnitId = TestIds.ADAPTIVE_BANNER;
@@ -457,7 +459,7 @@ export default function EReader() {
 
       const customerInfo = await Purchases.getCustomerInfo();
       const hasSubscription =
-        !!customerInfo.entitlements.active["Sumi Premium"];
+        !!customerInfo.entitlements.active[premiumEntitlementId];
 
       if (!hasSubscription) {
         setArgument(
@@ -665,7 +667,7 @@ export default function EReader() {
       // setHasPremium(premiumStatus);
 
       const premiumStatus = await Purchases.getCustomerInfo();
-      setHasPremium(!!premiumStatus.entitlements.active["Sumi Premium"]);
+      setHasPremium(!!premiumStatus.entitlements.active[premiumEntitlementId]);
 
       const extract = await getExtract(id);
 

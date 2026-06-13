@@ -34,6 +34,8 @@ import Purchases from "react-native-purchases";
 let adUnitId = "";
 
 const useTestAds = __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
+const useTestPayment = process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
+const premiumEntitlementId = useTestPayment ? "Sumi Premium" : "premium";
 
 if (useTestAds) {
   adUnitId = TestIds.ADAPTIVE_BANNER;
@@ -100,7 +102,7 @@ export default function Artwork() {
       const quotes = await getUserQuotes(user.id);
       const customerInfo = await Purchases.getCustomerInfo();
       const hasSubscription =
-        !!customerInfo.entitlements.active["Sumi Premium"];
+        !!customerInfo.entitlements.active[premiumEntitlementId];
       setArtworks(artworks);
       setQuotes(quotes);
       setHasPremium(hasSubscription);

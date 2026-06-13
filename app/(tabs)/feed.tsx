@@ -50,6 +50,7 @@ let adUnitId = "";
 
 const useTestAds = process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
 const useTestPayment = process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
+const premiumEntitlementId = useTestPayment ? "Sumi Premium" : "premium";
 
 if (useTestAds) {
   adUnitId = TestIds.ADAPTIVE_BANNER;
@@ -277,7 +278,7 @@ export default function FeedScreen() {
 
       const customerInfo = await Purchases.getCustomerInfo();
       const hasSubscription =
-        !!customerInfo.entitlements.active["Sumi Premium"];
+        !!customerInfo.entitlements.active[premiumEntitlementId];
       setHasPremium(hasSubscription);
     }
   };
