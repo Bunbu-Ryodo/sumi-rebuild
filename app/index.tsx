@@ -4,6 +4,7 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
+  Platform,
   useWindowDimensions,
 } from "react-native";
 import { Link, useRouter } from "expo-router";
@@ -13,7 +14,7 @@ import { useEffect } from "react";
 
 export default function Index() {
   const { width } = useWindowDimensions();
-  const isIPad = width >= 768;
+  const isIPad = Platform.OS === "ios" && Platform.isPad;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [signinError, setSigninError] = useState("");

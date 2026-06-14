@@ -7,6 +7,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Linking,
+  Platform,
   useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
@@ -32,7 +33,7 @@ import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 export default function Settings() {
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const isIPad = width >= 768;
+  const isIPad = Platform.OS === "ios" && Platform.isPad;
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState("");
   const [readerTag, setReaderTag] = useState("");

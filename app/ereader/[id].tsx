@@ -122,7 +122,7 @@ const BounceView = forwardRef<any, BounceInProps>((props, ref) => {
 export default function EReader() {
   const bannerRef = useRef<BannerAd>(null);
   const { width } = useWindowDimensions();
-  const isIPad = width >= 768;
+  const isIPad = Platform.OS === "ios" && Platform.isPad;
   let { id } = useLocalSearchParams();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;

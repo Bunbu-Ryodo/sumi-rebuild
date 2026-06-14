@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
+  Platform,
   useWindowDimensions,
 } from "react-native";
 import { useState, useEffect } from "react";
@@ -37,7 +38,7 @@ export default function ViewArtwork() {
   }, []);
 
   const { width } = useWindowDimensions();
-  const isIPad = width >= 768;
+  const isIPad = Platform.OS === "ios" && Platform.isPad;
   const screenWidth = width - 20;
 
   const deleteArtwork = async () => {

@@ -45,7 +45,7 @@ if (useTestAds) {
 
 export default function Subscriptions() {
   const { width } = useWindowDimensions();
-  const isIPad = width >= 768;
+  const isIPad = Platform.OS === "ios" && Platform.isPad;
   const bannerRef = useRef<BannerAd>(null);
   const [series, setSeries] = useState<SeriesType[]>([]);
   const [streak, setStreak] = useState<StreakType | null>(null);

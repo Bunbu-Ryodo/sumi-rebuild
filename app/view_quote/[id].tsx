@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
+  Platform,
   useWindowDimensions,
 } from "react-native";
 import { useState, useEffect } from "react";
@@ -18,7 +19,7 @@ import { useRouter } from "expo-router";
 export default function ViewQuote() {
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const isIPad = width >= 768;
+  const isIPad = Platform.OS === "ios" && Platform.isPad;
   const dividerDots = Array.from({ length: 48 });
   let { id } = useLocalSearchParams();
   const [quote, setQuote] = useState<QuoteType | null>(null);

@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Animated,
   Easing,
+  Platform,
   useWindowDimensions,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -74,7 +75,7 @@ export default function Extract({
 }: ExtractComponent) {
   const dividerDots = Array.from({ length: 48 });
   const { width } = useWindowDimensions();
-  const isIPad = width >= 768;
+  const isIPad = Platform.OS === "ios" && Platform.isPad;
   const [preview] = useState(fulltext.slice(0, isIPad ? 840 : 420));
   const [saved, setSaved] = useState(false);
   const router = useRouter();

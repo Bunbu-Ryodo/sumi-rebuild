@@ -61,7 +61,7 @@ export default function Artwork() {
   const dividerDots = Array.from({ length: 48 });
 
   const { width } = useWindowDimensions();
-  const isIPad = width >= 768;
+  const isIPad = Platform.OS === "ios" && Platform.isPad;
 
   const onPressPaginationArtworks = (index: number) => {
     artworkCarousel.current?.scrollTo({

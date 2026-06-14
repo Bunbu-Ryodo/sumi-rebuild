@@ -4,6 +4,7 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
+  Platform,
   useWindowDimensions,
 } from "react-native";
 import { Link } from "expo-router";
@@ -12,7 +13,7 @@ import supabase from "../lib/supabase.js";
 
 export default function Register() {
   const { width } = useWindowDimensions();
-  const isIPad = width >= 768;
+  const isIPad = Platform.OS === "ios" && Platform.isPad;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");

@@ -4,6 +4,7 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
+  Platform,
   useWindowDimensions,
 } from "react-native";
 import { useState } from "react";
@@ -13,7 +14,7 @@ import { resetPassword } from "../supabase_queries/auth.js";
 export default function PasswordReset() {
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const isIPad = width >= 768;
+  const isIPad = Platform.OS === "ios" && Platform.isPad;
   const [email, setEmail] = useState("");
   const [confirmationMessage, setConfirmationMessage] = useState("");
 

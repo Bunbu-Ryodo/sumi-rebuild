@@ -35,7 +35,7 @@ if (useTestAds) {
 
 export default function Leaderboards() {
   const { width } = useWindowDimensions();
-  const isIPad = width >= 768;
+  const isIPad = Platform.OS === "ios" && Platform.isPad;
   const bannerRef = useRef<BannerAd>(null);
   const [leaderboard, setLeaderboard] = useState<StreakType[]>([]);
   const [loading, setLoading] = useState(true);

@@ -1,10 +1,10 @@
 import { Tabs } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { StatusBar, useWindowDimensions } from "react-native";
+import { Platform, StatusBar, useWindowDimensions } from "react-native";
 
 export default function TabLayout() {
   const { width } = useWindowDimensions();
-  const isIPad = width >= 768;
+  const isIPad = Platform.OS === "ios" && Platform.isPad;
 
   return (
     <>

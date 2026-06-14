@@ -382,7 +382,7 @@ export default function RootLayout() {
 
 function RootNavigator({ toastConfig }: { toastConfig: any }) {
   const { width } = useWindowDimensions();
-  const isIPad = width >= 768;
+  const isIPad = Platform.OS === "ios" && Platform.isPad;
   // const { handleURLCallback } = useStripe();
   // const lastSyncedEmailRef = useRef<string | null>(null);
 
