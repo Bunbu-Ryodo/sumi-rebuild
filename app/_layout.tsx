@@ -4,14 +4,14 @@ import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import supabase from "../lib/supabase";
 import { createContext, useContext } from "react";
-import { View, Text, Linking } from "react-native";
+import { View, Text } from "react-native";
 import { StatusBar } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Toast from "react-native-toast-message";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import StripeProvider from "../components/stripe-provider";
-import { useStripe } from "@stripe/stripe-react-native";
-import { syncStripeCustomerEmailForCurrentUser } from "../supabase_queries/settings";
+// import StripeProvider from "../components/stripe-provider";
+// import { useStripe } from "@stripe/stripe-react-native";
+// import { syncStripeCustomerEmailForCurrentUser } from "../supabase_queries/settings";
 import { Platform } from "react-native";
 import Purchases, { LOG_LEVEL } from "react-native-purchases";
 
@@ -374,63 +374,63 @@ export default function RootLayout() {
   };
 
   return (
-    <StripeProvider>
-      <RootNavigator toastConfig={toastConfig} />
-    </StripeProvider>
+    // <StripeProvider>
+    <RootNavigator toastConfig={toastConfig} />
+    // </StripeProvider>
   );
 }
 
 function RootNavigator({ toastConfig }: { toastConfig: any }) {
-  const { handleURLCallback } = useStripe();
-  const lastSyncedEmailRef = useRef<string | null>(null);
+  // const { handleURLCallback } = useStripe();
+  // const lastSyncedEmailRef = useRef<string | null>(null);
 
-  useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event !== "USER_UPDATED") {
-          return;
-        }
+  // useEffect(() => {
+  //   const { data: authListener } = supabase.auth.onAuthStateChange(
+  //     (event, session) => {
+  //       if (event !== "USER_UPDATED") {
+  //         return;
+  //       }
 
-        const updatedEmail = session?.user?.email ?? null;
-        if (!updatedEmail || updatedEmail === lastSyncedEmailRef.current) {
-          return;
-        }
+  //       const updatedEmail = session?.user?.email ?? null;
+  //       if (!updatedEmail || updatedEmail === lastSyncedEmailRef.current) {
+  //         return;
+  //       }
 
-        lastSyncedEmailRef.current = updatedEmail;
-        syncStripeCustomerEmailForCurrentUser().catch((error) => {
-          console.error("Failed to sync Stripe customer email", error);
-        });
-      },
-    );
+  //       lastSyncedEmailRef.current = updatedEmail;
+  //       syncStripeCustomerEmailForCurrentUser().catch((error) => {
+  //         console.error("Failed to sync Stripe customer email", error);
+  //       });
+  //     },
+  //   );
 
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
+  //   return () => {
+  //     authListener.subscription.unsubscribe();
+  //   };
+  // }, []);
 
-  useEffect(() => {
-    const handleDeepLink = async ({ url }: { url: string }) => {
-      if (!url) {
-        return;
-      }
+  // useEffect(() => {
+  //   const handleDeepLink = async ({ url }: { url: string }) => {
+  //     if (!url) {
+  //       return;
+  //     }
 
-      await handleURLCallback(url);
-    };
+  //     await handleURLCallback(url);
+  //   };
 
-    const subscription = Linking.addEventListener("url", handleDeepLink);
+  //   const subscription = Linking.addEventListener("url", handleDeepLink);
 
-    Linking.getInitialURL().then((url) => {
-      if (url) {
-        handleURLCallback(url).catch((error) => {
-          console.error("Failed to process initial URL callback", error);
-        });
-      }
-    });
+  //   Linking.getInitialURL().then((url) => {
+  //     if (url) {
+  //       handleURLCallback(url).catch((error) => {
+  //         console.error("Failed to process initial URL callback", error);
+  //       });
+  //     }
+  //   });
 
-    return () => {
-      subscription.remove();
-    };
-  }, [handleURLCallback]);
+  //   return () => {
+  //     subscription.remove();
+  //   };
+  // }, [handleURLCallback]);
 
   return (
     <>
@@ -463,18 +463,18 @@ function RootNavigator({ toastConfig }: { toastConfig: any }) {
               name="passwordreset"
               options={{ headerShown: false }}
             ></Stack.Screen>
-            <Stack.Screen
+            {/* <Stack.Screen
               name="getpremium"
               options={{ headerShown: false }}
-            ></Stack.Screen>
-            <Stack.Screen
+            ></Stack.Screen> */}
+            {/* <Stack.Screen
               name="reactivatepremium"
               options={{ headerShown: false }}
-            ></Stack.Screen>
-            <Stack.Screen
+            ></Stack.Screen> */}
+            {/* <Stack.Screen
               name="cancelpremium"
               options={{ headerShown: false }}
-            ></Stack.Screen>
+            ></Stack.Screen> */}
             <Stack.Screen
               name="billchangestatus"
               options={{ headerShown: false }}
@@ -483,10 +483,10 @@ function RootNavigator({ toastConfig }: { toastConfig: any }) {
               name="deleteaccount"
               options={{ headerShown: false }}
             ></Stack.Screen>
-            <Stack.Screen
+            {/* <Stack.Screen
               name="stripe-redirect"
               options={{ headerShown: false }}
-            ></Stack.Screen>
+            ></Stack.Screen> */}
             <Stack.Screen
               name="changepassword"
               options={{ headerShown: false }}

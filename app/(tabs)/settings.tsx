@@ -90,8 +90,6 @@ export default function Settings() {
           },
         });
       }
-
-      console.log("Paywall result:", result);
     } catch (error) {
       console.error("Failed to present paywall", error);
       displayErrorToast("Unable to open paywall right now");
@@ -148,8 +146,6 @@ export default function Settings() {
           const customerInfo = await Purchases.getCustomerInfo();
           const premiumStatus =
             !!customerInfo.entitlements.active[premiumEntitlementId];
-          console.log(customerInfo, "customerInfo in settings");
-          console.log(premiumStatus, "premiumStatus in settings");
 
           setHasPremium(premiumStatus);
         }
