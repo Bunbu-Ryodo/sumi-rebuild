@@ -405,6 +405,12 @@ export default function Settings() {
                 </Text>
               </TouchableOpacity>
             )}
+            <TouchableOpacity
+              style={styles.deleteAccountButton}
+              onPress={() => router.push("/deleteaccount" as never)}
+            >
+              <Text style={styles.deleteAccountButtonText}>Delete Account</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.logoutButton} onPress={Logout}>
               <Text style={styles.logoutButtonText}>Logout</Text>
             </TouchableOpacity>
@@ -669,6 +675,19 @@ const styles = StyleSheet.create({
   },
   premiumButtonText: {
     color: "#393E41",
+    fontFamily: "BeProVietnam",
+    fontSize: 16,
+  },
+  deleteAccountButton: {
+    backgroundColor: "#D64045",
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    width: "100%",
+    marginTop: 12,
+  },
+  deleteAccountButtonText: {
+    color: "#F6F7EB",
     fontFamily: "BeProVietnam",
     fontSize: 16,
   },

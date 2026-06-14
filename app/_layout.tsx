@@ -480,6 +480,10 @@ function RootNavigator({ toastConfig }: { toastConfig: any }) {
               options={{ headerShown: false }}
             ></Stack.Screen>
             <Stack.Screen
+              name="deleteaccount"
+              options={{ headerShown: false }}
+            ></Stack.Screen>
+            <Stack.Screen
               name="stripe-redirect"
               options={{ headerShown: false }}
             ></Stack.Screen>
