@@ -3,8 +3,14 @@ import { useRouter } from "expo-router";
 import { useLocalSearchParams } from "expo-router";
 
 export default function SubscribeSuccess() {
-  const { message } = useLocalSearchParams<{ message: string }>();
+  const { message, backPath, backLabel } = useLocalSearchParams<{
+    message: string;
+    backPath?: string;
+    backLabel?: string;
+  }>();
   const router = useRouter();
+  const resolvedBackPath = backPath || "/settings";
+  const resolvedBackLabel = backLabel || "Back to Settings";
   return (
     <>
       <ScrollView contentContainerStyle={styles.getPremiumWrapper}>
@@ -14,10 +20,10 @@ export default function SubscribeSuccess() {
           </View>
           <Text style={styles.getPremiumText}>{message}</Text>
           <Text
-            onPress={() => router.push("/settings")}
+            onPress={() => router.push(resolvedBackPath as never)}
             style={styles.backToSettings}
           >
-            Back to Settings
+            {resolvedBackLabel}
           </Text>
         </View>
       </ScrollView>
