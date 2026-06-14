@@ -6,6 +6,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   Platform,
+  useWindowDimensions,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import {
@@ -33,6 +34,8 @@ if (useTestAds) {
 }
 
 export default function Leaderboards() {
+  const { width } = useWindowDimensions();
+  const isIPad = width >= 768;
   const bannerRef = useRef<BannerAd>(null);
   const [leaderboard, setLeaderboard] = useState<StreakType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,25 +75,21 @@ export default function Leaderboards() {
         <View style={styles.streakWrapper}>
           <View style={styles.leaderBoardHeader}>
             <View style={styles.headerIconContainer}>
-              <Ionicons name="globe" size={24} color={"#393E41"} />
+              <Ionicons
+                name="globe"
+                size={isIPad ? 32 : 24}
+                color={"#393E41"}
+              />
             </View>
           </View>
           {!loading &&
             leaderboard.map((streak, index) => (
-              <View
-                key={streak.id}
-                style={{
-                  alignItems: "center",
-                  width: "100%",
-                  justifyContent: "center",
-                  flexDirection: "row",
-                }}
-              >
+              <View key={streak.id} style={styles.leaderboardRow}>
                 <Text
                   style={[
                     {
                       fontFamily: "BeProVietnam",
-                      fontSize: 18,
+                      fontSize: isIPad ? 24 : 18,
                       color: "#393E41",
                     },
                   ]}
@@ -175,6 +174,13 @@ const styles = StyleSheet.create({
     padding: 16,
     marginTop: 8,
     width: "100%",
+  },
+  leaderboardRow: {
+    alignItems: "center",
+    width: "100%",
+    justifyContent: "center",
+    flexDirection: "row",
+    marginBottom: 12,
   },
   subscriptionSection: {
     marginTop: 12,

@@ -1,8 +1,11 @@
 import { Tabs } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { StatusBar } from "react-native";
+import { StatusBar, useWindowDimensions } from "react-native";
 
 export default function TabLayout() {
+  const { width } = useWindowDimensions();
+  const isIPad = width >= 768;
+
   return (
     <>
       <StatusBar backgroundColor="#393E41" barStyle="light-content" />
@@ -14,6 +17,7 @@ export default function TabLayout() {
           },
           headerTitleStyle: {
             fontFamily: "BeProVietnam",
+            fontSize: isIPad ? 24 : 16,
           },
           headerShadowVisible: false,
           headerTintColor: "#F6F7EB",
@@ -30,7 +34,7 @@ export default function TabLayout() {
             tabBarIcon: ({ color, focused }) => (
               <Ionicons
                 name={focused ? "newspaper" : "newspaper-outline"}
-                size={24}
+                size={isIPad ? 30 : 24}
                 color={color}
               />
             ),
@@ -44,7 +48,7 @@ export default function TabLayout() {
             tabBarIcon: ({ color, focused }) => (
               <Ionicons
                 name={focused ? "mail" : "mail-outline"}
-                size={24}
+                size={isIPad ? 32 : 24}
                 color={color}
               />
             ),
@@ -57,7 +61,7 @@ export default function TabLayout() {
             tabBarIcon: ({ color, focused }) => (
               <Ionicons
                 name={(focused ? "heart" : "heart-outline") as any}
-                size={24}
+                size={isIPad ? 32 : 24}
                 color={color}
               />
             ),
@@ -70,7 +74,7 @@ export default function TabLayout() {
             tabBarIcon: ({ color, focused }) => (
               <Ionicons
                 name={focused ? "settings" : "settings-outline"}
-                size={24}
+                size={isIPad ? 30 : 24}
                 color={color}
               />
             ),

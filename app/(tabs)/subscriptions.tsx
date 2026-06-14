@@ -6,6 +6,7 @@ import {
   RefreshControl,
   Platform,
   TouchableOpacity,
+  useWindowDimensions,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
@@ -43,6 +44,8 @@ if (useTestAds) {
 }
 
 export default function Subscriptions() {
+  const { width } = useWindowDimensions();
+  const isIPad = width >= 768;
   const bannerRef = useRef<BannerAd>(null);
   const [series, setSeries] = useState<SeriesType[]>([]);
   const [streak, setStreak] = useState<StreakType | null>(null);
@@ -95,7 +98,12 @@ export default function Subscriptions() {
         {!loading && (
           <View style={styles.extractWrapper}>
             <View style={styles.subscriptionsHeader}>
-              <Text style={styles.newInstallmentsHeader}>
+              <Text
+                style={[
+                  styles.newInstallmentsHeader,
+                  isIPad && { fontSize: 24 },
+                ]}
+              >
                 {series.length > 0 ? "" : "Subscribe To A Series!"}
               </Text>
               <View style={styles.headerIconContainer}>
@@ -103,10 +111,14 @@ export default function Subscriptions() {
               </View>
             </View>
             <View style={styles.streakHeader}>
-              <Text style={styles.streakHeaderText}>
+              <Text
+                style={[styles.streakHeaderText, isIPad && { fontSize: 24 }]}
+              >
                 Current Login & Read Streak: {streak?.current_streak}
               </Text>
-              <Text style={styles.streakHeaderText}>
+              <Text
+                style={[styles.streakHeaderText, isIPad && { fontSize: 24 }]}
+              >
                 Longest Streak:{" "}
                 {streak && streak.longest_streak > 0
                   ? streak.longest_streak
@@ -117,7 +129,12 @@ export default function Subscriptions() {
               </View>
               <Link href="/leaderboards" asChild>
                 <TouchableOpacity style={styles.seeLeaderboardButton}>
-                  <Text style={styles.secondaryButtonText}>
+                  <Text
+                    style={[
+                      styles.secondaryButtonText,
+                      isIPad && { fontSize: 24 },
+                    ]}
+                  >
                     Global Leaderboard
                   </Text>
                 </TouchableOpacity>
@@ -125,7 +142,9 @@ export default function Subscriptions() {
             </View>
             <View style={styles.subscriptionSection}>
               {series
-                ? series.map((series) => <Series key={series.id} {...series} />)
+                ? series.map((series) => (
+                    <Series key={series.id} {...series} isIPad={isIPad} />
+                  ))
                 : null}
             </View>
           </View>

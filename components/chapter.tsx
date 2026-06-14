@@ -2,13 +2,23 @@ import { View, Image, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Link } from "expo-router";
 import { ExtractType } from "../types/types.js";
 
-export default function Chapter({ id, chapter, subscribeart }: ExtractType) {
+export default function Chapter({
+  id,
+  chapter,
+  subscribeart,
+  isIPad = false,
+}: ExtractType & { isIPad?: boolean }) {
   return (
     <View style={styles.subscriptionWrapper}>
       <Link href={{ pathname: "/ereader/[id]", params: { id: id } }} asChild>
         <TouchableOpacity key={id} style={styles.subscriptionButton}>
-          <Image style={styles.imageIcons} source={{ uri: subscribeart }} />
-          <Text style={styles.chapter}>{chapter}</Text>
+          <Image
+            style={[styles.imageIcons, isIPad && { height: 80, width: 80 }]}
+            source={{ uri: subscribeart }}
+          />
+          <Text style={[styles.chapter, isIPad && { fontSize: 24 }]}>
+            {chapter}
+          </Text>
         </TouchableOpacity>
       </Link>
     </View>

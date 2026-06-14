@@ -7,6 +7,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Linking,
+  useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useState, useEffect } from "react";
@@ -30,6 +31,8 @@ import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 
 export default function Settings() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isIPad = width >= 768;
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState("");
   const [readerTag, setReaderTag] = useState("");
@@ -256,68 +259,105 @@ export default function Settings() {
 
   return (
     <>
-      <ScrollView style={styles.settingsWrapper}>
+      <ScrollView
+        style={styles.settingsWrapper}
+        contentContainerStyle={styles.scrollContent}
+      >
         {loading ? (
           <ActivityIndicator size="large" color="#F6F7EB" />
         ) : (
           <View style={styles.form}>
-            <Text style={styles.formLabel}>Change ReaderTag</Text>
+            <Text style={[styles.formLabel, isIPad && { fontSize: 24 }]}>
+              Change ReaderTag
+            </Text>
             <TextInput
               defaultValue={username}
-              style={styles.formInput}
+              style={[styles.formInput, isIPad && { fontSize: 24 }]}
               onChangeText={setReaderTag}
             ></TextInput>
             <TouchableOpacity
               style={styles.changeReaderTagButton}
               onPress={updateReaderTag}
             >
-              <Text style={styles.changeReaderTagButtonText}>
+              <Text
+                style={[
+                  styles.changeReaderTagButtonText,
+                  isIPad && { fontSize: 24 },
+                ]}
+              >
                 Change ReaderTag
               </Text>
             </TouchableOpacity>
-            <Text style={styles.formLabel}>Change Email</Text>
+            <Text style={[styles.formLabel, isIPad && { fontSize: 24 }]}>
+              Change Email
+            </Text>
             <TextInput
               defaultValue={email}
-              style={styles.formInput}
+              style={[styles.formInput, isIPad && { fontSize: 24 }]}
               onChangeText={setEmail}
             ></TextInput>
             <TouchableOpacity
               style={styles.changeEmailButton}
               onPress={changeEmail}
             >
-              <Text style={styles.changeEmailButtonText}>Change Email</Text>
+              <Text
+                style={[
+                  styles.changeEmailButtonText,
+                  isIPad && { fontSize: 24 },
+                ]}
+              >
+                Change Email
+              </Text>
             </TouchableOpacity>
-            <Text style={styles.formLabel}>Change Password</Text>
+            <Text style={[styles.formLabel, isIPad && { fontSize: 24 }]}>
+              Change Password
+            </Text>
             <TextInput
               secureTextEntry={true}
               style={[
                 styles.formInput,
                 passwordChangeError ? styles.errorInput : null,
+                isIPad && { fontSize: 24 },
               ]}
               onChangeText={setNewPassword}
             ></TextInput>
-            <Text style={styles.formLabel}>Confirm New Password</Text>
+            <Text style={[styles.formLabel, isIPad && { fontSize: 24 }]}>
+              Confirm New Password
+            </Text>
             <TextInput
               secureTextEntry={true}
               style={[
                 styles.formInput,
                 passwordChangeError ? styles.errorInput : null,
+                isIPad && { fontSize: 24 },
               ]}
               onChangeText={setConfirmNewPassword}
               onBlur={checkPasswordMatch}
             ></TextInput>
             {passwordChangeError ? (
-              <Text style={styles.errorText}>{passwordChangeError}</Text>
+              <Text style={[styles.errorText, isIPad && { fontSize: 24 }]}>
+                {passwordChangeError}
+              </Text>
             ) : null}
             <TouchableOpacity
               style={styles.changePasswordButton}
               onPress={changePassword}
             >
-              <Text style={styles.changePasswordButtonText}>
+              <Text
+                style={[
+                  styles.changePasswordButtonText,
+                  isIPad && { fontSize: 24 },
+                ]}
+              >
                 Change Password
               </Text>
             </TouchableOpacity>
-            <Text style={styles.subscriptionFrequencyLabel}>
+            <Text
+              style={[
+                styles.subscriptionFrequencyLabel,
+                isIPad && { fontSize: 24 },
+              ]}
+            >
               Set Subscription Frequency
             </Text>
             <View style={styles.intervalDropdown}>
@@ -333,7 +373,14 @@ export default function Settings() {
                       interval === option.value && styles.radioButtonSelected,
                     ]}
                   />
-                  <Text style={styles.radioButtonLabel}>{option.label}</Text>
+                  <Text
+                    style={[
+                      styles.radioButtonLabel,
+                      isIPad && { fontSize: 24 },
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -341,7 +388,9 @@ export default function Settings() {
               style={styles.privacyButton}
               onPress={handleConsent}
             >
-              <Text style={styles.privacyButtonText}>
+              <Text
+                style={[styles.privacyButtonText, isIPad && { fontSize: 24 }]}
+              >
                 Manage Privacy Settings
               </Text>
             </TouchableOpacity>
@@ -386,7 +435,9 @@ export default function Settings() {
                 style={styles.privacyButton}
                 onPress={presentPaywall}
               >
-                <Text style={styles.privacyButtonText}>
+                <Text
+                  style={[styles.privacyButtonText, isIPad && { fontSize: 24 }]}
+                >
                   Explore Sumi Premium
                 </Text>
               </TouchableOpacity>
@@ -396,7 +447,9 @@ export default function Settings() {
                 style={styles.privacyButton}
                 onPress={manageSubscription}
               >
-                <Text style={styles.privacyButtonText}>
+                <Text
+                  style={[styles.privacyButtonText, isIPad && { fontSize: 24 }]}
+                >
                   Manage Sumi Premium
                 </Text>
               </TouchableOpacity>
@@ -405,10 +458,21 @@ export default function Settings() {
               style={styles.deleteAccountButton}
               onPress={() => router.push("/deleteaccount" as never)}
             >
-              <Text style={styles.deleteAccountButtonText}>Delete Account</Text>
+              <Text
+                style={[
+                  styles.deleteAccountButtonText,
+                  isIPad && { fontSize: 24 },
+                ]}
+              >
+                Delete Account
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.logoutButton} onPress={Logout}>
-              <Text style={styles.logoutButtonText}>Logout</Text>
+              <Text
+                style={[styles.logoutButtonText, isIPad && { fontSize: 24 }]}
+              >
+                Logout
+              </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -452,10 +516,13 @@ const styles = StyleSheet.create({
     fontFamily: "BeProVietnam",
     color: "#F6F7EB",
   },
+  scrollContent: {
+    alignItems: "center",
+  },
   form: {
     width: "100%",
+    maxWidth: 528,
     padding: 16,
-    height: "100%",
   },
   formLabel: {
     marginTop: 8,

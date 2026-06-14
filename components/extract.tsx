@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Animated,
   Easing,
+  useWindowDimensions,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import React, {
@@ -72,9 +73,12 @@ export default function Extract({
   userid,
 }: ExtractComponent) {
   const dividerDots = Array.from({ length: 48 });
-  const [preview] = useState(fulltext.slice(0, 420));
+  const { width } = useWindowDimensions();
+  const isIPad = width >= 768;
+  const [preview] = useState(fulltext.slice(0, isIPad ? 840 : 420));
   const [saved, setSaved] = useState(false);
   const router = useRouter();
+  const thumbnailHeight = isIPad ? 500 : 250;
 
   const handleNavigation = () => {
     router.push({
@@ -120,14 +124,25 @@ export default function Extract({
     <View style={styles.extract}>
       <View style={styles.header}>
         <TouchableOpacity onPress={handleNavigation}>
-          <Image source={{ uri: portrait }} style={styles.portrait}></Image>
+          <Image
+            source={{ uri: portrait }}
+            style={[styles.portrait, isIPad && { height: 150, width: 150 }]}
+          ></Image>
         </TouchableOpacity>
         <TouchableOpacity onPress={handleNavigation}>
           <View style={styles.headerContainer}>
-            <Text style={styles.headerTextTitle}>{title}</Text>
-            <Text style={styles.headerText}>Chapter {chapter}</Text>
-            <Text style={styles.headerText}>{author}</Text>
-            <Text style={styles.headerText}>({year})</Text>
+            <Text style={[styles.headerTextTitle, isIPad && { fontSize: 24 }]}>
+              {title}
+            </Text>
+            <Text style={[styles.headerText, isIPad && { fontSize: 24 }]}>
+              Chapter {chapter}
+            </Text>
+            <Text style={[styles.headerText, isIPad && { fontSize: 24 }]}>
+              {author}
+            </Text>
+            <Text style={[styles.headerText, isIPad && { fontSize: 24 }]}>
+              ({year})
+            </Text>
           </View>
         </TouchableOpacity>
       </View>
@@ -138,7 +153,9 @@ export default function Extract({
       </View>
       <TouchableOpacity onPress={handleNavigation}>
         <View style={styles.previewText}>
-          <Text style={styles.text}>{preview}...</Text>
+          <Text style={[styles.text, isIPad && { fontSize: 24 }]}>
+            {preview}...
+          </Text>
         </View>
       </TouchableOpacity>
 
@@ -157,13 +174,23 @@ export default function Extract({
           ></Ionicons>
         </BounceView>
         {!saved ? (
-          <Text style={styles.saveArtwork}>Save Artwork</Text>
+          <Text style={[styles.saveArtwork, isIPad && { fontSize: 18 }]}>
+            Save Artwork
+          </Text>
         ) : (
-          <Text style={styles.savedArtwork}>Saved!</Text>
+          <Text style={[styles.savedArtwork, isIPad && { fontSize: 18 }]}>
+            Saved!
+          </Text>
         )}
       </TouchableOpacity>
-      <TouchableOpacity onPress={handleNavigation} style={styles.thumbnail}>
-        <Image source={{ uri: coverart }} style={styles.thumbnail} />
+      <TouchableOpacity
+        onPress={handleNavigation}
+        style={[styles.thumbnail, { height: thumbnailHeight }]}
+      >
+        <Image
+          source={{ uri: coverart }}
+          style={[styles.thumbnail, { height: thumbnailHeight }]}
+        />
       </TouchableOpacity>
     </View>
   );
@@ -215,7 +242,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 8,
-    marginTop: 8
+    marginTop: 8,
   },
   headerDividerDot: {
     width: 3,

@@ -49,7 +49,8 @@ export default function Series({
   sequeldue,
   earnedchapters,
   totalchapters,
-}: SeriesType) {
+  isIPad = false,
+}: SeriesType & { isIPad?: boolean }) {
   const progressBarRef = useRef<View>(null);
   const [progressBarWidth, setProgressBarWidth] = useState(250);
 
@@ -63,9 +64,9 @@ export default function Series({
     }, 100);
   }, []);
 
-  let progress; 
+  let progress;
 
-  if (earnedchapters > totalchapters){
+  if (earnedchapters > totalchapters) {
     progress = progressBarWidth;
   } else {
     progress = (earnedchapters / totalchapters) * progressBarWidth;
@@ -74,12 +75,17 @@ export default function Series({
   return (
     <View style={styles.bookWrapper}>
       <View style={styles.heading}>
-        <Text style={styles.bookTextTitle}>{title}</Text>
-        <Text style={styles.bookText}>by {author}</Text>
+        <Text style={[styles.bookTextTitle, isIPad && { fontSize: 24 }]}>
+          {title}
+        </Text>
+        <Text style={[styles.bookText, isIPad && { fontSize: 24 }]}>
+          by {author}
+        </Text>
       </View>
 
-      <Text style={styles.progressText}>
-        {earnedchapters > totalchapters ? totalchapters : earnedchapters} out of {totalchapters} instalments
+      <Text style={[styles.progressText, isIPad && { fontSize: 24 }]}>
+        {earnedchapters > totalchapters ? totalchapters : earnedchapters} out of{" "}
+        {totalchapters} instalments
       </Text>
       <View style={styles.progressBarContainer}>
         <View ref={progressBarRef} style={styles.progressBar}>
@@ -98,10 +104,10 @@ export default function Series({
       </View>
       <View style={styles.chapters}>
         {extracts.map((extract, index) => (
-          <Chapter key={`${title}-${index}`} {...extract} />
+          <Chapter key={`${title}-${index}`} {...extract} isIPad={isIPad} />
         ))}
       </View>
-      <Text style={styles.dueText}>
+      <Text style={[styles.dueText, isIPad && { fontSize: 24 }]}>
         Next Chapter:{" "}
         {new Date(sequeldue).toLocaleDateString("en-GB", {
           year: "numeric",

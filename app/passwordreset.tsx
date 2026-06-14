@@ -4,6 +4,7 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
+  useWindowDimensions,
 } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
@@ -11,6 +12,8 @@ import { resetPassword } from "../supabase_queries/auth.js";
 
 export default function PasswordReset() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isIPad = width >= 768;
   const [email, setEmail] = useState("");
   const [confirmationMessage, setConfirmationMessage] = useState("");
 
@@ -25,23 +28,36 @@ export default function PasswordReset() {
   return (
     <View style={styles.passwordResetWrapper}>
       <View style={styles.form}>
-        <Text style={styles.formLabel}>Confirm Email</Text>
-        <TextInput style={styles.formInput} onChangeText={setEmail}></TextInput>
+        <Text style={[styles.formLabel, isIPad && { fontSize: 24 }]}>
+          Confirm Email
+        </Text>
+        <TextInput
+          style={[styles.formInput, isIPad && { fontSize: 24 }]}
+          onChangeText={setEmail}
+        ></TextInput>
         <TouchableOpacity
           style={styles.buttonPrimary}
           onPress={handlePasswordReset}
         >
-          <Text style={styles.primaryButtonText}>Send Reset Link</Text>
+          <Text style={[styles.primaryButtonText, isIPad && { fontSize: 24 }]}>
+            Send Reset Link
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.buttonSecondary}
           onPress={() => router.push("/")}
         >
-          <Text style={styles.secondaryButtonText}>Back to Sign In</Text>
+          <Text
+            style={[styles.secondaryButtonText, isIPad && { fontSize: 24 }]}
+          >
+            Back to Sign In
+          </Text>
         </TouchableOpacity>
       </View>
       {confirmationMessage ? (
-        <Text style={styles.errorText}>{confirmationMessage}</Text>
+        <Text style={[styles.errorText, isIPad && { fontSize: 24 }]}>
+          {confirmationMessage}
+        </Text>
       ) : null}
     </View>
   );
@@ -57,7 +73,7 @@ const styles = StyleSheet.create({
   },
   form: {
     width: "90%",
-    maxWidth: 368,
+    maxWidth: 528,
   },
   formLabel: {
     fontSize: 16,
@@ -73,7 +89,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#F6F7EB",
-    padding: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
     backgroundColor: "transparent",
   },
   buttonPrimary: {

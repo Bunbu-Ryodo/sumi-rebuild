@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
+  useWindowDimensions,
 } from "react-native";
 import { useState, useEffect } from "react";
 import { QuoteType } from "@/types/types";
@@ -16,6 +17,9 @@ import { useRouter } from "expo-router";
 
 export default function ViewQuote() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isIPad = width >= 768;
+  const dividerDots = Array.from({ length: 48 });
   let { id } = useLocalSearchParams();
   const [quote, setQuote] = useState<QuoteType | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,10 +59,24 @@ export default function ViewQuote() {
               <>
                 <View style={styles.quoteHeader}>
                   <View style={styles.quoteDetails}>
-                    <Text style={styles.quoteText}>{quote.author}</Text>
-                    <Text style={styles.quoteText}>{quote.title}</Text>
-                    <Text style={styles.quoteText}>{quote.year}</Text>
-                    <Text style={styles.quoteText}>
+                    <Text
+                      style={[styles.quoteText, isIPad && { fontSize: 24 }]}
+                    >
+                      {quote.author}
+                    </Text>
+                    <Text
+                      style={[styles.quoteText, isIPad && { fontSize: 24 }]}
+                    >
+                      {quote.title}
+                    </Text>
+                    <Text
+                      style={[styles.quoteText, isIPad && { fontSize: 24 }]}
+                    >
+                      {quote.year}
+                    </Text>
+                    <Text
+                      style={[styles.quoteText, isIPad && { fontSize: 24 }]}
+                    >
                       Chapter {quote.chapter}
                     </Text>
                   </View>
@@ -69,14 +87,23 @@ export default function ViewQuote() {
                     />
                   </View>
                 </View>
-                <Text style={styles.quoteText}>{quote.quote}</Text>
+                <View style={styles.headerDivider}>
+                  {dividerDots.map((_, index) => (
+                    <View key={index} style={styles.headerDividerDot} />
+                  ))}
+                </View>
+                <Text style={[styles.quoteText, isIPad && { fontSize: 24 }]}>
+                  {quote.quote}
+                </Text>
               </>
             ) : (
               <Text>Quote failed to load.</Text>
             )}
             <TouchableOpacity style={styles.deleteButton} onPress={deleteQuote}>
               <Ionicons name="trash" size={24} color="#393E41" />
-              <Text style={styles.buttonText}>Delete Quote</Text>
+              <Text style={[styles.buttonText, isIPad && { fontSize: 24 }]}>
+                Delete Quote
+              </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -157,14 +184,25 @@ const styles = StyleSheet.create({
     flex: 1,
     marginBottom: 8,
     marginRight: 12,
-
-    padding: 8,
   },
   quoteHeader: {
     flexDirection: "row",
     width: "100%",
     height: "auto",
     alignItems: "flex-start",
+  },
+  headerDivider: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+    marginTop: 8,
+  },
+  headerDividerDot: {
+    width: 3,
+    height: 3,
+    borderRadius: 999,
+    backgroundColor: "#393E41",
   },
   artContainer: {
     width: 100,
