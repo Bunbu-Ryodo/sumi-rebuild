@@ -4,7 +4,7 @@ import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import supabase from "../lib/supabase";
 import { createContext, useContext } from "react";
-import { View, Text } from "react-native";
+import { View, Text, useWindowDimensions } from "react-native";
 import { StatusBar } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Toast from "react-native-toast-message";
@@ -381,6 +381,8 @@ export default function RootLayout() {
 }
 
 function RootNavigator({ toastConfig }: { toastConfig: any }) {
+  const { width } = useWindowDimensions();
+  const isIPad = Platform.OS === "ios" && Platform.isPad;
   // const { handleURLCallback } = useStripe();
   // const lastSyncedEmailRef = useRef<string | null>(null);
 
@@ -438,18 +440,19 @@ function RootNavigator({ toastConfig }: { toastConfig: any }) {
         <GestureHandlerRootView>
           <StatusBar backgroundColor="#393E41" barStyle="light-content" />
           <Stack
-            screenOptions={{
+            screenOptions={() => ({
               headerStyle: {
                 backgroundColor: "#393E41",
               },
               headerTitleStyle: {
                 fontFamily: "BeProVietnam",
                 color: "#F6F7EB",
+                fontSize: isIPad ? 24 : 16,
               },
               headerTintColor: "#F6F7EB",
               headerShadowVisible: false,
               headerBackButtonDisplayMode: "minimal",
-            }}
+            })}
           >
             <Stack.Screen
               name="index"
@@ -510,6 +513,7 @@ function RootNavigator({ toastConfig }: { toastConfig: any }) {
                 headerTitleStyle: {
                   fontFamily: "BeProVietnam",
                   color: "#F6F7EB",
+                  fontSize: isIPad ? 24 : 16,
                 },
                 headerTintColor: "#F6F7EB",
                 headerShadowVisible: false,
@@ -526,6 +530,7 @@ function RootNavigator({ toastConfig }: { toastConfig: any }) {
                 headerTitleStyle: {
                   fontFamily: "BeProVietnam",
                   color: "#F6F7EB",
+                  fontSize: isIPad ? 24 : 16,
                 },
                 headerTintColor: "#F6F7EB",
                 headerShadowVisible: false,

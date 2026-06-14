@@ -6,7 +6,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
-  Dimensions,
+  Platform,
+  useWindowDimensions,
 } from "react-native";
 import { useState, useEffect } from "react";
 import { ArtworkType } from "@/types/types";
@@ -36,7 +37,9 @@ export default function ViewArtwork() {
     fetchArtwork();
   }, []);
 
-  const screenWidth = Dimensions.get("window").width - 20;
+  const { width } = useWindowDimensions();
+  const isIPad = Platform.OS === "ios" && Platform.isPad;
+  const screenWidth = width - 20;
 
   const deleteArtwork = async () => {
     if (artwork) {
@@ -48,44 +51,48 @@ export default function ViewArtwork() {
   };
 
   return (
-      <ScrollView
-        contentContainerStyle={styles.postArtworkWrapper}
-        style={styles.container}
-      >
-        {loading ? (
-          <ActivityIndicator size="large" color="#393E41" />
-        ) : (
-          <View style={styles.frameButtonsSection}>
-            {artwork && artwork.url ? (
-              <Image
-                source={{ uri: artwork.url }}
-                style={{
-                  width: screenWidth,
-                  height: 400,
-                  marginBottom: 16,
-                  borderRadius: 8,
-                }}
-              />
-            ) : (
-              <Text>No artwork found.</Text>
-            )}
-            <View>
-              <Text style={styles.artworkTitle}>{artwork?.title}</Text>
-              <Text style={styles.artworkDetails}>{artwork?.artist}</Text>
-              <Text style={styles.artworkDetails}>{artwork?.year}</Text>
-            </View>
-            <TouchableOpacity
-              style={styles.deleteButton}
-              onPress={deleteArtwork}
-            >
-              <Ionicons name="trash" size={24} color="#393E41" />
-              <Text style={styles.buttonText}>
-                Delete Artwork from My Collection
-              </Text>
-            </TouchableOpacity>
+    <ScrollView
+      contentContainerStyle={styles.postArtworkWrapper}
+      style={styles.container}
+    >
+      {loading ? (
+        <ActivityIndicator size="large" color="#393E41" />
+      ) : (
+        <View style={styles.frameButtonsSection}>
+          {artwork && artwork.url ? (
+            <Image
+              source={{ uri: artwork.url }}
+              style={{
+                width: screenWidth,
+                height: isIPad ? 800 : 400,
+                marginBottom: 16,
+                borderRadius: 8,
+              }}
+              resizeMode="contain"
+            />
+          ) : (
+            <Text style={isIPad && { fontSize: 24 }}>No artwork found.</Text>
+          )}
+          <View>
+            <Text style={[styles.artworkTitle, isIPad && { fontSize: 24 }]}>
+              {artwork?.title}
+            </Text>
+            <Text style={[styles.artworkDetails, isIPad && { fontSize: 24 }]}>
+              {artwork?.artist}
+            </Text>
+            <Text style={[styles.artworkDetails, isIPad && { fontSize: 24 }]}>
+              {artwork?.year}
+            </Text>
           </View>
-        )}
-      </ScrollView>
+          <TouchableOpacity style={styles.deleteButton} onPress={deleteArtwork}>
+            <Ionicons name="trash" size={24} color="#393E41" />
+            <Text style={[styles.buttonText, isIPad && { fontSize: 24 }]}>
+              Delete Artwork from My Collection
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </ScrollView>
   );
 }
 

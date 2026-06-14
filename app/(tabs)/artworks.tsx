@@ -1,5 +1,4 @@
 import {
-  Dimensions,
   View,
   Text,
   StyleSheet,
@@ -8,6 +7,7 @@ import {
   TouchableOpacity,
   Image,
   Platform,
+  useWindowDimensions,
 } from "react-native";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -58,8 +58,10 @@ export default function Artwork() {
 
   const artworkProgress = useSharedValue<number>(0);
   const quoteProgress = useSharedValue<number>(0);
+  const dividerDots = Array.from({ length: 48 });
 
-  const width = Dimensions.get("window").width;
+  const { width } = useWindowDimensions();
+  const isIPad = Platform.OS === "ios" && Platform.isPad;
 
   const onPressPaginationArtworks = (index: number) => {
     artworkCarousel.current?.scrollTo({
@@ -132,13 +134,13 @@ export default function Artwork() {
                   alignItems: "center",
                   justifyContent: "center",
                   marginTop: 24,
-                  minHeight: 500,
+                  minHeight: isIPad ? 788 : 500,
                 }}
               >
                 <Carousel
                   ref={artworkCarousel}
                   width={width}
-                  height={310}
+                  height={isIPad ? 698 : 310}
                   data={artworks}
                   onProgressChange={artworkProgress}
                   renderItem={(artwork) => {
@@ -149,16 +151,34 @@ export default function Artwork() {
                       >
                         <Image
                           source={{ uri: artwork.item.url }}
-                          style={styles.thumbnail}
+                          style={[
+                            styles.thumbnail,
+                            isIPad && { width: 450, height: 495 },
+                          ]}
                         />
                         <View style={styles.artworkDetailsContainer}>
-                          <Text style={styles.artworkTitle}>
+                          <Text
+                            style={[
+                              styles.artworkTitle,
+                              isIPad && { fontSize: 24 },
+                            ]}
+                          >
                             {artwork.item.title}
                           </Text>
-                          <Text style={styles.artworkDetails}>
+                          <Text
+                            style={[
+                              styles.artworkDetails,
+                              isIPad && { fontSize: 24 },
+                            ]}
+                          >
                             {artwork.item.artist}
                           </Text>
-                          <Text style={styles.artworkDetails}>
+                          <Text
+                            style={[
+                              styles.artworkDetails,
+                              isIPad && { fontSize: 24 },
+                            ]}
+                          >
                             {artwork.item.year}
                           </Text>
                         </View>
@@ -187,12 +207,16 @@ export default function Artwork() {
               >
                 <Carousel
                   ref={quoteCarousel}
-                  width={width}
+                  width={isIPad ? width * 0.75 : width * 0.9}
                   height={300}
                   data={quotes}
                   onProgressChange={quoteProgress}
                   renderItem={(quote) => {
                     const quotePreview = quote.item.quote.slice(0, 420);
+                    const quoteTextStyle = [
+                      styles.quoteText,
+                      isIPad && { fontSize: 24 },
+                    ];
                     return (
                       <TouchableOpacity
                         style={styles.quoteContainer}
@@ -200,16 +224,16 @@ export default function Artwork() {
                       >
                         <View style={styles.quoteHeader}>
                           <View style={styles.quoteDetails}>
-                            <Text style={styles.quoteText}>
+                            <Text style={quoteTextStyle}>
                               {quote.item.author}
                             </Text>
-                            <Text style={styles.quoteText}>
+                            <Text style={quoteTextStyle}>
                               {quote.item.title}
                             </Text>
-                            <Text style={styles.quoteText}>
+                            <Text style={quoteTextStyle}>
                               {quote.item.year}
                             </Text>
-                            <Text style={styles.quoteText}>
+                            <Text style={quoteTextStyle}>
                               Chapter {quote.item.chapter}
                             </Text>
                           </View>
@@ -220,7 +244,12 @@ export default function Artwork() {
                             />
                           </View>
                         </View>
-                        <Text style={styles.quoteText}>
+                        <View style={styles.headerDivider}>
+                          {dividerDots.map((_, index) => (
+                            <View key={index} style={styles.headerDividerDot} />
+                          ))}
+                        </View>
+                        <Text style={quoteTextStyle}>
                           {quotePreview}
                           {quote.item.quote.length > 420 ? "..." : ""}
                         </Text>
@@ -437,13 +466,25 @@ const styles = StyleSheet.create({
     flex: 1,
     marginBottom: 8,
     marginRight: 12,
-    padding: 8,
   },
   quoteHeader: {
     flexDirection: "row",
     width: "100%",
     height: "auto",
     alignItems: "flex-start",
+  },
+  headerDivider: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+    marginTop: 8,
+  },
+  headerDividerDot: {
+    width: 3,
+    height: 3,
+    borderRadius: 999,
+    backgroundColor: "#393E41",
   },
   artContainer: {
     width: 100,

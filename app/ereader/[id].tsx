@@ -1,4 +1,4 @@
-import { Platform } from "react-native";
+import { Platform, useWindowDimensions } from "react-native";
 import {
   View,
   Text,
@@ -121,6 +121,8 @@ const BounceView = forwardRef<any, BounceInProps>((props, ref) => {
 
 export default function EReader() {
   const bannerRef = useRef<BannerAd>(null);
+  const { width } = useWindowDimensions();
+  const isIPad = Platform.OS === "ios" && Platform.isPad;
   let { id } = useLocalSearchParams();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -156,7 +158,7 @@ export default function EReader() {
   const [subscribed, setSubscribed] = useState(false);
   const [subid, setSubid] = useState(0);
   const [userid, setUserid] = useState("");
-  const [fontSize, setFontSize] = useState(18);
+  const [fontSize, setFontSize] = useState(isIPad ? 24 : 18);
   const [warmth, setWarmth] = useState(0);
   const [argument, setArgument] = useState("");
   const [thinking, setThinking] = useState(false);
@@ -886,30 +888,41 @@ export default function EReader() {
                   style={[
                     styles.fontUp,
                     warmth === 4 && { backgroundColor: "#F6F7EB" },
+                    isIPad && { height: 60, width: 60 },
                   ]}
                   onPress={fontUp}
                 >
-                  <Ionicons name="text" size={24} color="#393E41"></Ionicons>
+                  <Ionicons
+                    name="text"
+                    size={isIPad ? 32 : 24}
+                    color="#393E41"
+                  ></Ionicons>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[
                     styles.fontDown,
                     warmth === 4 && { backgroundColor: "#F6F7EB" },
+                    isIPad && { height: 60, width: 60 },
                   ]}
                   onPress={fontDown}
                 >
-                  <Ionicons name="text" size={18} color="#393E41"></Ionicons>
+                  <Ionicons
+                    name="text"
+                    size={isIPad ? 24 : 18}
+                    color="#393E41"
+                  ></Ionicons>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[
                     styles.brightness,
                     warmth === 4 && { backgroundColor: "#F6F7EB" },
+                    isIPad && { height: 60, width: 60 },
                   ]}
                   onPress={adjustBrightness}
                 >
                   <Ionicons
                     name="sunny-outline"
-                    size={18}
+                    size={isIPad ? 24 : 18}
                     color="#393E41"
                   ></Ionicons>
                 </TouchableOpacity>
@@ -917,30 +930,41 @@ export default function EReader() {
                   style={[
                     styles.summary,
                     warmth === 4 && { backgroundColor: "#F6F7EB" },
+                    isIPad && { height: 60, width: 60 },
                   ]}
                   onPress={generateChapterArgument}
                 >
-                  <Ionicons name="school" size={18} color="#393E41"></Ionicons>
+                  <Ionicons
+                    name="school"
+                    size={isIPad ? 24 : 18}
+                    color="#393E41"
+                  ></Ionicons>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[
                     styles.summary,
                     warmth === 4 && { backgroundColor: "#F6F7EB" },
+                    isIPad && { height: 60, width: 60 },
                   ]}
                   onPress={generateChapterBulletPoints}
                 >
-                  <Ionicons name="list" size={18} color="#393E41"></Ionicons>
+                  <Ionicons
+                    name="list"
+                    size={isIPad ? 24 : 18}
+                    color="#393E41"
+                  ></Ionicons>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[
                     styles.summary,
                     warmth === 4 && { backgroundColor: "#F6F7EB" },
+                    isIPad && { height: 60, width: 60 },
                   ]}
                   onPress={generateSynopsis}
                 >
                   <Ionicons
                     name="help-outline"
-                    size={18}
+                    size={isIPad ? 24 : 18}
                     color="#393E41"
                   ></Ionicons>
                 </TouchableOpacity>
@@ -948,24 +972,33 @@ export default function EReader() {
                   style={[
                     styles.summary,
                     warmth === 4 && { backgroundColor: "#F6F7EB" },
+                    isIPad && { height: 60, width: 60 },
                   ]}
                   onPress={openMarginaliaModal}
                 >
                   <Ionicons
                     name="create-outline"
-                    size={18}
+                    size={isIPad ? 24 : 18}
                     color="#393E41"
                   ></Ionicons>
                 </TouchableOpacity>
               </View>
               <View style={styles.titleBar}>
                 <Text
-                  style={[styles.title, warmth === 4 && { color: "#F6F7EB" }]}
+                  style={[
+                    styles.title,
+                    warmth === 4 && { color: "#F6F7EB" },
+                    isIPad && { fontSize: 32 },
+                  ]}
                 >
                   {extract.title}
                 </Text>
                 <Text
-                  style={[styles.chapter, warmth === 4 && { color: "#F6F7EB" }]}
+                  style={[
+                    styles.chapter,
+                    warmth === 4 && { color: "#F6F7EB" },
+                    isIPad && { fontSize: 32 },
+                  ]}
                 >
                   {extract.chapter}
                 </Text>
@@ -1008,6 +1041,7 @@ export default function EReader() {
                       style={[
                         styles.saveQuoteText,
                         warmth === 4 && { color: "#393E41" },
+                        isIPad && { fontSize: 24 },
                       ]}
                     >
                       Save Quote: "
@@ -1030,11 +1064,16 @@ export default function EReader() {
                 style={styles.returnAnchor}
                 onPress={backToFeed}
               >
-                <Ionicons name="arrow-back" size={24} color="#8980F5" />
+                <Ionicons
+                  name="arrow-back"
+                  size={isIPad ? 36 : 24}
+                  color="#8980F5"
+                />
                 <Text
                   style={[
                     styles.shoppingText,
                     warmth === 4 && { color: "#F6F7EB" },
+                    isIPad && { fontSize: 24 },
                   ]}
                 >
                   Save Progress &amp;
@@ -1043,6 +1082,7 @@ export default function EReader() {
                   style={[
                     styles.shoppingText,
                     warmth === 4 && { color: "#F6F7EB" },
+                    isIPad && { fontSize: 24 },
                   ]}
                 >
                   Return to Feed
@@ -1053,7 +1093,7 @@ export default function EReader() {
                   <BounceView ref={bounceRef}>
                     <Ionicons
                       name={subscribed ? "bookmark" : "bookmark-outline"}
-                      size={24}
+                      size={isIPad ? 36 : 24}
                       color="#FE7F2D"
                     />
                   </BounceView>
@@ -1062,6 +1102,7 @@ export default function EReader() {
                   style={[
                     styles.bookmarkText,
                     warmth === 4 && { color: "#F6F7EB" },
+                    isIPad && { fontSize: 24 },
                   ]}
                 >
                   Subscribe
@@ -1166,6 +1207,7 @@ export default function EReader() {
                     style={[
                       styles.cancelButtonText,
                       warmth === 4 && { color: "#F6F7EB" },
+                      isIPad && { fontSize: 24 },
                     ]}
                   >
                     Cancel
@@ -1183,7 +1225,14 @@ export default function EReader() {
                   {marginaliaLoading ? (
                     <ActivityIndicator size="small" color="#F6F7EB" />
                   ) : (
-                    <Text style={styles.saveButtonText}>Save Notes</Text>
+                    <Text
+                      style={[
+                        styles.saveButtonText,
+                        isIPad && { fontSize: 24 },
+                      ]}
+                    >
+                      Save Notes
+                    </Text>
                   )}
                 </TouchableOpacity>
               </View>

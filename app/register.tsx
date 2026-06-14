@@ -4,12 +4,16 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
+  Platform,
+  useWindowDimensions,
 } from "react-native";
 import { Link } from "expo-router";
 import { useState } from "react";
 import supabase from "../lib/supabase.js";
 
 export default function Register() {
+  const { width } = useWindowDimensions();
+  const isIPad = Platform.OS === "ios" && Platform.isPad;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -86,44 +90,78 @@ export default function Register() {
         <Text style={styles.tagline}>Join for Free</Text>
       </View>
       <View style={styles.form}>
-        <Text style={styles.formLabel}>Email</Text>
+        <Text style={[styles.formLabel, isIPad && { fontSize: 24 }]}>
+          Email
+        </Text>
         <TextInput
-          style={[styles.formInput, emailError ? styles.errorInput : null]}
+          style={[
+            styles.formInput,
+            emailError ? styles.errorInput : null,
+            isIPad && { fontSize: 24 },
+          ]}
           keyboardType="email-address"
           value={email}
           onChangeText={handleEmailChange}
           onBlur={() => checkEmail(email)}
         ></TextInput>
         {emailError ? (
-          <Text style={styles.passwordEmailErrorText}>{emailError}</Text>
+          <Text
+            style={[styles.passwordEmailErrorText, isIPad && { fontSize: 24 }]}
+          >
+            {emailError}
+          </Text>
         ) : null}
-        <Text style={styles.formLabel}>Create Password</Text>
+        <Text style={[styles.formLabel, isIPad && { fontSize: 24 }]}>
+          Create Password
+        </Text>
         <TextInput
           secureTextEntry={true}
           onChangeText={setPassword}
-          style={[styles.formInput, passwordError ? styles.errorInput : null]}
+          style={[
+            styles.formInput,
+            passwordError ? styles.errorInput : null,
+            isIPad && { fontSize: 24 },
+          ]}
         ></TextInput>
-        <Text style={styles.formLabel}>Confirm Password</Text>
+        <Text style={[styles.formLabel, isIPad && { fontSize: 24 }]}>
+          Confirm Password
+        </Text>
         <TextInput
           secureTextEntry={true}
           onChangeText={setConfirmPassword}
           onBlur={checkPasswords}
-          style={[styles.formInput, passwordError ? styles.errorInput : null]}
+          style={[
+            styles.formInput,
+            passwordError ? styles.errorInput : null,
+            isIPad && { fontSize: 24 },
+          ]}
         ></TextInput>
         {passwordError ? (
-          <Text style={styles.passwordEmailErrorText}>{passwordError}</Text>
+          <Text
+            style={[styles.passwordEmailErrorText, isIPad && { fontSize: 24 }]}
+          >
+            {passwordError}
+          </Text>
         ) : null}
         {registerError ? (
-          <Text style={styles.errorText}>{registerError}</Text>
+          <Text style={[styles.errorText, isIPad && { fontSize: 24 }]}>
+            {registerError}
+          </Text>
         ) : registerSuccess ? (
-          <Text style={styles.registerSuccess}>{registerSuccess}</Text>
+          <Text style={[styles.registerSuccess, isIPad && { fontSize: 24 }]}>
+            {registerSuccess}
+          </Text>
         ) : null}
         <TouchableOpacity style={styles.registerButton} onPress={signUpNewUser}>
-          <Text style={styles.registerButtonText}>Register</Text>
+          <Text style={[styles.registerButtonText, isIPad && { fontSize: 24 }]}>
+            Register
+          </Text>
         </TouchableOpacity>
         <Link href="/" asChild>
           <TouchableOpacity style={styles.backButton} onPress={() => {}}>
-            <Text style={styles.backButtonText}>Back to Sign In</Text>
+            <Text style={[styles.backButtonText, isIPad && { fontSize: 24 }]}>
+              Back to Sign In
+            </Text>
           </TouchableOpacity>
         </Link>
       </View>
@@ -169,7 +207,7 @@ const styles = StyleSheet.create({
   },
   form: {
     width: "90%",
-    maxWidth: 368,
+    maxWidth: 528,
   },
   formLabel: {
     fontSize: 16,
@@ -185,7 +223,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#F6F7EB",
-    padding: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
     backgroundColor: "transparent",
   },
   buttonContainer: {

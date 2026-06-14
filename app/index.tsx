@@ -4,6 +4,8 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
+  Platform,
+  useWindowDimensions,
 } from "react-native";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
@@ -11,6 +13,8 @@ import supabase from "../lib/supabase.js";
 import { useEffect } from "react";
 
 export default function Index() {
+  const { width } = useWindowDimensions();
+  const isIPad = Platform.OS === "ios" && Platform.isPad;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [signinError, setSigninError] = useState("");
@@ -81,12 +85,19 @@ export default function Index() {
         <Text style={styles.tagline}>{displayedTagline}</Text>
       </View>
       <View style={styles.form}>
-        <Text style={styles.formLabel}>Email</Text>
-        <TextInput style={styles.formInput} onChangeText={setEmail}></TextInput>
-        <Text style={styles.formLabel}>Password</Text>
+        <Text style={[styles.formLabel, isIPad && { fontSize: 24 }]}>
+          Email
+        </Text>
+        <TextInput
+          style={[styles.formInput, isIPad && { fontSize: 24 }]}
+          onChangeText={setEmail}
+        ></TextInput>
+        <Text style={[styles.formLabel, isIPad && { fontSize: 24 }]}>
+          Password
+        </Text>
         <TextInput
           secureTextEntry={true}
-          style={styles.formInput}
+          style={[styles.formInput, isIPad && { fontSize: 24 }]}
           onChangeText={setPassword}
         ></TextInput>
         {signinError ? (
@@ -94,17 +105,27 @@ export default function Index() {
         ) : null}
 
         <TouchableOpacity style={styles.signInButton} onPress={signInUser}>
-          <Text style={styles.signInButtonText}>Sign In</Text>
+          <Text style={[styles.signInButtonText, isIPad && { fontSize: 24 }]}>
+            Sign In
+          </Text>
         </TouchableOpacity>
         <Link href="../register" asChild>
           <TouchableOpacity style={styles.registerButton}>
-            <Text style={styles.registerButtonText}>Register</Text>
+            <Text
+              style={[styles.registerButtonText, isIPad && { fontSize: 24 }]}
+            >
+              Register
+            </Text>
           </TouchableOpacity>
         </Link>
       </View>
       <Link href={"/passwordreset"} asChild>
         <TouchableOpacity>
-          <Text style={styles.forgottenPasswordText}>Forgotten password?</Text>
+          <Text
+            style={[styles.forgottenPasswordText, isIPad && { fontSize: 24 }]}
+          >
+            Forgotten password?
+          </Text>
         </TouchableOpacity>
       </Link>
     </View>
@@ -150,7 +171,7 @@ const styles = StyleSheet.create({
   },
   form: {
     width: "90%",
-    maxWidth: 368,
+    maxWidth: 528,
   },
   formLabel: {
     fontSize: 16,
@@ -166,7 +187,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#F6F7EB",
-    padding: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
     backgroundColor: "transparent",
   },
   signIn: {
