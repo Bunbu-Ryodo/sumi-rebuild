@@ -6,9 +6,11 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useState } from "react";
+import { useRouter } from "expo-router";
 import { resetPassword } from "../supabase_queries/auth.js";
 
 export default function PasswordReset() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [confirmationMessage, setConfirmationMessage] = useState("");
 
@@ -30,6 +32,12 @@ export default function PasswordReset() {
           onPress={handlePasswordReset}
         >
           <Text style={styles.primaryButtonText}>Send Reset Link</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.buttonSecondary}
+          onPress={() => router.push("/")}
+        >
+          <Text style={styles.secondaryButtonText}>Back to Sign In</Text>
         </TouchableOpacity>
       </View>
       {confirmationMessage ? (
@@ -79,6 +87,21 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     color: "#393E41",
+    fontFamily: "BeProVietnam",
+    fontSize: 16,
+  },
+  buttonSecondary: {
+    marginTop: 12,
+    padding: 16,
+    backgroundColor: "transparent",
+    borderRadius: 8,
+    alignItems: "center",
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#F6F7EB",
+  },
+  secondaryButtonText: {
+    color: "#F6F7EB",
     fontFamily: "BeProVietnam",
     fontSize: 16,
   },

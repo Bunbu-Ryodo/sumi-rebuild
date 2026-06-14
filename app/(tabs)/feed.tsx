@@ -18,7 +18,7 @@ import {
   lookUpUserProfile,
   getUserSession,
   setLoginDateTime,
-  updateUserProfileSubscription,
+  // updateUserProfileSubscription,
   // hasActivePremiumSubscription,
 } from "../../supabase_queries/auth.js";
 import { getExtracts } from "../../supabase_queries/feed";
@@ -147,47 +147,47 @@ export default function FeedScreen() {
     }
   };
 
-  const createCustomer = async () => {
-    try {
-      const { data: session } = await supabase.auth.getSession();
+  // const createCustomer = async () => {
+  //   try {
+  //     const { data: session } = await supabase.auth.getSession();
 
-      if (!session?.session?.access_token) {
-        throw new Error("No valid session");
-      }
+  //     if (!session?.session?.access_token) {
+  //       throw new Error("No valid session");
+  //     }
 
-      let createCustomer;
+  //     let createCustomer;
 
-      if (useTestPayment) {
-        createCustomer = "create-customer";
-      } else {
-        createCustomer = "prod-create-customer";
-      }
+  //     if (useTestPayment) {
+  //       createCustomer = "create-customer";
+  //     } else {
+  //       createCustomer = "prod-create-customer";
+  //     }
 
-      const { data: customerData, error: customerError } =
-        await supabase.functions.invoke(createCustomer, {
-          headers: {
-            Authorization: `Bearer ${session.session.access_token}`,
-          },
-        });
+  //     const { data: customerData, error: customerError } =
+  //       await supabase.functions.invoke(createCustomer, {
+  //         headers: {
+  //           Authorization: `Bearer ${session.session.access_token}`,
+  //         },
+  //       });
 
-      if (customerError) throw customerError;
+  //     if (customerError) throw customerError;
 
-      const subscriptionData = await createSubscription(customerData.id);
+  //     const subscriptionData = await createSubscription(customerData.id);
 
-      const { id } = customerData;
-      const { subscriptionId, status, clientSecret } = subscriptionData || {};
+  //     const { id } = customerData;
+  //     const { subscriptionId, status, clientSecret } = subscriptionData || {};
 
-      return {
-        id: id,
-        subscriptionId: subscriptionId,
-        status: status,
-        clientSecret: clientSecret,
-      };
-    } catch (error) {
-      console.error("Error creating customer:", error);
-      displayErrorToast("Failed to create customer. Please try again.");
-    }
-  };
+  //     return {
+  //       id: id,
+  //       subscriptionId: subscriptionId,
+  //       status: status,
+  //       clientSecret: clientSecret,
+  //     };
+  //   } catch (error) {
+  //     console.error("Error creating customer:", error);
+  //     displayErrorToast("Failed to create customer. Please try again.");
+  //   }
+  // };
 
   const createSubscription = async (customerId: string) => {
     try {
@@ -232,29 +232,27 @@ export default function FeedScreen() {
     }
     if (!userProfile) {
       console.log("Profile not found, creating new profile");
-      const data = await createCustomer();
-      console.log("Created customer and subscription data");
+      // const data = await createCustomer();
+      // console.log("Created customer and subscription data");
 
-      await createNewProfile(
-        userId,
-        new Date(),
-        data?.id,
-        data?.subscriptionId,
-        data?.status,
-        data?.clientSecret,
-      );
+      await createNewProfile(userId, new Date());
+
+      const customerInfo = await Purchases.getCustomerInfo();
+      const hasSubscription =
+        !!customerInfo.entitlements.active[premiumEntitlementId];
+      setHasPremium(hasSubscription);
     } else if (userProfile) {
-      if (userProfile.subscription_status == "cancelled") {
-        console.log("Subscription cancelled, creating new subscription");
-        const { subscriptionId, status, clientSecret } =
-          await createSubscription(userProfile.stripe_customer_id);
-        await updateUserProfileSubscription(
-          userId,
-          subscriptionId,
-          status,
-          clientSecret,
-        );
-      }
+      // if (userProfile.subscription_status == "cancelled") {
+      // console.log("Subscription cancelled, creating new subscription");
+      // const { subscriptionId, status, clientSecret } =
+      //   // await createSubscription(userProfile.stripe_customer_id);
+      // await updateUserProfileSubscription(
+      //   userId,
+      //   subscriptionId,
+      //   status,
+      //   clientSecret,
+      // );
+      // }
       const today = new Date();
       const lastLogin = new Date(userProfile.lastLogin);
       const daysDiff = Math.floor(
