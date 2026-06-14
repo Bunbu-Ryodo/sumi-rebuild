@@ -1055,7 +1055,9 @@ export default function EReader() {
               </View>
             </View>
             <View style={styles.readingProgressContainer}>
-              <Text style={styles.readingProgressText}>
+              <Text
+                style={[styles.readingProgressText, isIPad && { fontSize: 24 }]}
+              >
                 {Math.floor(readingProgress)}%
               </Text>
             </View>
@@ -1151,6 +1153,7 @@ export default function EReader() {
                   style={[
                     styles.modalTitle,
                     warmth === 4 && { color: "#F6F7EB" },
+                    isIPad && { fontSize: 24 },
                   ]}
                 >
                   Reflections
@@ -1171,6 +1174,7 @@ export default function EReader() {
                 style={[
                   styles.modalSubtitle,
                   warmth === 4 && { color: "#F6F7EB" },
+                  isIPad && { fontSize: 24 },
                 ]}
               >
                 {extract.title} - Chapter {extract.chapter}
