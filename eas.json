@@ -8,6 +8,7 @@
       "developmentClient": true,
       "distribution": "internal",
       "ios": {
+        "image": "latest",
         "simulator": true
       },
       "env": {
@@ -45,6 +46,19 @@
     },
     "production": {
       "autoIncrement": true,
+      "ios": {
+        "image": "latest"
+      },
+      "env": {
+        "EXPO_PUBLIC_USE_TEST_ADS": "false",
+        "EXPO_PUBLIC_USE_TEST_PAYMENTS": "false"
+      }
+    },
+    "simulator-final-candidate": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      },
       "env": {
         "EXPO_PUBLIC_USE_TEST_ADS": "false",
         "EXPO_PUBLIC_USE_TEST_PAYMENTS": "false"
