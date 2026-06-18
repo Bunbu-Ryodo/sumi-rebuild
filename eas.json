@@ -56,9 +56,6 @@
     },
     "simulator-final-candidate": {
       "distribution": "internal",
-      "ios": {
-        "simulator": true
-      },
       "env": {
         "EXPO_PUBLIC_USE_TEST_ADS": "false",
         "EXPO_PUBLIC_USE_TEST_PAYMENTS": "false"
