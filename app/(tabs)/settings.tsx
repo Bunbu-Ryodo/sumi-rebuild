@@ -53,13 +53,23 @@ export default function Settings() {
   async function presentPaywall() {
     try {
       const offerings = await Purchases.getOfferings();
+      const currentOffering = offerings.current;
 
-      if (!offerings.current) {
+      if (!currentOffering) {
         displayErrorToast("No paywall is configured in RevenueCat yet");
         return;
       }
 
-      const result = await RevenueCatUI.presentPaywall();
+      if (currentOffering.availablePackages.length === 0) {
+        displayErrorToast(
+          "No subscription packages are attached to this paywall",
+        );
+        return;
+      }
+
+      const result = await RevenueCatUI.presentPaywall({
+        offering: currentOffering,
+      });
 
       if (result === PAYWALL_RESULT.PURCHASED) {
         router.replace({
@@ -96,7 +106,11 @@ export default function Settings() {
       }
     } catch (error) {
       console.error("Failed to present paywall", error);
-      displayErrorToast("Unable to open paywall right now");
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Unable to open paywall right now";
+      displayErrorToast(errorMessage);
     }
   }
 

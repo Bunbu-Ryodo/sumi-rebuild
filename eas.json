@@ -54,7 +54,7 @@
         "EXPO_PUBLIC_USE_TEST_PAYMENTS": "false"
       }
     },
-    "simulator-final-candidate": {
+    "testpayment": {
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_USE_TEST_ADS": "false",
