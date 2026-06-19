@@ -4,7 +4,6 @@
     "slug": "sumi-rebuild",
     "version": "1.0.0",
     "orientation": "portrait",
-    "newArchEnabled": false,
     "icon": "./assets/images/ios-icon.png",
     "scheme": "sumirebuild",
     "userInterfaceStyle": "automatic",
