@@ -8,6 +8,7 @@
       "developmentClient": true,
       "distribution": "internal",
       "ios": {
+        "image": "macos-sequoia-15.6-xcode-16.4",
         "simulator": true
       },
       "env": {
@@ -15,8 +16,18 @@
         "EXPO_PUBLIC_USE_TEST_PAYMENTS": "true"
       }
     },
+    "development-modern": {
+      "extends": "development",
+      "ios": {
+        "image": "sdk-56",
+        "simulator": true
+      }
+    },
     "testing": {
       "distribution": "internal",
+      "ios": {
+        "image": "macos-sequoia-15.6-xcode-16.4"
+      },
       "env": {
         "EXPO_PUBLIC_USE_TEST_ADS": "true",
         "EXPO_PUBLIC_USE_TEST_PAYMENTS": "true"
@@ -25,6 +36,9 @@
     "beta": {
       "distribution": "internal",
       "autoIncrement": true,
+      "ios": {
+        "image": "macos-sequoia-15.6-xcode-16.4"
+      },
       "env": {
         "EXPO_PUBLIC_USE_TEST_ADS": "true",
         "EXPO_PUBLIC_USE_TEST_PAYMENTS": "true"
@@ -35,19 +49,50 @@
     },
     "test-stripe": {
       "distribution": "internal",
+      "ios": {
+        "image": "macos-sequoia-15.6-xcode-16.4"
+      },
       "env": {
         "EXPO_PUBLIC_USE_TEST_ADS": "true",
         "EXPO_PUBLIC_USE_TEST_PAYMENTS": "false"
       }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "ios": {
+        "image": "macos-sequoia-15.6-xcode-16.4"
+      }
     },
     "production": {
       "autoIncrement": true,
+      "ios": {
+        "image": "macos-sequoia-15.6-xcode-16.4"
+      },
       "env": {
         "EXPO_PUBLIC_USE_TEST_ADS": "false",
         "EXPO_PUBLIC_USE_TEST_PAYMENTS": "false"
+      }
+    },
+    "production-modern": {
+      "extends": "production",
+      "ios": {
+        "image": "sdk-56"
+      }
+    },
+    "testpayment": {
+      "distribution": "internal",
+      "ios": {
+        "image": "macos-sequoia-15.6-xcode-16.4"
+      },
+      "env": {
+        "EXPO_PUBLIC_USE_TEST_ADS": "false",
+        "EXPO_PUBLIC_USE_TEST_PAYMENTS": "false"
+      }
+    },
+    "testpayment-modern": {
+      "extends": "testpayment",
+      "ios": {
+        "image": "sdk-56"
       }
     }
   },

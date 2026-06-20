@@ -40,10 +40,22 @@ export default function RootLayout() {
 
   useEffect(() => {
     async function prepare() {
-      await SplashScreen.preventAutoHideAsync();
-      await mobileAds().initialize();
+      try {
+        await SplashScreen.preventAutoHideAsync();
+      } catch (splashError) {
+        console.warn("Failed to lock splash screen", splashError);
+      }
+
+      try {
+        await mobileAds().initialize();
+      } catch (adsError) {
+        console.warn("Failed to initialize mobile ads", adsError);
+      }
     }
-    prepare();
+
+    prepare().catch((startupError) => {
+      console.warn("Startup preparation failed", startupError);
+    });
   }, []);
 
   useEffect(() => {
@@ -53,7 +65,11 @@ export default function RootLayout() {
   }, [loaded, error]);
 
   useEffect(() => {
-    Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+    try {
+      Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+    } catch (logLevelError) {
+      console.warn("Failed to set RevenueCat log level", logLevelError);
+    }
 
     const testApiKey = process.env.EXPO_PUBLIC_REVENUECAT_TEST_KEY;
     const apiKey = useTestPayments ? testApiKey : revenueCatApiKey;
@@ -63,10 +79,15 @@ export default function RootLayout() {
       return;
     }
 
-    if (Platform.OS === "ios") {
-      Purchases.configure({ apiKey });
-    } else if (Platform.OS === "android") {
-      Purchases.configure({ apiKey });
+    try {
+      if (Platform.OS === "ios") {
+        Purchases.configure({ apiKey });
+      } else if (Platform.OS === "android") {
+        Purchases.configure({ apiKey });
+      }
+    } catch (configureError) {
+      console.warn("Failed to configure RevenueCat", configureError);
+      return;
     }
 
     const syncRevenueCatUser = async (userId: string | null) => {
