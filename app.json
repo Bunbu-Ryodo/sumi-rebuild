@@ -12,7 +12,8 @@
       "bundleIdentifier": "com.anonymous.sumisupabase",
       "icon": "./assets/images/ios-icon.png",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Sumi uses your camera so you can add profile pictures and share images in the app."
       }
     },
     "android": {
