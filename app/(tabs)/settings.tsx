@@ -87,14 +87,6 @@ export default function Settings() {
               "Your Sumi Premium subscription is active again. Enjoy your enhanced reading experience.",
           },
         });
-      } else if (result === PAYWALL_RESULT.CANCELLED) {
-        router.replace({
-          pathname: "/billchangestatus",
-          params: {
-            message:
-              "Your Sumi Premium subscription has been cancelled. You will retain access until the end of your billing period.",
-          },
-        });
       } else if (result === PAYWALL_RESULT.NOT_PRESENTED) {
         router.replace({
           pathname: "/billchangestatus",
