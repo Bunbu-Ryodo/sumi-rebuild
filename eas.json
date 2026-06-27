@@ -12,7 +12,6 @@
         "simulator": true
       },
       "env": {
-        "EXPO_PUBLIC_USE_TEST_ADS": "true",
         "EXPO_PUBLIC_USE_TEST_PAYMENTS": "true"
       }
     },
@@ -21,6 +20,9 @@
       "ios": {
         "image": "sdk-56",
         "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_USE_TEST_PAYMENTS": "true"
       }
     },
     "testing": {
@@ -29,7 +31,6 @@
         "image": "macos-sequoia-15.6-xcode-16.4"
       },
       "env": {
-        "EXPO_PUBLIC_USE_TEST_ADS": "true",
         "EXPO_PUBLIC_USE_TEST_PAYMENTS": "true"
       }
     },
@@ -40,7 +41,6 @@
         "image": "macos-sequoia-15.6-xcode-16.4"
       },
       "env": {
-        "EXPO_PUBLIC_USE_TEST_ADS": "true",
         "EXPO_PUBLIC_USE_TEST_PAYMENTS": "true"
       },
       "android": {
@@ -53,7 +53,6 @@
         "image": "macos-sequoia-15.6-xcode-16.4"
       },
       "env": {
-        "EXPO_PUBLIC_USE_TEST_ADS": "true",
         "EXPO_PUBLIC_USE_TEST_PAYMENTS": "false"
       }
     },
@@ -69,7 +68,6 @@
         "image": "macos-sequoia-15.6-xcode-16.4"
       },
       "env": {
-        "EXPO_PUBLIC_USE_TEST_ADS": "false",
         "EXPO_PUBLIC_USE_TEST_PAYMENTS": "false"
       }
     },
@@ -85,7 +83,6 @@
         "image": "macos-sequoia-15.6-xcode-16.4"
       },
       "env": {
-        "EXPO_PUBLIC_USE_TEST_ADS": "false",
         "EXPO_PUBLIC_USE_TEST_PAYMENTS": "false"
       }
     },

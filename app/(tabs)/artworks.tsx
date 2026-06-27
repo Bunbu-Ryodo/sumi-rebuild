@@ -9,13 +9,7 @@ import {
   Platform,
   useWindowDimensions,
 } from "react-native";
-import React, { useEffect, useRef, useState } from "react";
-import {
-  BannerAd,
-  BannerAdSize,
-  TestIds,
-  useForeground,
-} from "react-native-google-mobile-ads";
+import React, { useEffect, useState } from "react";
 import { ArtworkType, QuoteType } from "../../types/types";
 import { getUserArtworks } from "../../supabase_queries/artworks";
 import {
@@ -31,27 +25,14 @@ import { useRouter } from "expo-router";
 import { getUserQuotes } from "../../supabase_queries/quotes";
 import Purchases from "react-native-purchases";
 
-let adUnitId = "";
-
-const useTestAds = __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
-const useTestPayment = process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
-const premiumEntitlementId = useTestPayment ? "Sumi Premium" : "premium";
-
-if (useTestAds) {
-  adUnitId = TestIds.ADAPTIVE_BANNER;
-} else if (Platform.OS === "android") {
-  adUnitId = "ca-app-pub-5850018728161057/6524403480";
-} else if (Platform.OS === "ios") {
-  adUnitId = "ca-app-pub-5850018728161057/3269917700";
-}
-
 export default function Artwork() {
   const router = useRouter();
-  const bannerRef = useRef<BannerAd>(null);
   const [artworks, setArtworks] = useState<ArtworkType[]>([]);
   const [quotes, setQuotes] = useState<QuoteType[]>([]);
   const [loading, setLoading] = useState(true);
-  const [hasPremium, setHasPremium] = useState<boolean | null>(null);
+  const [hasPremium, setHasPremium] = useState(false);
+  const useTestPayment = process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
+  const premiumEntitlementId = useTestPayment ? "Sumi Premium" : "premium";
 
   const artworkCarousel = React.useRef<ICarouselInstance>(null);
   const quoteCarousel = React.useRef<ICarouselInstance>(null);
@@ -84,14 +65,6 @@ export default function Artwork() {
     });
   };
 
-  useForeground(() => {
-    if (Platform.OS === "android" || Platform.OS === "ios") {
-      if (hasPremium !== null && !hasPremium) {
-        bannerRef.current?.load();
-      }
-    }
-  });
-
   useEffect(() => {
     fetchData();
   }, []);
@@ -100,14 +73,21 @@ export default function Artwork() {
     setLoading(true);
     const user = await getUserSession();
     if (user) {
-      const artworks = await getUserArtworks(user.id);
-      const quotes = await getUserQuotes(user.id);
       const customerInfo = await Purchases.getCustomerInfo();
-      const hasSubscription =
+      const premiumStatus =
         !!customerInfo.entitlements.active[premiumEntitlementId];
-      setArtworks(artworks);
-      setQuotes(quotes);
-      setHasPremium(hasSubscription);
+
+      setHasPremium(premiumStatus);
+
+      if (premiumStatus) {
+        const artworks = await getUserArtworks(user.id);
+        const quotes = await getUserQuotes(user.id);
+        setArtworks(artworks);
+        setQuotes(quotes);
+      } else {
+        setArtworks([]);
+        setQuotes([]);
+      }
     }
     setLoading(false);
   };
@@ -127,159 +107,174 @@ export default function Artwork() {
       >
         {!loading && (
           <View style={styles.artWrapper}>
-            {artworks && artworks.length > 0 ? (
-              <View
-                style={{
-                  flex: 1,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginTop: 24,
-                  minHeight: isIPad ? 788 : 500,
-                }}
-              >
-                <Carousel
-                  ref={artworkCarousel}
-                  width={width}
-                  height={isIPad ? 698 : 310}
-                  data={artworks}
-                  onProgressChange={artworkProgress}
-                  renderItem={(artwork) => {
-                    return (
-                      <TouchableOpacity
-                        style={styles.thumbnailContainer}
-                        onPress={() => handleNavigation(artwork.item.id)}
-                      >
-                        <Image
-                          source={{ uri: artwork.item.url }}
-                          style={[
-                            styles.thumbnail,
-                            isIPad && { width: 450, height: 495 },
-                          ]}
-                        />
-                        <View style={styles.artworkDetailsContainer}>
-                          <Text
-                            style={[
-                              styles.artworkTitle,
-                              isIPad && { fontSize: 24 },
-                            ]}
-                          >
-                            {artwork.item.title}
-                          </Text>
-                          <Text
-                            style={[
-                              styles.artworkDetails,
-                              isIPad && { fontSize: 24 },
-                            ]}
-                          >
-                            {artwork.item.artist}
-                          </Text>
-                          <Text
-                            style={[
-                              styles.artworkDetails,
-                              isIPad && { fontSize: 24 },
-                            ]}
-                          >
-                            {artwork.item.year}
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-                    );
-                  }}
-                />
-                <Pagination.Basic
-                  progress={artworkProgress}
-                  data={artworks}
-                  dotStyle={{
-                    backgroundColor: "rgba(57,62,65,0.2)",
-                    borderRadius: 50,
-                  }}
-                  containerStyle={{ gap: 5, marginTop: 10 }}
-                  onPress={onPressPaginationArtworks}
-                />
+            {!hasPremium ? (
+              <View style={styles.premiumGateCard}>
+                <Text style={styles.premiumGateTitle}>
+                  Upgrade to view your saved artworks and quotes
+                </Text>
+                <Text style={styles.premiumGateCopy}>
+                  Sumi Premium unlocks your personal artwork and quote library.
+                  Go to Settings to upgrade.
+                </Text>
+                <TouchableOpacity
+                  onPress={() => router.push("/settings")}
+                  style={styles.premiumGateButton}
+                >
+                  <Text style={styles.premiumGateButtonText}>Get Premium</Text>
+                </TouchableOpacity>
               </View>
-            ) : null}
-            {quotes && quotes.length > 0 ? (
-              <View
-                style={{
-                  flex: 1,
-                  alignItems: "center",
-                }}
-              >
-                <Carousel
-                  ref={quoteCarousel}
-                  width={isIPad ? width * 0.75 : width * 0.9}
-                  height={300}
-                  data={quotes}
-                  onProgressChange={quoteProgress}
-                  renderItem={(quote) => {
-                    const quotePreview = quote.item.quote.slice(0, 420);
-                    const quoteTextStyle = [
-                      styles.quoteText,
-                      isIPad && { fontSize: 24 },
-                    ];
-                    return (
-                      <TouchableOpacity
-                        style={styles.quoteContainer}
-                        onPress={() => redirectToQuote(quote.item.id)}
-                      >
-                        <View style={styles.quoteHeader}>
-                          <View style={styles.quoteDetails}>
-                            <Text style={quoteTextStyle}>
-                              {quote.item.author}
-                            </Text>
-                            <Text style={quoteTextStyle}>
-                              {quote.item.title}
-                            </Text>
-                            <Text style={quoteTextStyle}>
-                              {quote.item.year}
-                            </Text>
-                            <Text style={quoteTextStyle}>
-                              Chapter {quote.item.chapter}
-                            </Text>
-                          </View>
-                          <View style={styles.artContainer}>
+            ) : (
+              <>
+                {artworks && artworks.length > 0 ? (
+                  <View
+                    style={{
+                      flex: 1,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginTop: 24,
+                      minHeight: isIPad ? 788 : 500,
+                    }}
+                  >
+                    <Carousel
+                      ref={artworkCarousel}
+                      width={width}
+                      height={isIPad ? 698 : 310}
+                      data={artworks}
+                      onProgressChange={artworkProgress}
+                      renderItem={(artwork) => {
+                        return (
+                          <TouchableOpacity
+                            style={styles.thumbnailContainer}
+                            onPress={() => handleNavigation(artwork.item.id)}
+                          >
                             <Image
-                              source={{ uri: quote.item.coverart }}
-                              style={styles.coverart}
+                              source={{ uri: artwork.item.url }}
+                              style={[
+                                styles.thumbnail,
+                                isIPad && { width: 450, height: 495 },
+                              ]}
                             />
-                          </View>
-                        </View>
-                        <View style={styles.headerDivider}>
-                          {dividerDots.map((_, index) => (
-                            <View key={index} style={styles.headerDividerDot} />
-                          ))}
-                        </View>
-                        <Text style={quoteTextStyle}>
-                          {quotePreview}
-                          {quote.item.quote.length > 420 ? "..." : ""}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  }}
-                />
-                <Pagination.Basic
-                  progress={quoteProgress}
-                  data={quotes}
-                  dotStyle={{
-                    backgroundColor: "rgba(57,62,65,0.2)",
-                    borderRadius: 50,
-                  }}
-                  containerStyle={{ gap: 5, marginTop: 10 }}
-                  onPress={onPressPaginationArtworks}
-                />
-              </View>
-            ) : null}
+                            <View style={styles.artworkDetailsContainer}>
+                              <Text
+                                style={[
+                                  styles.artworkTitle,
+                                  isIPad && { fontSize: 24 },
+                                ]}
+                              >
+                                {artwork.item.title}
+                              </Text>
+                              <Text
+                                style={[
+                                  styles.artworkDetails,
+                                  isIPad && { fontSize: 24 },
+                                ]}
+                              >
+                                {artwork.item.artist}
+                              </Text>
+                              <Text
+                                style={[
+                                  styles.artworkDetails,
+                                  isIPad && { fontSize: 24 },
+                                ]}
+                              >
+                                {artwork.item.year}
+                              </Text>
+                            </View>
+                          </TouchableOpacity>
+                        );
+                      }}
+                    />
+                    <Pagination.Basic
+                      progress={artworkProgress}
+                      data={artworks}
+                      dotStyle={{
+                        backgroundColor: "rgba(57,62,65,0.2)",
+                        borderRadius: 50,
+                      }}
+                      containerStyle={{ gap: 5, marginTop: 10 }}
+                      onPress={onPressPaginationArtworks}
+                    />
+                  </View>
+                ) : null}
+                {quotes && quotes.length > 0 ? (
+                  <View
+                    style={{
+                      flex: 1,
+                      alignItems: "center",
+                    }}
+                  >
+                    <Carousel
+                      ref={quoteCarousel}
+                      width={isIPad ? width * 0.75 : width * 0.9}
+                      height={300}
+                      data={quotes}
+                      onProgressChange={quoteProgress}
+                      renderItem={(quote) => {
+                        const quotePreview = quote.item.quote.slice(0, 420);
+                        const quoteTextStyle = [
+                          styles.quoteText,
+                          isIPad && { fontSize: 24 },
+                        ];
+                        return (
+                          <TouchableOpacity
+                            style={styles.quoteContainer}
+                            onPress={() => redirectToQuote(quote.item.id)}
+                          >
+                            <View style={styles.quoteHeader}>
+                              <View style={styles.quoteDetails}>
+                                <Text style={quoteTextStyle}>
+                                  {quote.item.author}
+                                </Text>
+                                <Text style={quoteTextStyle}>
+                                  {quote.item.title}
+                                </Text>
+                                <Text style={quoteTextStyle}>
+                                  {quote.item.year}
+                                </Text>
+                                <Text style={quoteTextStyle}>
+                                  Chapter {quote.item.chapter}
+                                </Text>
+                              </View>
+                              <View style={styles.artContainer}>
+                                <Image
+                                  source={{ uri: quote.item.coverart }}
+                                  style={styles.coverart}
+                                />
+                              </View>
+                            </View>
+                            <View style={styles.headerDivider}>
+                              {dividerDots.map((_, index) => (
+                                <View
+                                  key={index}
+                                  style={styles.headerDividerDot}
+                                />
+                              ))}
+                            </View>
+                            <Text style={quoteTextStyle}>
+                              {quotePreview}
+                              {quote.item.quote.length > 420 ? "..." : ""}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      }}
+                    />
+                    <Pagination.Basic
+                      progress={quoteProgress}
+                      data={quotes}
+                      dotStyle={{
+                        backgroundColor: "rgba(57,62,65,0.2)",
+                        borderRadius: 50,
+                      }}
+                      containerStyle={{ gap: 5, marginTop: 10 }}
+                      onPress={onPressPaginationArtworks}
+                    />
+                  </View>
+                ) : null}
+              </>
+            )}
           </View>
         )}
       </ScrollView>
-      {hasPremium !== null && !hasPremium && (
-        <BannerAd
-          key={`ad-artworks`}
-          ref={bannerRef}
-          unitId={adUnitId}
-          size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-        />
-      )}
     </>
   );
 }
@@ -492,5 +487,39 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     flexDirection: "row",
+  },
+  premiumGateCard: {
+    width: "100%",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(57,62,65,0.18)",
+    backgroundColor: "rgba(57,62,65,0.06)",
+    padding: 16,
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  premiumGateTitle: {
+    fontFamily: "BeProVietnam",
+    fontSize: 18,
+    color: "#393E41",
+    marginBottom: 8,
+  },
+  premiumGateCopy: {
+    fontFamily: "BeProVietnam",
+    fontSize: 14,
+    color: "#393E41",
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  premiumGateButton: {
+    backgroundColor: "#FE7F2D",
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  premiumGateButtonText: {
+    fontFamily: "BeProVietnam",
+    fontSize: 16,
+    color: "#393E41",
   },
 });

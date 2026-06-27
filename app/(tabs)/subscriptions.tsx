@@ -17,48 +17,16 @@ import {
 } from "../../supabase_queries/auth.js";
 import { getAllSeries, getStreak } from "../../supabase_queries/subscriptions";
 import { SeriesType, StreakType } from "../../types/types";
-import {
-  BannerAd,
-  BannerAdSize,
-  TestIds,
-  useForeground,
-} from "react-native-google-mobile-ads";
-
-import React, { useRef } from "react";
+import React from "react";
 import Series from "../../components/series";
 import { Link } from "expo-router";
-import Purchases from "react-native-purchases";
-
-let adUnitId = "";
-
-const useTestAds = __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
-const useTestPayment = process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
-const premiumEntitlementId = useTestPayment ? "Sumi Premium" : "premium";
-
-if (useTestAds) {
-  adUnitId = TestIds.ADAPTIVE_BANNER;
-} else if (Platform.OS === "android") {
-  adUnitId = "ca-app-pub-5850018728161057/6524403480";
-} else if (Platform.OS === "ios") {
-  adUnitId = "ca-app-pub-5850018728161057/3269917700";
-}
 
 export default function Subscriptions() {
   const { width } = useWindowDimensions();
   const isIPad = Platform.OS === "ios" && Platform.isPad;
-  const bannerRef = useRef<BannerAd>(null);
   const [series, setSeries] = useState<SeriesType[]>([]);
   const [streak, setStreak] = useState<StreakType | null>(null);
   const [loading, setLoading] = useState(true);
-  const [hasPremium, setHasPremium] = useState<boolean | null>(null);
-
-  useForeground(() => {
-    if (Platform.OS === "android" || Platform.OS === "ios") {
-      if (hasPremium !== null && !hasPremium) {
-        bannerRef.current?.load();
-      }
-    }
-  });
 
   const fetchSubscriptionData = async () => {
     setLoading(true);
@@ -69,10 +37,6 @@ export default function Subscriptions() {
     }
     if (user) {
       const series = await getAllSeries(user.id);
-      const customerInfo = await Purchases.getCustomerInfo();
-      const hasSubscription =
-        !!customerInfo.entitlements.active[premiumEntitlementId];
-      setHasPremium(hasSubscription);
       setSeries(series || []);
       setLoading(false);
     }
@@ -150,14 +114,6 @@ export default function Subscriptions() {
           </View>
         )}
       </ScrollView>
-      {hasPremium !== null && !hasPremium && (
-        <BannerAd
-          key={`ad-subscriptions`}
-          ref={bannerRef}
-          unitId={adUnitId}
-          size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-        />
-      )}
     </>
   );
 }

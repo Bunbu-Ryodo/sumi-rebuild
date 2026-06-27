@@ -77,35 +77,4 @@ const styles = StyleSheet.create({
     cursor: "pointer",
     marginTop: 12,
   },
-  checkboxRow: {
-    width: "100%",
-    flexDirection: "row",
-    alignItems: "flex-start",
-    marginVertical: 10,
-  },
-  checkbox: {
-    marginTop: 3,
-    marginRight: 10,
-  },
-  consentText: {
-    flex: 1,
-    fontSize: 14,
-    fontFamily: "BeProVietnam",
-    color: "#393E41",
-    lineHeight: 20,
-  },
-  premiumButton: {
-    backgroundColor: "#FE7F2D",
-    opacity: 0.6,
-    paddingVertical: 16,
-    borderRadius: 8,
-    alignItems: "center",
-    width: "100%",
-    marginTop: 12,
-  },
-  premiumButtonText: {
-    color: "#393E41",
-    fontFamily: "BeProVietnam",
-    fontSize: 16,
-  },
 });

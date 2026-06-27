@@ -50,12 +50,6 @@ import {
 } from "../../supabase_queries/auth.js";
 import supabase from "../../lib/supabase.js";
 import { lookUpUserProfile } from "../../supabase_queries/auth";
-import {
-  BannerAd,
-  BannerAdSize,
-  TestIds,
-  useForeground,
-} from "react-native-google-mobile-ads";
 import { useFocusEffect } from "expo-router";
 import type { PropsWithChildren } from "react";
 import { WebView } from "react-native-webview";
@@ -69,20 +63,8 @@ import {
 } from "../../supabase_queries/marginalia";
 import Toast from "react-native-toast-message";
 import Purchases from "react-native-purchases";
-
-let adUnitId = "";
-
-const useTestAds = __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
 const useTestPayment = process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
 const premiumEntitlementId = useTestPayment ? "Sumi Premium" : "premium";
-
-if (useTestAds) {
-  adUnitId = TestIds.ADAPTIVE_BANNER;
-} else if (Platform.OS === "android") {
-  adUnitId = "ca-app-pub-5850018728161057/6524403480";
-} else if (Platform.OS === "ios") {
-  adUnitId = "ca-app-pub-5850018728161057/3269917700";
-}
 
 type BounceInProps = PropsWithChildren<{}>;
 
@@ -120,7 +102,6 @@ const BounceView = forwardRef<any, BounceInProps>((props, ref) => {
 });
 
 export default function EReader() {
-  const bannerRef = useRef<BannerAd>(null);
   const { width } = useWindowDimensions();
   const isIPad = Platform.OS === "ios" && Platform.isPad;
   let { id } = useLocalSearchParams();
@@ -128,14 +109,6 @@ export default function EReader() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const modalOpacity = useRef(new Animated.Value(0)).current;
   const modalScale = useRef(new Animated.Value(0.8)).current;
-
-  useForeground(() => {
-    if (Platform.OS === "android" || Platform.OS === "ios") {
-      if (hasPremium !== null && !hasPremium) {
-        bannerRef.current?.load();
-      }
-    }
-  });
 
   const [extract, setExtract] = useState<ExtractType>({
     id: 0,
@@ -167,13 +140,13 @@ export default function EReader() {
   const [showMarginaliaModal, setShowMarginaliaModal] = useState(false);
   const [marginaliaText, setMarginaliaText] = useState("");
   const [marginaliaLoading, setMarginaliaLoading] = useState(false);
+  const [hasPremium, setHasPremium] = useState(false);
   const [readingProgress, setReadingProgress] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
   const [viewHeight, setViewHeight] = useState(0);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [streak, setStreak] = useState<StreakType | null>(null);
   const [needsPremium, setNeedsPremium] = useState(false);
-  const [hasPremium, setHasPremium] = useState<boolean | null>(null);
   const webViewRef = useRef<WebView>(null);
 
   const injectedJavaScript = `
@@ -397,13 +370,23 @@ export default function EReader() {
   };
 
   const saveMarginaliaText = async () => {
-    if (!marginaliaText.trim()) {
-      Alert.alert("Error", "Please enter some text for your marginalia.");
-      return;
-    }
-
     setMarginaliaLoading(true);
     try {
+      const customerInfo = await Purchases.getCustomerInfo();
+      const hasSubscription =
+        !!customerInfo.entitlements.active[premiumEntitlementId];
+
+      if (!hasSubscription) {
+        closeMarginaliaModal();
+        router.push("/settings");
+        return;
+      }
+
+      if (!marginaliaText.trim()) {
+        Alert.alert("Error", "Please enter some text for your marginalia.");
+        return;
+      }
+
       await saveMarginalia(extract.id, userid, marginaliaText.trim());
 
       closeMarginaliaModal();
@@ -412,6 +395,11 @@ export default function EReader() {
     } finally {
       setMarginaliaLoading(false);
     }
+  };
+
+  const goToSettingsFromMarginalia = () => {
+    closeMarginaliaModal();
+    router.push("/settings");
   };
 
   const closeMarginaliaModal = () => {
@@ -665,11 +653,14 @@ export default function EReader() {
     if (user) {
       setUserid(user.id);
 
+      const customerInfo = await Purchases.getCustomerInfo();
+      const premiumStatus =
+        !!customerInfo.entitlements.active[premiumEntitlementId];
+
+      setHasPremium(premiumStatus);
+
       // const premiumStatus = await hasActivePremiumSubscription(user.id);
       // setHasPremium(premiumStatus);
-
-      const premiumStatus = await Purchases.getCustomerInfo();
-      setHasPremium(!!premiumStatus.entitlements.active[premiumEntitlementId]);
 
       const extract = await getExtract(id);
 
@@ -850,7 +841,7 @@ export default function EReader() {
           </head>
           <body>
             ${thinking ? '<div class="thinking-text">Thinking...</div>' : ""}
-            ${argument && argument.length > 0 ? `<div class="argument-container"><div class="argument-text">${argument.replace(/\n/g, "<br>")}</div>${needsPremium ? '<a href="#settings" class="settings-link" onclick="window.ReactNativeWebView.postMessage(JSON.stringify({type: \'goToSettings\'})); return false;">Go To Settings</a>' : ""}</div>` : ""}
+            ${argument && argument.length > 0 ? `<div class="argument-container"><div class="argument-text">${argument.replace(/\n/g, "<br>")}</div>${needsPremium ? '<a href="#settings" class="settings-link" onclick="window.ReactNativeWebView.postMessage(JSON.stringify({type: \'goToSettings\'})); return false;">Get Premium</a>' : ""}</div>` : ""}
             <div>
               ${
                 extract.fulltext
@@ -1114,15 +1105,6 @@ export default function EReader() {
           </View>
         )}
       </View>
-      {hasPremium !== null && !hasPremium && (
-        <BannerAd
-          key={`ad-${id}`}
-          ref={bannerRef}
-          unitId={adUnitId}
-          size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-        />
-      )}
-
       {/* Marginalia Modal */}
       <Modal
         animationType="none"
@@ -1180,6 +1162,17 @@ export default function EReader() {
                 {extract.title} - Chapter {extract.chapter}
               </Text>
 
+              <Text
+                style={[
+                  styles.modalHelperText,
+                  warmth === 4 && { color: "#F6F7EB" },
+                  isIPad && { fontSize: 22 },
+                ]}
+              >
+                A Sumi Premium subscription is required to save notes on
+                extracts.
+              </Text>
+
               <TextInput
                 style={[
                   styles.marginaliaInput,
@@ -1219,7 +1212,9 @@ export default function EReader() {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  onPress={saveMarginaliaText}
+                  onPress={
+                    hasPremium ? saveMarginaliaText : goToSettingsFromMarginalia
+                  }
                   style={[
                     styles.saveButton,
                     marginaliaLoading && styles.disabledButton,
@@ -1235,7 +1230,7 @@ export default function EReader() {
                         isIPad && { fontSize: 24 },
                       ]}
                     >
-                      Save Notes
+                      {hasPremium ? "Save Notes" : "Get Premium"}
                     </Text>
                   )}
                 </TouchableOpacity>
@@ -1562,6 +1557,14 @@ const styles = StyleSheet.create({
     color: "#393E41",
     marginBottom: 15,
     textAlign: "center",
+  },
+  modalHelperText: {
+    fontSize: 16,
+    fontFamily: "EBGaramond",
+    color: "#393E41",
+    marginBottom: 20,
+    textAlign: "center",
+    lineHeight: 22,
   },
   marginaliaInput: {
     borderWidth: 1,
