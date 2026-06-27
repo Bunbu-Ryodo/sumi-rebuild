@@ -5,7 +5,6 @@ import {
   RefreshControl,
   TouchableOpacity,
   ActivityIndicator,
-  Platform,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -33,32 +32,11 @@ import {
 } from "../../supabase_queries/subscriptions";
 import { ExtractType } from "../../types/types.js";
 import Extract from "../../components/extract";
-import {
-  BannerAd,
-  BannerAdSize,
-  TestIds,
-  useForeground,
-} from "react-native-google-mobile-ads";
 import { useRef } from "react";
 import { useFocusEffect } from "expo-router";
 import Toast from "react-native-toast-message";
-import { AdsConsent, AdsConsentStatus } from "react-native-google-mobile-ads";
 import supabase from "../../lib/supabase.js";
-import Purchases from "react-native-purchases";
-
-let adUnitId = "";
-
-const useTestAds = process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
 const useTestPayment = process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
-const premiumEntitlementId = useTestPayment ? "Sumi Premium" : "premium";
-
-if (useTestAds) {
-  adUnitId = TestIds.ADAPTIVE_BANNER;
-} else if (Platform.OS === "android") {
-  adUnitId = "ca-app-pub-5850018728161057/6524403480";
-} else if (Platform.OS === "ios") {
-  adUnitId = "ca-app-pub-5850018728161057/3269917700";
-}
 
 function RightAction() {
   return <Reanimated.View style={{ width: 250 }} />;
@@ -69,11 +47,9 @@ function LeftAction() {
 }
 
 export default function FeedScreen() {
-  const bannerRef = useRef<BannerAd>(null);
   const router = useRouter();
   const [extracts, setExtracts] = useState([] as ExtractType[]);
   const [refreshing, setRefreshing] = useState(false);
-  const [hasPremium, setHasPremium] = useState<boolean | null>(null);
   const [allExtractsDismissed, setAllExtractsDismissed] = useState(false);
   const [userid, setUserid] = useState("");
 
@@ -90,14 +66,6 @@ export default function FeedScreen() {
       text1: message,
     });
   };
-
-  useForeground(() => {
-    if (Platform.OS === "android" || Platform.OS === "ios") {
-      if (hasPremium !== null && !hasPremium) {
-        bannerRef.current?.load();
-      }
-    }
-  });
 
   const swipeableRefs = useRef<{ [key: number]: React.RefObject<any> }>({});
 
@@ -121,7 +89,6 @@ export default function FeedScreen() {
       } else if (user) {
         setUserid(user.id);
         await checkUserProfileStatus(user.id);
-        await initializeAdsConsent();
         await fetchExtracts();
         setRefreshing(false);
         processSubscriptions(user.id).catch((err) =>
@@ -131,21 +98,6 @@ export default function FeedScreen() {
     };
     checkUserAuthenticated();
   }, []);
-
-  const initializeAdsConsent = async () => {
-    try {
-      const consentInfo = await AdsConsent.requestInfoUpdate();
-
-      if (
-        consentInfo.isConsentFormAvailable &&
-        consentInfo.status === AdsConsentStatus.REQUIRED
-      ) {
-        await AdsConsent.loadAndShowConsentFormIfRequired();
-      }
-    } catch (error) {
-      console.error("Error initializing consent:", error);
-    }
-  };
 
   // const createCustomer = async () => {
   //   try {
@@ -228,7 +180,7 @@ export default function FeedScreen() {
     const streak = await getStreak(userId);
     if (!streak) {
       console.log("Streak not found, creating new streak");
-      await createStreak(userId, userProfile?.username || "NewUser");
+      await createStreak(userId, userProfile?.username || "???");
     }
     if (!userProfile) {
       console.log("Profile not found, creating new profile");
@@ -236,11 +188,6 @@ export default function FeedScreen() {
       // console.log("Created customer and subscription data");
 
       await createNewProfile(userId, new Date());
-
-      const customerInfo = await Purchases.getCustomerInfo();
-      const hasSubscription =
-        !!customerInfo.entitlements.active[premiumEntitlementId];
-      setHasPremium(hasSubscription);
     } else if (userProfile) {
       // if (userProfile.subscription_status == "cancelled") {
       // console.log("Subscription cancelled, creating new subscription");
@@ -273,11 +220,6 @@ export default function FeedScreen() {
         console.log("Streak reset, checking for new streak");
       }
       await setLoginDateTime(userId, new Date());
-
-      const customerInfo = await Purchases.getCustomerInfo();
-      const hasSubscription =
-        !!customerInfo.entitlements.active[premiumEntitlementId];
-      setHasPremium(hasSubscription);
     }
   };
 
@@ -459,14 +401,6 @@ export default function FeedScreen() {
           <ActivityIndicator size="large" color="#393E41" />
         )}
       </ScrollView>
-      {hasPremium !== null && !hasPremium && (
-        <BannerAd
-          key={`feedad`}
-          ref={bannerRef}
-          unitId={adUnitId}
-          size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-        />
-      )}
     </>
   );
 }

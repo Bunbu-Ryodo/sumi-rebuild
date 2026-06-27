@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import supabase from "../lib/supabase";
@@ -20,8 +20,6 @@ const useTestPayments = process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
 const revenueCatApiKey =
   process.env.EXPO_PUBLIC_REVENUECAT_API ??
   process.env.EXPO_PUBLIC_REVENUECAT_API_KEY;
-
-import mobileAds from "react-native-google-mobile-ads";
 
 export const useSupabase = () => {
   const context = useContext(SupabaseContext);
@@ -44,12 +42,6 @@ export default function RootLayout() {
         await SplashScreen.preventAutoHideAsync();
       } catch (splashError) {
         console.warn("Failed to lock splash screen", splashError);
-      }
-
-      try {
-        await mobileAds().initialize();
-      } catch (adsError) {
-        console.warn("Failed to initialize mobile ads", adsError);
       }
     }
 
@@ -125,13 +117,14 @@ export default function RootLayout() {
     settingsUpdateError: ({ text1 }: { text1?: string }) => (
       <View
         style={{
-          width: "85%",
+          width: "88%",
           borderRadius: 8,
           backgroundColor: "#F6F7EB",
           borderWidth: 1,
           borderColor: "#393E41",
           padding: 12,
           flexDirection: "row",
+          alignItems: "flex-start",
         }}
       >
         <View
@@ -147,12 +140,22 @@ export default function RootLayout() {
         >
           <Ionicons name="close" size={24} color="#F6F7EB"></Ionicons>
         </View>
-        <View style={{ alignContent: "center", justifyContent: "center" }}>
+        <View
+          style={{
+            flex: 1,
+            minWidth: 0,
+            justifyContent: "center",
+            paddingRight: 4,
+          }}
+        >
           <Text
             style={{
               fontFamily: "BeProVietnam",
               fontSize: 16,
               color: "#393E41",
+              flexShrink: 1,
+              flexWrap: "wrap",
+              lineHeight: 22,
             }}
           >
             {text1 ?? ""}
@@ -163,13 +166,14 @@ export default function RootLayout() {
     settingsUpdateSuccess: ({ text1 }: { text1?: string }) => (
       <View
         style={{
-          width: "85%",
+          width: "88%",
           borderRadius: 8,
           backgroundColor: "#F6F7EB",
           borderWidth: 1,
           borderColor: "#393E41",
           padding: 12,
           flexDirection: "row",
+          alignItems: "flex-start",
         }}
       >
         <View
@@ -185,12 +189,22 @@ export default function RootLayout() {
         >
           <Ionicons name="checkmark" size={24} color="#F6F7EB"></Ionicons>
         </View>
-        <View style={{ alignContent: "center", justifyContent: "center" }}>
+        <View
+          style={{
+            flex: 1,
+            minWidth: 0,
+            justifyContent: "center",
+            paddingRight: 4,
+          }}
+        >
           <Text
             style={{
               fontFamily: "BeProVietnam",
               fontSize: 16,
               color: "#393E41",
+              flexShrink: 1,
+              flexWrap: "wrap",
+              lineHeight: 22,
             }}
           >
             {text1 ?? ""}

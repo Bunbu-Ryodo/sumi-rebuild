@@ -4,55 +4,75 @@ import {
   StyleSheet,
   ScrollView,
   RefreshControl,
-  TouchableOpacity,
   Platform,
   useWindowDimensions,
+  TouchableOpacity,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import {
-  BannerAd,
-  BannerAdSize,
-  TestIds,
-  useForeground,
-} from "react-native-google-mobile-ads";
 import { useEffect, useState } from "react";
-import React, { useRef } from "react";
+import React from "react";
+import { useRouter } from "expo-router";
 import { StreakType } from "../types/types";
 import { getLeaderBoard } from "../supabase_queries/subscriptions";
-import { Link } from "expo-router";
-
-let adUnitId = "";
-
-const useTestAds = __DEV__ || process.env.EXPO_PUBLIC_USE_TEST_ADS === "true";
-
-if (useTestAds) {
-  adUnitId = TestIds.ADAPTIVE_BANNER;
-} else if (Platform.OS === "android") {
-  adUnitId = "ca-app-pub-5850018728161057/6524403480";
-} else if (Platform.OS === "ios") {
-  adUnitId = "ca-app-pub-5850018728161057/3269917700";
-}
+import { getUserSession } from "../supabase_queries/auth";
+import Purchases from "react-native-purchases";
 
 export default function Leaderboards() {
+  const router = useRouter();
   const { width } = useWindowDimensions();
   const isIPad = Platform.OS === "ios" && Platform.isPad;
-  const bannerRef = useRef<BannerAd>(null);
   const [leaderboard, setLeaderboard] = useState<StreakType[]>([]);
+  const [currentUserRow, setCurrentUserRow] = useState<StreakType | null>(null);
+  const [currentUserRank, setCurrentUserRank] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-
-  useForeground(() => {
-    if (Platform.OS === "android" || Platform.OS === "ios") {
-      bannerRef.current?.load();
-    }
-  });
+  const [hasPremium, setHasPremium] = useState(false);
+  const useTestPayment = process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
+  const premiumEntitlementId = useTestPayment ? "Sumi Premium" : "premium";
 
   const fetchLeaderboardData = async () => {
     setLoading(true);
+    const user = await getUserSession();
+    const customerInfo = await Purchases.getCustomerInfo();
+    const premiumStatus =
+      !!customerInfo.entitlements.active[premiumEntitlementId];
+
+    setHasPremium(premiumStatus);
+
+    if (!premiumStatus) {
+      setLeaderboard([]);
+      setCurrentUserRow(null);
+      setCurrentUserRank(null);
+      setLoading(false);
+      return;
+    }
+
     const leaderboardData = await getLeaderBoard();
     if (leaderboardData) {
       setLeaderboard(leaderboardData || []);
-      setLoading(false);
+
+      if (user) {
+        const matchedIndex = leaderboardData.findIndex(
+          (streak) =>
+            (streak as { user_id?: string; userid?: string }).user_id ===
+              user.id ||
+            (streak as { user_id?: string; userid?: string }).userid ===
+              user.id,
+        );
+
+        if (matchedIndex !== -1) {
+          setCurrentUserRow(leaderboardData[matchedIndex]);
+          setCurrentUserRank(matchedIndex + 1);
+        } else {
+          setCurrentUserRow(null);
+          setCurrentUserRank(null);
+        }
+      } else {
+        setCurrentUserRow(null);
+        setCurrentUserRank(null);
+      }
     }
+
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -82,11 +102,140 @@ export default function Leaderboards() {
               />
             </View>
           </View>
+
+          {!loading && !hasPremium ? (
+            <View style={styles.premiumGateCard}>
+              <Text style={styles.premiumGateTitle}>
+                Leaderboard is premium
+              </Text>
+              <Text style={styles.premiumGateCopy}>
+                Unlock the full leaderboard and see how you rank against the
+                rest of the Sumi community.
+              </Text>
+              <TouchableOpacity
+                style={styles.premiumGateButton}
+                onPress={() => router.push("/settings")}
+              >
+                <Text style={styles.premiumGateButtonText}>Get Premium</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
+
           {!loading &&
-            leaderboard.map((streak, index) => (
-              <View key={streak.id} style={styles.leaderboardRow}>
+          hasPremium &&
+          currentUserRow &&
+          currentUserRank !== null ? (
+            <View style={styles.currentUserCard}>
+              <Text style={styles.currentUserTitle}>Your ranking</Text>
+              <View style={styles.tableHeader}>
+                <Text style={[styles.tableHeaderText, styles.rankColumn]}>
+                  #
+                </Text>
+                <Text style={[styles.tableHeaderText, styles.usernameColumn]}>
+                  User
+                </Text>
+                <Text style={[styles.tableHeaderText, styles.streakColumn]}>
+                  Streak
+                </Text>
+                <Text style={[styles.tableHeaderText, styles.recordColumn]}>
+                  Record
+                </Text>
+              </View>
+              <View style={[styles.tableRow, styles.currentUserRow]}>
+                <View style={styles.rankColumn}>
+                  <Text
+                    style={[
+                      styles.tableCellText,
+                      { fontSize: isIPad ? 22 : 16 },
+                    ]}
+                  >
+                    {currentUserRank}
+                  </Text>
+                </View>
                 <Text
                   style={[
+                    styles.tableCellText,
+                    styles.usernameColumn,
+                    { fontSize: isIPad ? 22 : 16 },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {currentUserRow.username}
+                </Text>
+                <Text
+                  style={[
+                    styles.tableCellText,
+                    styles.streakColumn,
+                    { fontSize: isIPad ? 22 : 16 },
+                  ]}
+                >
+                  {currentUserRow.current_streak} days
+                </Text>
+                <Text
+                  style={[
+                    styles.tableCellText,
+                    styles.recordColumn,
+                    { fontSize: isIPad ? 22 : 16 },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {currentUserRow.longest_streak ||
+                    currentUserRow.current_streak}
+                </Text>
+              </View>
+            </View>
+          ) : null}
+          {!loading && hasPremium && leaderboard.length > 0 ? (
+            <View style={styles.tableHeader}>
+              <Text style={[styles.tableHeaderText, styles.rankColumn]}>#</Text>
+              <Text style={[styles.tableHeaderText, styles.usernameColumn]}>
+                User
+              </Text>
+              <Text style={[styles.tableHeaderText, styles.streakColumn]}>
+                Streak
+              </Text>
+              <Text style={[styles.tableHeaderText, styles.recordColumn]}>
+                Record
+              </Text>
+            </View>
+          ) : null}
+          {!loading &&
+            hasPremium &&
+            leaderboard.map((streak, index) => (
+              <View key={streak.id} style={styles.tableRow}>
+                <View style={styles.rankColumn}>
+                  <Text
+                    style={[
+                      styles.tableCellText,
+                      { fontSize: isIPad ? 24 : 18 },
+                    ]}
+                  >
+                    {index + 1}
+                  </Text>
+                  {index + 1 === 1 && (
+                    <Ionicons name="trophy" size={18} color={"gold"} />
+                  )}
+                  {index + 1 === 2 && (
+                    <Ionicons name="trophy" size={18} color={"silver"} />
+                  )}
+                  {index + 1 === 3 && (
+                    <Ionicons name="trophy" size={18} color={"#cd7f32"} />
+                  )}
+                </View>
+                <Text
+                  style={[
+                    styles.tableCellText,
+                    styles.usernameColumn,
+                    { fontSize: isIPad ? 24 : 18 },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {streak.username}
+                </Text>
+                <Text
+                  style={[
+                    styles.tableCellText,
+                    styles.streakColumn,
                     {
                       fontFamily: "BeProVietnam",
                       fontSize: isIPad ? 24 : 18,
@@ -94,32 +243,24 @@ export default function Leaderboards() {
                     },
                   ]}
                 >
-                  {index + 1}. {streak.username}: {streak.current_streak} days
-                  (record:{" "}
+                  {streak.current_streak} days
+                </Text>
+                <Text
+                  style={[
+                    styles.tableCellText,
+                    styles.recordColumn,
+                    { fontSize: isIPad ? 24 : 18 },
+                  ]}
+                  numberOfLines={1}
+                >
                   {streak.longest_streak
                     ? streak.longest_streak
                     : streak.current_streak}
-                  )
                 </Text>
-                {index + 1 === 1 && (
-                  <Ionicons name="trophy" size={24} color={"gold"} />
-                )}
-                {index + 1 === 2 && (
-                  <Ionicons name="trophy" size={24} color={"silver"} />
-                )}
-                {index + 1 === 3 && (
-                  <Ionicons name="trophy" size={24} color={"bronze"} />
-                )}
               </View>
             ))}
         </View>
       </ScrollView>
-      <BannerAd
-        key={`ad-leaderboard`}
-        ref={bannerRef}
-        unitId={adUnitId}
-        size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-      />
     </>
   );
 }
@@ -175,12 +316,108 @@ const styles = StyleSheet.create({
     marginTop: 8,
     width: "100%",
   },
-  leaderboardRow: {
+  premiumGateCard: {
+    width: "100%",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(57,62,65,0.18)",
+    backgroundColor: "rgba(57,62,65,0.06)",
+    padding: 16,
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  premiumGateTitle: {
+    fontFamily: "BeProVietnam",
+    fontSize: 18,
+    color: "#393E41",
+    marginBottom: 8,
+  },
+  premiumGateCopy: {
+    fontFamily: "BeProVietnam",
+    fontSize: 14,
+    color: "#393E41",
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  premiumGateButton: {
+    backgroundColor: "#FE7F2D",
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  premiumGateButtonText: {
+    fontFamily: "BeProVietnam",
+    fontSize: 16,
+    color: "#393E41",
+  },
+  currentUserCard: {
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "rgba(57,62,65,0.25)",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+    backgroundColor: "rgba(255,255,255,0.35)",
+  },
+  currentUserTitle: {
+    fontFamily: "BeProVietnam",
+    fontSize: 14,
+    color: "#393E41",
+    marginBottom: 8,
+  },
+  tableHeader: {
+    flexDirection: "row",
     alignItems: "center",
     width: "100%",
-    justifyContent: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(57,62,65,0.2)",
+    marginBottom: 6,
+  },
+  tableHeaderText: {
+    fontFamily: "BeProVietnam",
+    color: "#393E41",
+    fontSize: 14,
+  },
+  tableRow: {
     flexDirection: "row",
-    marginBottom: 12,
+    alignItems: "center",
+    width: "100%",
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(57,62,65,0.12)",
+  },
+  currentUserRow: {
+    borderBottomWidth: 0,
+    paddingVertical: 8,
+  },
+  tableCellText: {
+    fontFamily: "BeProVietnam",
+    color: "#393E41",
+  },
+  rankColumn: {
+    width: 56,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    justifyContent: "flex-start",
+  },
+  usernameColumn: {
+    flex: 1.4,
+    textAlign: "left",
+    paddingRight: 8,
+  },
+  streakColumn: {
+    flex: 0.7,
+    textAlign: "center",
+    paddingHorizontal: 4,
+  },
+  recordColumn: {
+    flex: 0.9,
+    textAlign: "right",
+    paddingLeft: 8,
   },
   subscriptionSection: {
     marginTop: 12,

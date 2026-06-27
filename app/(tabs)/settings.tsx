@@ -26,9 +26,67 @@ import { changeUserNameOnStreak } from "../../supabase_queries/subscriptions";
 import supabase from "../../lib/supabase.js";
 import { updateSubscriptionInterval } from "../../supabase_queries/profiles";
 import Toast from "react-native-toast-message";
-import { AdsConsent } from "react-native-google-mobile-ads";
+import profanity from "leo-profanity";
 import Purchases from "react-native-purchases";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
+
+profanity.loadDictionary("en");
+
+const isChainedProfanity = (value: string) => {
+  const compactedValue = value.toLowerCase().replace(/[^a-z]/g, "");
+
+  if (!compactedValue) {
+    return false;
+  }
+
+  const wordsByFirstLetter = new Map<string, string[]>();
+
+  for (const word of profanity.list()) {
+    const normalizedWord = word.toLowerCase();
+
+    if (!normalizedWord) {
+      continue;
+    }
+
+    const firstLetter = normalizedWord[0];
+    const existingWords = wordsByFirstLetter.get(firstLetter) ?? [];
+    existingWords.push(normalizedWord);
+    wordsByFirstLetter.set(firstLetter, existingWords);
+  }
+
+  const canSegment = new Array(compactedValue.length + 1).fill(false);
+  canSegment[0] = true;
+
+  for (let index = 0; index < compactedValue.length; index += 1) {
+    if (!canSegment[index]) {
+      continue;
+    }
+
+    const candidateWords = wordsByFirstLetter.get(compactedValue[index]) ?? [];
+
+    for (const word of candidateWords) {
+      if (compactedValue.startsWith(word, index)) {
+        canSegment[index + word.length] = true;
+      }
+    }
+  }
+
+  return canSegment[compactedValue.length];
+};
+
+const hasEmbeddedProfanity = (value: string) => {
+  const compactedValue = value.toLowerCase().replace(/[^a-z]/g, "");
+
+  if (!compactedValue) {
+    return false;
+  }
+
+  return profanity
+    .list()
+    .map((word) => word.toLowerCase())
+    .filter((word) => word.length >= 4)
+    .some((word) => compactedValue.includes(word));
+};
 
 export default function Settings() {
   const router = useRouter();
@@ -185,14 +243,41 @@ export default function Settings() {
   };
 
   const updateReaderTag = async () => {
-    const updateReaderTag = await updateUsername(readerTag);
-    const user = await getUserSession();
-    if (user) {
-      await changeUserNameOnStreak(user.id, readerTag);
+    const trimmedReaderTag = readerTag.trim();
+    const cleanedReaderTag = profanity.clean(trimmedReaderTag).trim();
+
+    if (!cleanedReaderTag) {
+      displayErrorToast("ReaderTag cannot be empty");
+      return;
     }
 
-    if (updateReaderTag) {
-      displayToast("ReaderTag updated successfully");
+    if (
+      cleanedReaderTag === trimmedReaderTag &&
+      (isChainedProfanity(trimmedReaderTag) ||
+        hasEmbeddedProfanity(trimmedReaderTag))
+    ) {
+      displayErrorToast(
+        "ReaderTag cannot contain profanity, even when the words are joined together",
+      );
+      return;
+    }
+
+    if (cleanedReaderTag !== trimmedReaderTag) {
+      setReaderTag(cleanedReaderTag);
+    }
+
+    const updatedReaderTag = await updateUsername(cleanedReaderTag);
+    const user = await getUserSession();
+    if (user) {
+      await changeUserNameOnStreak(user.id, cleanedReaderTag);
+    }
+
+    if (updatedReaderTag) {
+      displayToast(
+        cleanedReaderTag !== trimmedReaderTag
+          ? "ReaderTag was cleaned and updated successfully"
+          : "ReaderTag updated successfully",
+      );
     }
   };
 
@@ -238,22 +323,6 @@ export default function Settings() {
       } else {
         displayErrorToast("Error updating email");
       }
-    }
-  };
-
-  const handleConsent = async () => {
-    try {
-      const consentInfo = await AdsConsent.requestInfoUpdate();
-
-      if (consentInfo.isConsentFormAvailable) {
-        await AdsConsent.showPrivacyOptionsForm();
-        displayToast("Privacy settings updated");
-      } else {
-        displayToast("No privacy options required for your location");
-      }
-    } catch (error) {
-      console.error("Error showing privacy options form:", error);
-      displayErrorToast("Unable to show privacy options");
     }
   };
 
@@ -391,59 +460,16 @@ export default function Settings() {
                 </TouchableOpacity>
               ))}
             </View>
-            <TouchableOpacity
-              style={styles.privacyButton}
-              onPress={handleConsent}
-            >
-              <Text
-                style={[styles.privacyButtonText, isIPad && { fontSize: 24 }]}
-              >
-                Manage Privacy Settings
-              </Text>
-            </TouchableOpacity>
-            {/* {deactivated ? (
-              <>
-                <Text style={styles.selectedText}>
-                  Premium will end on{" "}
-                  {cancelAt
-                    ? new Date(cancelAt).toLocaleDateString()
-                    : "Unknown"}
-                </Text>
-                <TouchableOpacity
-                  style={styles.privacyButton}
-                  onPress={() => router.push("/reactivatepremium")}
-                >
-                  <Text style={styles.privacyButtonText}>
-                    Reactivate Sumi Premium
-                  </Text>
-                </TouchableOpacity>
-              </>
-            ) : !premium && !deactivated ? (
-              <TouchableOpacity
-                style={styles.privacyButton}
-                onPress={() => router.push("/getpremium")}
-              >
-                <Text style={styles.privacyButtonText}>
-                  Explore Sumi Premium
-                </Text>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                style={styles.privacyButton}
-                onPress={() => router.push("/cancelpremium")}
-              >
-                <Text style={styles.privacyButtonText}>
-                  Cancel Sumi Premium
-                </Text>
-              </TouchableOpacity>
-            )} */}
             {!hasPremium && (
               <TouchableOpacity
-                style={styles.privacyButton}
+                style={styles.premiumActionButton}
                 onPress={presentPaywall}
               >
                 <Text
-                  style={[styles.privacyButtonText, isIPad && { fontSize: 24 }]}
+                  style={[
+                    styles.premiumActionButtonText,
+                    isIPad && { fontSize: 24 },
+                  ]}
                 >
                   Explore Sumi Premium
                 </Text>
@@ -451,11 +477,14 @@ export default function Settings() {
             )}
             {hasPremium && (
               <TouchableOpacity
-                style={styles.privacyButton}
+                style={styles.premiumActionButton}
                 onPress={manageSubscription}
               >
                 <Text
-                  style={[styles.privacyButtonText, isIPad && { fontSize: 24 }]}
+                  style={[
+                    styles.premiumActionButtonText,
+                    isIPad && { fontSize: 24 },
+                  ]}
                 >
                   Manage Sumi Premium
                 </Text>
@@ -717,7 +746,7 @@ const styles = StyleSheet.create({
     width: "100%",
     marginTop: 12,
   },
-  privacyButton: {
+  premiumActionButton: {
     backgroundColor: "#F6F7EB",
     paddingVertical: 16,
     borderRadius: 8,
@@ -725,7 +754,7 @@ const styles = StyleSheet.create({
     width: "100%",
     marginTop: 12,
   },
-  privacyButtonText: {
+  premiumActionButtonText: {
     color: "#393E41",
     fontFamily: "BeProVietnam",
     fontSize: 16,
