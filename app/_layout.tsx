@@ -124,7 +124,7 @@ export default function RootLayout() {
           borderColor: "#393E41",
           padding: 12,
           flexDirection: "row",
-          alignItems: "flex-start",
+          alignItems: "center",
         }}
       >
         <View
@@ -173,7 +173,7 @@ export default function RootLayout() {
           borderColor: "#393E41",
           padding: 12,
           flexDirection: "row",
-          alignItems: "flex-start",
+          alignItems: "center",
         }}
       >
         <View

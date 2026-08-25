@@ -10,6 +10,7 @@ import {
 import { Link } from "expo-router";
 import { useState } from "react";
 import supabase from "../lib/supabase.js";
+import Toast from "react-native-toast-message";
 
 export default function Register() {
   const { width } = useWindowDimensions();
@@ -17,10 +18,22 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [registerError, setRegisterError] = useState("");
-  const [registerSuccess, setRegisterSuccess] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+
+  const displayErrorToast = (message: string) => {
+    Toast.show({
+      type: "settingsUpdateError",
+      text1: message,
+    });
+  };
+
+  const displaySuccessToast = (message: string) => {
+    Toast.show({
+      type: "settingsUpdateSuccess",
+      text1: message,
+    });
+  };
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -34,6 +47,7 @@ export default function Register() {
   const checkEmail = (email: string) => {
     if (!validateEmail(email)) {
       setEmailError("Invalid email address");
+      displayErrorToast("Invalid email address");
     } else {
       setEmailError("");
     }
@@ -42,26 +56,28 @@ export default function Register() {
   const checkPasswords = () => {
     if (password !== confirmPassword) {
       setPasswordError("Passwords do not match");
-      setRegisterSuccess("");
+      displayErrorToast("Passwords do not match");
     } else {
       setPasswordError("");
-      setRegisterSuccess("");
     }
   };
 
   async function signUpNewUser() {
-    setRegisterError("");
-    setRegisterSuccess("");
     if (password !== confirmPassword) {
       setPasswordError("Passwords do not match");
+      displayErrorToast("Passwords do not match");
       return;
     }
 
     if (!validateEmail(email)) {
       setEmailError("Invalid email address");
-      setRegisterSuccess("");
+      displayErrorToast("Invalid email address");
       return;
     }
+
+    setEmailError("");
+    setPasswordError("");
+
     await supabase.auth
       .signUp({
         email: email,
@@ -69,14 +85,14 @@ export default function Register() {
       })
       .then(({ error }) => {
         if (error) {
-          setRegisterError("Error registering, please try again");
+          displayErrorToast("Error registering, please try again");
           return;
         } else {
-          setRegisterSuccess("Verification email sent");
+          displaySuccessToast("Verification email sent");
         }
       })
       .catch((error) => {
-        setRegisterError(error.message);
+        displayErrorToast(error.message);
       });
   }
 
@@ -104,13 +120,6 @@ export default function Register() {
           onChangeText={handleEmailChange}
           onBlur={() => checkEmail(email)}
         ></TextInput>
-        {emailError ? (
-          <Text
-            style={[styles.passwordEmailErrorText, isIPad && { fontSize: 24 }]}
-          >
-            {emailError}
-          </Text>
-        ) : null}
         <Text style={[styles.formLabel, isIPad && { fontSize: 24 }]}>
           Create Password
         </Text>
@@ -136,22 +145,6 @@ export default function Register() {
             isIPad && { fontSize: 24 },
           ]}
         ></TextInput>
-        {passwordError ? (
-          <Text
-            style={[styles.passwordEmailErrorText, isIPad && { fontSize: 24 }]}
-          >
-            {passwordError}
-          </Text>
-        ) : null}
-        {registerError ? (
-          <Text style={[styles.errorText, isIPad && { fontSize: 24 }]}>
-            {registerError}
-          </Text>
-        ) : registerSuccess ? (
-          <Text style={[styles.registerSuccess, isIPad && { fontSize: 24 }]}>
-            {registerSuccess}
-          </Text>
-        ) : null}
         <TouchableOpacity style={styles.registerButton} onPress={signUpNewUser}>
           <Text style={[styles.registerButtonText, isIPad && { fontSize: 24 }]}>
             Register
@@ -262,24 +255,6 @@ const styles = StyleSheet.create({
     color: "#F6F7EB",
     fontFamily: "BeProVietnam",
     fontSize: 16,
-  },
-  errorText: {
-    color: "#D64045",
-    marginTop: 12,
-    fontSize: 16,
-    fontFamily: "BeProVietnam",
-  },
-  passwordEmailErrorText: {
-    color: "#D64045",
-    marginBottom: 6,
-    fontSize: 16,
-    fontFamily: "BeProVietnam",
-  },
-  registerSuccess: {
-    color: "#83F65E",
-    marginBottom: 6,
-    fontSize: 16,
-    fontFamily: "BeProVietnam",
   },
   errorInput: {
     borderColor: "#D64045",
