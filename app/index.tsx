@@ -11,13 +11,15 @@ import { Link, useRouter } from "expo-router";
 import { useState } from "react";
 import supabase from "../lib/supabase.js";
 import { useEffect } from "react";
+import * as AppleAuthentication from "expo-apple-authentication";
+import * as Crypto from "expo-crypto";
+import Toast from "react-native-toast-message";
 
 export default function Index() {
   const { width } = useWindowDimensions();
   const isIPad = Platform.OS === "ios" && Platform.isPad;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [signinError, setSigninError] = useState("");
   const [taglineIndex, setTaglineIndex] = useState(0);
   const [displayedTagline, setDisplayedTagline] = useState("");
   const [typing, setTyping] = useState(true);
@@ -30,8 +32,15 @@ export default function Index() {
     "...Flooded with the Great Books",
   ];
 
+  const displayErrorToast = (message: string) => {
+    Toast.show({
+      type: "settingsUpdateError",
+      text1: message,
+    });
+  };
+
   useEffect(() => {
-    let timeout: number;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
     const fullText = taglines[taglineIndex];
 
     if (typing) {
@@ -54,7 +63,11 @@ export default function Index() {
         }, 400);
       }
     }
-    return () => clearTimeout(timeout);
+    return () => {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+    };
   }, [displayedTagline, typing, taglineIndex, taglines]);
 
   async function signInUser() {
@@ -65,14 +78,54 @@ export default function Index() {
       })
       .then(({ error }) => {
         if (error) {
-          setSigninError(error.message);
+          displayErrorToast(error.message);
           return;
         }
         router.push("/feed");
       })
       .catch((error) => {
-        setSigninError(error.message);
+        displayErrorToast(error.message);
       });
+  }
+
+  async function signInWithApple() {
+    try {
+      const rawNonce = Crypto.randomUUID();
+      const hashedNonce = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        rawNonce,
+      );
+
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [AppleAuthentication.AppleAuthenticationScope.EMAIL],
+        nonce: hashedNonce,
+      });
+
+      if (!credential.identityToken) {
+        displayErrorToast("Apple did not return an identity token.");
+        return;
+      }
+
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: "apple",
+        token: credential.identityToken,
+        nonce: rawNonce,
+      });
+
+      if (error) {
+        displayErrorToast(error.message);
+        return;
+      }
+
+      router.push("/feed");
+    } catch (e: any) {
+      if (e?.code === "ERR_REQUEST_CANCELED") {
+        displayErrorToast("Sign in with Apple was canceled.");
+        return;
+      }
+
+      displayErrorToast(e?.message ?? "Unable to sign in with Apple.");
+    }
   }
 
   return (
@@ -100,21 +153,25 @@ export default function Index() {
           style={[styles.formInput, isIPad && { fontSize: 24 }]}
           onChangeText={setPassword}
         ></TextInput>
-        {signinError ? (
-          <Text style={styles.errorText}>{signinError}</Text>
-        ) : null}
 
         <TouchableOpacity style={styles.signInButton} onPress={signInUser}>
           <Text style={[styles.signInButtonText, isIPad && { fontSize: 24 }]}>
             Sign In
           </Text>
         </TouchableOpacity>
+        <AppleAuthentication.AppleAuthenticationButton
+          buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+          buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+          cornerRadius={8}
+          style={styles.button}
+          onPress={signInWithApple}
+        />
         <Link href="../register" asChild>
           <TouchableOpacity style={styles.registerButton}>
             <Text
               style={[styles.registerButtonText, isIPad && { fontSize: 24 }]}
             >
-              Register
+              Or Register with Email
             </Text>
           </TouchableOpacity>
         </Link>
@@ -196,8 +253,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#F6F7EB",
     borderRadius: 8,
   },
+  button: {
+    marginTop: 8,
+    width: "100%",
+    height: 52,
+  },
   signInButton: {
     marginTop: 8,
+    marginBottom: 8,
     padding: 16,
     backgroundColor: "#F6F7EB",
     borderRadius: 8,
@@ -226,11 +289,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     fontFamily: "BeProVietnam",
     width: "100%",
-  },
-  errorText: {
-    color: "#D64045",
-    fontSize: 16,
-    fontFamily: "BeProVietnam",
   },
   forgottenPasswordText: {
     color: "#8980F5",

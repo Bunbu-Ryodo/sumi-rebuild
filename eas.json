@@ -1,14 +1,14 @@
 {
   "cli": {
     "version": ">= 16.17.4",
-    "appVersionSource": "remote"
+    "appVersionSource": "local"
   },
   "build": {
     "development": {
       "developmentClient": true,
       "distribution": "internal",
       "ios": {
-        "image": "macos-sequoia-15.6-xcode-16.4",
+        "image": "sdk-56",
         "simulator": true
       },
       "env": {
@@ -65,7 +65,7 @@
     "production": {
       "autoIncrement": true,
       "ios": {
-        "image": "macos-sequoia-15.6-xcode-16.4"
+        "image": "sdk-56"
       },
       "env": {
         "EXPO_PUBLIC_USE_TEST_PAYMENTS": "false"
