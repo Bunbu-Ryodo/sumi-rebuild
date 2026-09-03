@@ -11,6 +11,7 @@ import {
   TextInput,
   Alert,
   KeyboardAvoidingView,
+  ScrollView,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams } from "expo-router";
@@ -109,6 +110,8 @@ export default function EReader() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const modalOpacity = useRef(new Animated.Value(0)).current;
   const modalScale = useRef(new Animated.Value(0.8)).current;
+  const argumentModalOpacity = useRef(new Animated.Value(0)).current;
+  const argumentModalScale = useRef(new Animated.Value(0.8)).current;
 
   const [extract, setExtract] = useState<ExtractType>({
     id: 0,
@@ -134,10 +137,12 @@ export default function EReader() {
   const [fontSize, setFontSize] = useState(isIPad ? 24 : 18);
   const [warmth, setWarmth] = useState(0);
   const [argument, setArgument] = useState("");
+  const [assistLabel, setAssistLabel] = useState("Argument");
   const [thinking, setThinking] = useState(false);
   const [selectedText, setSelectedText] = useState("");
   const [quotes, setQuotes] = useState<QuoteType[]>([]);
   const [showMarginaliaModal, setShowMarginaliaModal] = useState(false);
+  const [showArgumentModal, setShowArgumentModal] = useState(false);
   const [marginaliaText, setMarginaliaText] = useState("");
   const [marginaliaLoading, setMarginaliaLoading] = useState(false);
   const [hasPremium, setHasPremium] = useState(false);
@@ -435,10 +440,61 @@ export default function EReader() {
     }
   }, [argument]);
 
+  const openArgumentModal = () => {
+    setShowArgumentModal(true);
+    argumentModalOpacity.setValue(0);
+    argumentModalScale.setValue(0.8);
+
+    Animated.parallel([
+      Animated.timing(argumentModalOpacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.spring(argumentModalScale, {
+        toValue: 1,
+        tension: 55,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const closeArgumentModal = () => {
+    Animated.parallel([
+      Animated.timing(argumentModalOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(argumentModalScale, {
+        toValue: 0.8,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setShowArgumentModal(false);
+    });
+  };
+
+  const goToSettingsFromArgument = () => {
+    closeArgumentModal();
+    router.push("/settings");
+  };
+
   const callGrok = async (type: "argument" | "bullets" | "synopsis") => {
-    setScrollPosition(0);
+    const nextLabel =
+      type === "argument"
+        ? "Argument"
+        : type === "bullets"
+          ? "Summary Notes"
+          : "Synopsis";
+
+    setAssistLabel(nextLabel);
     setThinking(true);
+    setNeedsPremium(false);
     setArgument("");
+    openArgumentModal();
 
     try {
       const { data: session } = await supabase.auth.getSession();
@@ -840,8 +896,6 @@ export default function EReader() {
             </style>
           </head>
           <body>
-            ${thinking ? '<div class="thinking-text">Thinking...</div>' : ""}
-            ${argument && argument.length > 0 ? `<div class="argument-container"><div class="argument-text">${argument.replace(/\n/g, "<br>")}</div>${needsPremium ? '<a href="#settings" class="settings-link" onclick="window.ReactNativeWebView.postMessage(JSON.stringify({type: \'goToSettings\'})); return false;">Get Premium</a>' : ""}</div>` : ""}
             <div>
               ${
                 extract.fulltext
@@ -1239,6 +1293,104 @@ export default function EReader() {
           </Animated.View>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* AI Reading Assist Modal */}
+      <Modal
+        animationType="none"
+        transparent={true}
+        visible={showArgumentModal}
+        onRequestClose={closeArgumentModal}
+      >
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+        >
+          <Animated.View
+            style={[styles.modalOverlay, { opacity: argumentModalOpacity }]}
+          >
+            <Animated.View
+              style={[
+                styles.modalContainer,
+                styles.argumentModalContainer,
+                {
+                  opacity: argumentModalOpacity,
+                  transform: [{ scale: argumentModalScale }],
+                },
+              ]}
+            >
+              <View style={styles.argumentModalHeader}>
+                <View style={styles.argumentHeaderIconWrap}>
+                  <Ionicons name="sparkles-outline" size={20} color="#F6F7EB" />
+                </View>
+                <Text
+                  style={[
+                    styles.argumentHeaderTitle,
+                    isIPad && { fontSize: 24 },
+                  ]}
+                >
+                  {assistLabel}
+                </Text>
+                <TouchableOpacity
+                  onPress={closeArgumentModal}
+                  style={styles.closeButton}
+                >
+                  <Ionicons name="close" size={24} color="#F6F7EB" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.argumentResultContainer}>
+                {thinking ? (
+                  <View style={styles.argumentLoadingState}>
+                    <ActivityIndicator size="small" color="#FE7F2D" />
+                    <Text
+                      style={[
+                        styles.argumentLoadingText,
+                        isIPad && { fontSize: 22 },
+                      ]}
+                    >
+                      Thinking...
+                    </Text>
+                  </View>
+                ) : (
+                  <ScrollView
+                    style={styles.argumentScroll}
+                    contentContainerStyle={styles.argumentScrollContent}
+                    showsVerticalScrollIndicator={true}
+                  >
+                    <Text
+                      style={[
+                        styles.argumentResultText,
+                        isIPad && { fontSize: 24 },
+                      ]}
+                    >
+                      {argument || "Ask for an assist using the toolbar icons."}
+                    </Text>
+                  </ScrollView>
+                )}
+              </View>
+
+              <View style={styles.modalButtons}>
+                {needsPremium && !thinking && (
+                  <TouchableOpacity
+                    onPress={goToSettingsFromArgument}
+                    style={styles.saveButton}
+                  >
+                    <Text
+                      style={[
+                        styles.saveButtonText,
+                        isIPad && { fontSize: 24 },
+                      ]}
+                    >
+                      Get Premium
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </Animated.View>
+          </Animated.View>
+        </KeyboardAvoidingView>
+      </Modal>
     </>
   );
 }
@@ -1305,15 +1457,15 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   engagementButtons: {
-    marginTop: 12,
+    marginTop: 20,
     width: "100%",
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    height: 100,
+    height: 64,
   },
   readingProgressContainer: {
-    marginTop: 48,
+    marginTop: 20,
     alignItems: "center",
     justifyContent: "center",
     width: "100%",
@@ -1516,6 +1668,65 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     flex: 1,
   },
+  argumentResultContainer: {
+    borderWidth: 1,
+    borderColor: "#4A4F53",
+    borderRadius: 8,
+    backgroundColor: "#393E41",
+    minHeight: 140,
+    maxHeight: 260,
+    marginBottom: 15,
+  },
+  argumentScroll: {
+    width: "100%",
+  },
+  argumentScrollContent: {
+    padding: 12,
+  },
+  argumentResultText: {
+    fontFamily: "EBGaramond",
+    fontSize: 18,
+    color: "#F6F7EB",
+    lineHeight: 28,
+  },
+  argumentLoadingState: {
+    minHeight: 120,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 12,
+  },
+  argumentLoadingText: {
+    marginTop: 10,
+    fontSize: 18,
+    fontFamily: "EBGaramond",
+    color: "#F6F7EB",
+  },
+  argumentModalContainer: {
+    backgroundColor: "#2F3337",
+  },
+  argumentModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 14,
+  },
+  argumentHeaderTitle: {
+    flex: 1,
+    marginLeft: 10,
+    color: "#F6F7EB",
+    fontSize: 20,
+    fontFamily: "BeProVietnam",
+  },
+  argumentHeaderIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#393E41",
+    borderWidth: 1,
+    borderColor: "#4A4F53",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   // Modal styles
   modalOverlay: {
     flex: 1,
@@ -1609,7 +1820,7 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontFamily: "BeProVietnam",
     fontSize: 16,
-    color: "#F6F7EB",
+    color: "#393E41",
   },
   disabledButton: {
     opacity: 0.6,
