@@ -112,6 +112,8 @@ export default function EReader() {
   const modalScale = useRef(new Animated.Value(0.8)).current;
   const argumentModalOpacity = useRef(new Animated.Value(0)).current;
   const argumentModalScale = useRef(new Animated.Value(0.8)).current;
+  const footnoteModalOpacity = useRef(new Animated.Value(0)).current;
+  const footnoteModalScale = useRef(new Animated.Value(0.8)).current;
 
   const [extract, setExtract] = useState<ExtractType>({
     id: 0,
@@ -137,12 +139,15 @@ export default function EReader() {
   const [fontSize, setFontSize] = useState(isIPad ? 24 : 18);
   const [warmth, setWarmth] = useState(0);
   const [argument, setArgument] = useState("");
+  const [footnotes, setFootnotes] = useState("");
   const [assistLabel, setAssistLabel] = useState("Argument");
   const [thinking, setThinking] = useState(false);
+  const [footnotesThinking, setFootnotesThinking] = useState(false);
   const [selectedText, setSelectedText] = useState("");
   const [quotes, setQuotes] = useState<QuoteType[]>([]);
   const [showMarginaliaModal, setShowMarginaliaModal] = useState(false);
   const [showArgumentModal, setShowArgumentModal] = useState(false);
+  const [showFootnotesModal, setShowFootnotesModal] = useState(false);
   const [marginaliaText, setMarginaliaText] = useState("");
   const [marginaliaLoading, setMarginaliaLoading] = useState(false);
   const [hasPremium, setHasPremium] = useState(false);
@@ -477,6 +482,43 @@ export default function EReader() {
     });
   };
 
+  const openFootnotesModal = () => {
+    setShowFootnotesModal(true);
+    footnoteModalOpacity.setValue(0);
+    footnoteModalScale.setValue(0.8);
+
+    Animated.parallel([
+      Animated.timing(footnoteModalOpacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.spring(footnoteModalScale, {
+        toValue: 1,
+        tension: 55,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const closeFootnotesModal = () => {
+    Animated.parallel([
+      Animated.timing(footnoteModalOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(footnoteModalScale, {
+        toValue: 0.8,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setShowFootnotesModal(false);
+    });
+  };
+
   const goToSettingsFromArgument = () => {
     closeArgumentModal();
     router.push("/settings");
@@ -524,7 +566,6 @@ export default function EReader() {
           Authorization: `Bearer ${session.session.access_token}`,
         },
       });
-
       if (error) throw error;
 
       setArgument(data.result || "Error generating summary");
@@ -535,6 +576,46 @@ export default function EReader() {
       setThinking(false);
     }
   };
+
+  async function generateFootnotes() {
+    if (!selectedText) return;
+
+    setFootnotes("");
+    setFootnotesThinking(true);
+
+    try {
+      const { data: session } = await supabase.auth.getSession();
+
+      if (!session?.session?.access_token) {
+        throw new Error("No valid session");
+      }
+
+      const { data, error } = await supabase.functions.invoke("ai-footnotes", {
+        body: {
+          highlight: selectedText,
+          author: extract.author,
+          title: extract.title,
+          chapter: extract.chapter,
+        },
+        headers: {
+          Authorization: `Bearer ${session.session.access_token}`,
+        },
+      });
+      if (error) throw error;
+      setFootnotes(data.result || "Error generating footnotes");
+    } catch (error) {
+      console.error("Error generating footnotes:", error);
+      setFootnotes("Error generating footnotes. Please try again.");
+    } finally {
+      setFootnotesThinking(false);
+    }
+  }
+
+  useEffect(() => {
+    if (footnotes && footnotes.trim().length > 0) {
+      openFootnotesModal();
+    }
+  }, [footnotes]);
 
   const generateChapterArgument = () => callGrok("argument");
   const generateChapterBulletPoints = () => callGrok("bullets");
@@ -1070,32 +1151,67 @@ export default function EReader() {
                 />
 
                 {selectedText && (
-                  <TouchableOpacity
-                    style={[
-                      styles.saveQuoteButton,
-                      warmth === 4 && { backgroundColor: "#F6F7EB" },
-                    ]}
-                    onPress={saveQuote}
-                  >
-                    <Ionicons
-                      name="chatbubble-ellipses"
-                      size={20}
-                      color={warmth === 4 ? "#393E41" : "#F6F7EB"}
-                    />
-                    <Text
+                  <View style={styles.selectionActionsContainer}>
+                    <TouchableOpacity
                       style={[
-                        styles.saveQuoteText,
-                        warmth === 4 && { color: "#393E41" },
-                        isIPad && { fontSize: 24 },
+                        styles.saveQuoteButton,
+                        warmth === 4 && { backgroundColor: "#F6F7EB" },
                       ]}
+                      onPress={saveQuote}
                     >
-                      Save Quote: "
-                      {selectedText.length > 50
-                        ? selectedText.substring(0, 50) + "..."
-                        : selectedText}
-                      "
-                    </Text>
-                  </TouchableOpacity>
+                      <Ionicons
+                        name="chatbubble-ellipses"
+                        size={20}
+                        color={warmth === 4 ? "#393E41" : "#F6F7EB"}
+                      />
+                      <Text
+                        style={[
+                          styles.saveQuoteText,
+                          warmth === 4 && { color: "#393E41" },
+                          isIPad && { fontSize: 24 },
+                        ]}
+                      >
+                        Save Quote: "
+                        {selectedText.length > 50
+                          ? selectedText.substring(0, 50) + "..."
+                          : selectedText}
+                        "
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.footnotesButton,
+                        warmth === 4 && { backgroundColor: "#F6F7EB" },
+                      ]}
+                      onPress={generateFootnotes}
+                      disabled={footnotesThinking}
+                    >
+                      {footnotesThinking ? (
+                        <ActivityIndicator
+                          size="small"
+                          color={warmth === 4 ? "#393E41" : "#F6F7EB"}
+                        />
+                      ) : (
+                        <Ionicons
+                          name="sparkles-outline"
+                          size={20}
+                          color={warmth === 4 ? "#393E41" : "#F6F7EB"}
+                        />
+                      )}
+                      <Text
+                        style={[
+                          styles.footnotesButtonText,
+                          warmth === 4 && { color: "#393E41" },
+                          isIPad && { fontSize: 24 },
+                        ]}
+                      >
+                        {footnotesThinking
+                          ? "Generating Footnote..."
+                          : "Generate Footnote"}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 )}
               </View>
             </View>
@@ -1391,6 +1507,72 @@ export default function EReader() {
           </Animated.View>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* Footnotes Modal */}
+      <Modal
+        animationType="none"
+        transparent={true}
+        visible={showFootnotesModal}
+        onRequestClose={closeFootnotesModal}
+      >
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+        >
+          <Animated.View
+            style={[styles.modalOverlay, { opacity: footnoteModalOpacity }]}
+          >
+            <Animated.View
+              style={[
+                styles.modalContainer,
+                styles.argumentModalContainer,
+                {
+                  opacity: footnoteModalOpacity,
+                  transform: [{ scale: footnoteModalScale }],
+                },
+              ]}
+            >
+              <View style={styles.argumentModalHeader}>
+                <View style={styles.argumentHeaderIconWrap}>
+                  <Ionicons name="sparkles-outline" size={20} color="#F6F7EB" />
+                </View>
+                <Text
+                  style={[
+                    styles.argumentHeaderTitle,
+                    isIPad && { fontSize: 24 },
+                  ]}
+                >
+                  Footnote
+                </Text>
+                <TouchableOpacity
+                  onPress={closeFootnotesModal}
+                  style={styles.closeButton}
+                >
+                  <Ionicons name="close" size={24} color="#F6F7EB" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.argumentResultContainer}>
+                <ScrollView
+                  style={styles.argumentScroll}
+                  contentContainerStyle={styles.argumentScrollContent}
+                  showsVerticalScrollIndicator={true}
+                >
+                  <Text
+                    style={[
+                      styles.argumentResultText,
+                      isIPad && { fontSize: 24 },
+                    ]}
+                  >
+                    {footnotes}
+                  </Text>
+                </ScrollView>
+              </View>
+            </Animated.View>
+          </Animated.View>
+        </KeyboardAvoidingView>
+      </Modal>
     </>
   );
 }
@@ -1662,6 +1844,29 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   saveQuoteText: {
+    color: "#F6F7EB",
+    fontFamily: "BeProVietnam",
+    fontSize: 14,
+    marginLeft: 8,
+    flex: 1,
+  },
+  selectionActionsContainer: {
+    marginVertical: 8,
+    gap: 8,
+  },
+  footnotesButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#393E41",
+    padding: 12,
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  footnotesButtonText: {
     color: "#F6F7EB",
     fontFamily: "BeProVietnam",
     fontSize: 14,
