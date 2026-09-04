@@ -11,6 +11,7 @@ import {
   TextInput,
   Alert,
   KeyboardAvoidingView,
+  ScrollView,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams } from "expo-router";
@@ -104,11 +105,16 @@ const BounceView = forwardRef<any, BounceInProps>((props, ref) => {
 export default function EReader() {
   const { width } = useWindowDimensions();
   const isIPad = Platform.OS === "ios" && Platform.isPad;
+  const isCompactViewport = width <= 375;
   let { id } = useLocalSearchParams();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const modalOpacity = useRef(new Animated.Value(0)).current;
   const modalScale = useRef(new Animated.Value(0.8)).current;
+  const argumentModalOpacity = useRef(new Animated.Value(0)).current;
+  const argumentModalScale = useRef(new Animated.Value(0.8)).current;
+  const footnoteModalOpacity = useRef(new Animated.Value(0)).current;
+  const footnoteModalScale = useRef(new Animated.Value(0.8)).current;
 
   const [extract, setExtract] = useState<ExtractType>({
     id: 0,
@@ -134,10 +140,16 @@ export default function EReader() {
   const [fontSize, setFontSize] = useState(isIPad ? 24 : 18);
   const [warmth, setWarmth] = useState(0);
   const [argument, setArgument] = useState("");
+  const [footnotes, setFootnotes] = useState("");
+  const [assistLabel, setAssistLabel] = useState("Argument");
   const [thinking, setThinking] = useState(false);
+  const [footnotesThinking, setFootnotesThinking] = useState(false);
   const [selectedText, setSelectedText] = useState("");
+  const [footnoteSourceHighlight, setFootnoteSourceHighlight] = useState("");
   const [quotes, setQuotes] = useState<QuoteType[]>([]);
   const [showMarginaliaModal, setShowMarginaliaModal] = useState(false);
+  const [showArgumentModal, setShowArgumentModal] = useState(false);
+  const [showFootnotesModal, setShowFootnotesModal] = useState(false);
   const [marginaliaText, setMarginaliaText] = useState("");
   const [marginaliaLoading, setMarginaliaLoading] = useState(false);
   const [hasPremium, setHasPremium] = useState(false);
@@ -435,10 +447,98 @@ export default function EReader() {
     }
   }, [argument]);
 
+  const openArgumentModal = () => {
+    setShowArgumentModal(true);
+    argumentModalOpacity.setValue(0);
+    argumentModalScale.setValue(0.8);
+
+    Animated.parallel([
+      Animated.timing(argumentModalOpacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.spring(argumentModalScale, {
+        toValue: 1,
+        tension: 55,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const closeArgumentModal = () => {
+    Animated.parallel([
+      Animated.timing(argumentModalOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(argumentModalScale, {
+        toValue: 0.8,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setShowArgumentModal(false);
+    });
+  };
+
+  const openFootnotesModal = () => {
+    setShowFootnotesModal(true);
+    footnoteModalOpacity.setValue(0);
+    footnoteModalScale.setValue(0.8);
+
+    Animated.parallel([
+      Animated.timing(footnoteModalOpacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.spring(footnoteModalScale, {
+        toValue: 1,
+        tension: 55,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const closeFootnotesModal = () => {
+    Animated.parallel([
+      Animated.timing(footnoteModalOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(footnoteModalScale, {
+        toValue: 0.8,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setShowFootnotesModal(false);
+    });
+  };
+
+  const goToSettingsFromArgument = () => {
+    closeArgumentModal();
+    router.push("/settings");
+  };
+
   const callGrok = async (type: "argument" | "bullets" | "synopsis") => {
-    setScrollPosition(0);
+    const nextLabel =
+      type === "argument"
+        ? "Argument"
+        : type === "bullets"
+          ? "Key Plot Points"
+          : "Synopsis";
+
+    setAssistLabel(nextLabel);
     setThinking(true);
+    setNeedsPremium(false);
     setArgument("");
+    openArgumentModal();
 
     try {
       const { data: session } = await supabase.auth.getSession();
@@ -468,7 +568,6 @@ export default function EReader() {
           Authorization: `Bearer ${session.session.access_token}`,
         },
       });
-
       if (error) throw error;
 
       setArgument(data.result || "Error generating summary");
@@ -480,9 +579,80 @@ export default function EReader() {
     }
   };
 
+  async function generateFootnotes() {
+    if (!selectedText) return;
+
+    const highlight = selectedText;
+    setFootnotes("");
+    setFootnoteSourceHighlight(highlight);
+    setFootnotesThinking(true);
+
+    try {
+      const { data: session } = await supabase.auth.getSession();
+
+      if (!session?.session?.access_token) {
+        throw new Error("No valid session");
+      }
+
+      const customerInfo = await Purchases.getCustomerInfo();
+      const hasSubscription =
+        !!customerInfo.entitlements.active[premiumEntitlementId];
+
+      if (!hasSubscription) {
+        setAssistLabel("Explanatory Notes");
+        setArgument(
+          "Upgrade to Premium to unlock AI-powered explanatory notes written in a critical style and explore your selected passages in greater depth.",
+        );
+        setNeedsPremium(true);
+        openArgumentModal();
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("ai-footnotes", {
+        body: {
+          highlight,
+          author: extract.author,
+          title: extract.title,
+          chapter: extract.chapter,
+        },
+        headers: {
+          Authorization: `Bearer ${session.session.access_token}`,
+        },
+      });
+      if (error) throw error;
+      setFootnotes(data.result || "Error generating footnotes");
+    } catch (error) {
+      console.error("Error generating footnotes:", error);
+      setFootnotes("Error generating footnotes. Please try again.");
+    } finally {
+      setFootnotesThinking(false);
+    }
+  }
+
+  const splitFootnoteResult = (result: string, highlight: string) => {
+    const footnotePrefix = `${highlight}:`;
+
+    if (!highlight || !result.startsWith(footnotePrefix)) {
+      return { highlight: "", note: result };
+    }
+
+    return {
+      highlight: footnotePrefix,
+      note: result.slice(footnotePrefix.length).trimStart(),
+    };
+  };
+
+  useEffect(() => {
+    if (footnotes && footnotes.trim().length > 0) {
+      openFootnotesModal();
+    }
+  }, [footnotes]);
+
   const generateChapterArgument = () => callGrok("argument");
   const generateChapterBulletPoints = () => callGrok("bullets");
   const generateSynopsis = () => callGrok("synopsis");
+  const { highlight: footnoteHighlight, note: footnoteNote } =
+    splitFootnoteResult(footnotes, footnoteSourceHighlight);
 
   const isSameDay = (date1: Date, date2: Date): boolean => {
     return (
@@ -840,8 +1010,6 @@ export default function EReader() {
             </style>
           </head>
           <body>
-            ${thinking ? '<div class="thinking-text">Thinking...</div>' : ""}
-            ${argument && argument.length > 0 ? `<div class="argument-container"><div class="argument-text">${argument.replace(/\n/g, "<br>")}</div>${needsPremium ? '<a href="#settings" class="settings-link" onclick="window.ReactNativeWebView.postMessage(JSON.stringify({type: \'goToSettings\'})); return false;">Get Premium</a>' : ""}</div>` : ""}
             <div>
               ${
                 extract.fulltext
@@ -874,11 +1042,17 @@ export default function EReader() {
         ) : (
           <View style={styles.contentContainer}>
             <View style={styles.mainReaderSection}>
-              <View style={styles.adjustFontSize}>
+              <View
+                style={[
+                  styles.adjustFontSize,
+                  isCompactViewport && styles.adjustFontSizeCompact,
+                ]}
+              >
                 <TouchableOpacity
                   style={[
                     styles.fontUp,
                     warmth === 4 && { backgroundColor: "#F6F7EB" },
+                    isCompactViewport && { height: 40, width: 40 },
                     isIPad && { height: 60, width: 60 },
                   ]}
                   onPress={fontUp}
@@ -893,6 +1067,7 @@ export default function EReader() {
                   style={[
                     styles.fontDown,
                     warmth === 4 && { backgroundColor: "#F6F7EB" },
+                    isCompactViewport && { height: 40, width: 40 },
                     isIPad && { height: 60, width: 60 },
                   ]}
                   onPress={fontDown}
@@ -907,6 +1082,7 @@ export default function EReader() {
                   style={[
                     styles.brightness,
                     warmth === 4 && { backgroundColor: "#F6F7EB" },
+                    isCompactViewport && { height: 40, width: 40 },
                     isIPad && { height: 60, width: 60 },
                   ]}
                   onPress={adjustBrightness}
@@ -921,6 +1097,7 @@ export default function EReader() {
                   style={[
                     styles.summary,
                     warmth === 4 && { backgroundColor: "#F6F7EB" },
+                    isCompactViewport && { height: 40, width: 40 },
                     isIPad && { height: 60, width: 60 },
                   ]}
                   onPress={generateChapterArgument}
@@ -935,6 +1112,7 @@ export default function EReader() {
                   style={[
                     styles.summary,
                     warmth === 4 && { backgroundColor: "#F6F7EB" },
+                    isCompactViewport && { height: 40, width: 40 },
                     isIPad && { height: 60, width: 60 },
                   ]}
                   onPress={generateChapterBulletPoints}
@@ -949,6 +1127,7 @@ export default function EReader() {
                   style={[
                     styles.summary,
                     warmth === 4 && { backgroundColor: "#F6F7EB" },
+                    isCompactViewport && { height: 40, width: 40 },
                     isIPad && { height: 60, width: 60 },
                   ]}
                   onPress={generateSynopsis}
@@ -963,6 +1142,7 @@ export default function EReader() {
                   style={[
                     styles.summary,
                     warmth === 4 && { backgroundColor: "#F6F7EB" },
+                    isCompactViewport && { height: 40, width: 40 },
                     isIPad && { height: 60, width: 60 },
                   ]}
                   onPress={openMarginaliaModal}
@@ -1016,38 +1196,77 @@ export default function EReader() {
                 />
 
                 {selectedText && (
-                  <TouchableOpacity
-                    style={[
-                      styles.saveQuoteButton,
-                      warmth === 4 && { backgroundColor: "#F6F7EB" },
-                    ]}
-                    onPress={saveQuote}
-                  >
-                    <Ionicons
-                      name="chatbubble-ellipses"
-                      size={20}
-                      color={warmth === 4 ? "#393E41" : "#F6F7EB"}
-                    />
-                    <Text
+                  <View style={styles.selectionActionsContainer}>
+                    <TouchableOpacity
                       style={[
-                        styles.saveQuoteText,
-                        warmth === 4 && { color: "#393E41" },
-                        isIPad && { fontSize: 24 },
+                        styles.saveQuoteButton,
+                        warmth === 4 && { backgroundColor: "#F6F7EB" },
                       ]}
+                      onPress={saveQuote}
                     >
-                      Save Quote: "
-                      {selectedText.length > 50
-                        ? selectedText.substring(0, 50) + "..."
-                        : selectedText}
-                      "
-                    </Text>
-                  </TouchableOpacity>
+                      <Ionicons
+                        name="chatbubble-ellipses"
+                        size={20}
+                        color={warmth === 4 ? "#393E41" : "#F6F7EB"}
+                      />
+                      <Text
+                        style={[
+                          styles.saveQuoteText,
+                          warmth === 4 && { color: "#393E41" },
+                          isIPad && { fontSize: 24 },
+                        ]}
+                      >
+                        Save Quote: "
+                        {selectedText.length > 50
+                          ? selectedText.substring(0, 50) + "..."
+                          : selectedText}
+                        "
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.footnotesButton,
+                        warmth === 4 && { backgroundColor: "#F6F7EB" },
+                      ]}
+                      onPress={generateFootnotes}
+                      disabled={footnotesThinking}
+                    >
+                      {footnotesThinking ? (
+                        <ActivityIndicator
+                          size="small"
+                          color={warmth === 4 ? "#393E41" : "#F6F7EB"}
+                        />
+                      ) : (
+                        <Ionicons
+                          name="sparkles-outline"
+                          size={20}
+                          color={warmth === 4 ? "#393E41" : "#F6F7EB"}
+                        />
+                      )}
+                      <Text
+                        style={[
+                          styles.footnotesButtonText,
+                          warmth === 4 && { color: "#393E41" },
+                          isIPad && { fontSize: 24 },
+                        ]}
+                      >
+                        {footnotesThinking
+                          ? "Generating Footnote..."
+                          : "Generate Footnote"}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 )}
               </View>
             </View>
             <View style={styles.readingProgressContainer}>
               <Text
-                style={[styles.readingProgressText, isIPad && { fontSize: 24 }]}
+                style={[
+                  styles.readingProgressText,
+                  warmth === 4 && { color: "#F6F7EB" },
+                  isIPad && { fontSize: 24 },
+                ]}
               >
                 {Math.floor(readingProgress)}%
               </Text>
@@ -1239,6 +1458,182 @@ export default function EReader() {
           </Animated.View>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* AI Reading Assist Modal */}
+      <Modal
+        animationType="none"
+        transparent={true}
+        visible={showArgumentModal}
+        onRequestClose={closeArgumentModal}
+      >
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+        >
+          <Animated.View
+            style={[styles.modalOverlay, { opacity: argumentModalOpacity }]}
+          >
+            <Animated.View
+              style={[
+                styles.modalContainer,
+                styles.argumentModalContainer,
+                {
+                  opacity: argumentModalOpacity,
+                  transform: [{ scale: argumentModalScale }],
+                },
+              ]}
+            >
+              <View style={styles.argumentModalHeader}>
+                <View style={styles.argumentHeaderIconWrap}>
+                  <Ionicons name="sparkles-outline" size={20} color="#F6F7EB" />
+                </View>
+                <Text
+                  style={[
+                    styles.argumentHeaderTitle,
+                    isIPad && { fontSize: 24 },
+                  ]}
+                >
+                  {assistLabel}
+                </Text>
+                <TouchableOpacity
+                  onPress={closeArgumentModal}
+                  style={styles.closeButton}
+                >
+                  <Ionicons name="close" size={24} color="#F6F7EB" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.argumentResultContainer}>
+                {thinking ? (
+                  <View style={styles.argumentLoadingState}>
+                    <ActivityIndicator size="small" color="#FE7F2D" />
+                    <Text
+                      style={[
+                        styles.argumentLoadingText,
+                        isIPad && { fontSize: 22 },
+                      ]}
+                    >
+                      Thinking...
+                    </Text>
+                  </View>
+                ) : (
+                  <ScrollView
+                    style={styles.argumentScroll}
+                    contentContainerStyle={styles.argumentScrollContent}
+                    showsVerticalScrollIndicator={true}
+                  >
+                    <Text
+                      style={[
+                        styles.argumentResultText,
+                        isIPad && { fontSize: 24 },
+                      ]}
+                    >
+                      {argument || "Ask for an assist using the toolbar icons."}
+                    </Text>
+                  </ScrollView>
+                )}
+              </View>
+
+              <View style={styles.modalButtons}>
+                {needsPremium && !thinking && (
+                  <TouchableOpacity
+                    onPress={goToSettingsFromArgument}
+                    style={styles.saveButton}
+                  >
+                    <Text
+                      style={[
+                        styles.saveButtonText,
+                        isIPad && { fontSize: 24 },
+                      ]}
+                    >
+                      Get Premium
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </Animated.View>
+          </Animated.View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Footnotes Modal */}
+      <Modal
+        animationType="none"
+        transparent={true}
+        visible={showFootnotesModal}
+        onRequestClose={closeFootnotesModal}
+      >
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+        >
+          <Animated.View
+            style={[styles.modalOverlay, { opacity: footnoteModalOpacity }]}
+          >
+            <Animated.View
+              style={[
+                styles.modalContainer,
+                styles.argumentModalContainer,
+                {
+                  opacity: footnoteModalOpacity,
+                  transform: [{ scale: footnoteModalScale }],
+                },
+              ]}
+            >
+              <View style={styles.argumentModalHeader}>
+                <View style={styles.argumentHeaderIconWrap}>
+                  <Ionicons name="sparkles-outline" size={20} color="#F6F7EB" />
+                </View>
+                <Text
+                  style={[
+                    styles.argumentHeaderTitle,
+                    isIPad && { fontSize: 24 },
+                  ]}
+                >
+                  Footnote
+                </Text>
+                <TouchableOpacity
+                  onPress={closeFootnotesModal}
+                  style={styles.closeButton}
+                >
+                  <Ionicons name="close" size={24} color="#F6F7EB" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.argumentResultContainer}>
+                <ScrollView
+                  style={styles.argumentScroll}
+                  contentContainerStyle={styles.argumentScrollContent}
+                  showsVerticalScrollIndicator={true}
+                >
+                  {footnoteHighlight && (
+                    <Text
+                      style={[
+                        styles.argumentResultText,
+                        styles.footnoteHighlightText,
+                        isIPad && { fontSize: 24 },
+                      ]}
+                    >
+                      {footnoteHighlight}
+                    </Text>
+                  )}
+                  <Text
+                    style={[
+                      styles.argumentResultText,
+                      styles.footnoteNoteText,
+                      isIPad && { fontSize: 24 },
+                    ]}
+                  >
+                    {footnoteNote}
+                  </Text>
+                </ScrollView>
+              </View>
+            </Animated.View>
+          </Animated.View>
+        </KeyboardAvoidingView>
+      </Modal>
     </>
   );
 }
@@ -1305,15 +1700,15 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   engagementButtons: {
-    marginTop: 12,
+    marginTop: 20,
     width: "100%",
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    height: 100,
+    height: 64,
   },
   readingProgressContainer: {
-    marginTop: 48,
+    marginTop: 20,
     alignItems: "center",
     justifyContent: "center",
     width: "100%",
@@ -1438,6 +1833,9 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     alignItems: "flex-end",
   },
+  adjustFontSizeCompact: {
+    justifyContent: "center",
+  },
   fontUp: {
     alignItems: "center",
     justifyContent: "center",
@@ -1515,6 +1913,94 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginLeft: 8,
     flex: 1,
+  },
+  selectionActionsContainer: {
+    marginVertical: 8,
+    gap: 8,
+  },
+  footnotesButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#393E41",
+    padding: 12,
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  footnotesButtonText: {
+    color: "#F6F7EB",
+    fontFamily: "BeProVietnam",
+    fontSize: 14,
+    marginLeft: 8,
+    flex: 1,
+  },
+  argumentResultContainer: {
+    borderWidth: 1,
+    borderColor: "#4A4F53",
+    borderRadius: 8,
+    backgroundColor: "#393E41",
+    minHeight: 140,
+    maxHeight: 260,
+    marginBottom: 15,
+  },
+  argumentScroll: {
+    width: "100%",
+  },
+  argumentScrollContent: {
+    padding: 12,
+  },
+  argumentResultText: {
+    fontFamily: "EBGaramond",
+    fontSize: 18,
+    color: "#F6F7EB",
+    lineHeight: 28,
+  },
+  footnoteHighlightText: {
+    fontStyle: "italic",
+  },
+  footnoteNoteText: {
+    marginTop: 8,
+  },
+  argumentLoadingState: {
+    minHeight: 120,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 12,
+  },
+  argumentLoadingText: {
+    marginTop: 10,
+    fontSize: 18,
+    fontFamily: "EBGaramond",
+    color: "#F6F7EB",
+  },
+  argumentModalContainer: {
+    backgroundColor: "#2F3337",
+  },
+  argumentModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 14,
+  },
+  argumentHeaderTitle: {
+    flex: 1,
+    marginLeft: 10,
+    color: "#F6F7EB",
+    fontSize: 20,
+    fontFamily: "BeProVietnam",
+  },
+  argumentHeaderIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#393E41",
+    borderWidth: 1,
+    borderColor: "#4A4F53",
+    alignItems: "center",
+    justifyContent: "center",
   },
   // Modal styles
   modalOverlay: {
@@ -1609,7 +2095,7 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontFamily: "BeProVietnam",
     fontSize: 16,
-    color: "#F6F7EB",
+    color: "#393E41",
   },
   disabledButton: {
     opacity: 0.6,

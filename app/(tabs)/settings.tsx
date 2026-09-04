@@ -10,6 +10,7 @@ import {
   Platform,
   useWindowDimensions,
 } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useState, useEffect } from "react";
 import {
@@ -343,6 +344,43 @@ export default function Settings() {
           <ActivityIndicator size="large" color="#F6F7EB" />
         ) : (
           <View style={styles.form}>
+            {!hasPremium && (
+              <TouchableOpacity
+                style={styles.premiumActionButton}
+                onPress={presentPaywall}
+              >
+                <View style={styles.premiumActionButtonContent}>
+                  <Ionicons
+                    name="sparkles-outline"
+                    size={isIPad ? 24 : 18}
+                    color="#393E41"
+                  />
+                  <Text
+                    style={[
+                      styles.premiumActionButtonText,
+                      isIPad && { fontSize: 24 },
+                    ]}
+                  >
+                    Upgrade to Sumi Premium
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            )}
+            {hasPremium && (
+              <TouchableOpacity
+                style={styles.premiumActionButton}
+                onPress={manageSubscription}
+              >
+                <Text
+                  style={[
+                    styles.premiumActionButtonText,
+                    isIPad && { fontSize: 24 },
+                  ]}
+                >
+                  Manage Sumi Premium
+                </Text>
+              </TouchableOpacity>
+            )}
             <Text style={[styles.formLabel, isIPad && { fontSize: 24 }]}>
               Change ReaderTag
             </Text>
@@ -460,36 +498,6 @@ export default function Settings() {
                 </TouchableOpacity>
               ))}
             </View>
-            {!hasPremium && (
-              <TouchableOpacity
-                style={styles.premiumActionButton}
-                onPress={presentPaywall}
-              >
-                <Text
-                  style={[
-                    styles.premiumActionButtonText,
-                    isIPad && { fontSize: 24 },
-                  ]}
-                >
-                  Explore Sumi Premium
-                </Text>
-              </TouchableOpacity>
-            )}
-            {hasPremium && (
-              <TouchableOpacity
-                style={styles.premiumActionButton}
-                onPress={manageSubscription}
-              >
-                <Text
-                  style={[
-                    styles.premiumActionButtonText,
-                    isIPad && { fontSize: 24 },
-                  ]}
-                >
-                  Manage Sumi Premium
-                </Text>
-              </TouchableOpacity>
-            )}
             <TouchableOpacity
               style={styles.deleteAccountButton}
               onPress={() => router.push("/deleteaccount" as never)}
@@ -747,17 +755,24 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   premiumActionButton: {
-    backgroundColor: "#F6F7EB",
+    backgroundColor: "#FE7F2D",
     paddingVertical: 16,
     borderRadius: 8,
     alignItems: "center",
     width: "100%",
     marginTop: 12,
+    marginBottom: 32,
   },
   premiumActionButtonText: {
     color: "#393E41",
     fontFamily: "BeProVietnam",
     fontSize: 16,
+  },
+  premiumActionButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
   },
   getPremiumText: {
     color: "#F6F7EB",
