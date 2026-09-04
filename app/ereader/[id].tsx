@@ -105,6 +105,7 @@ const BounceView = forwardRef<any, BounceInProps>((props, ref) => {
 export default function EReader() {
   const { width } = useWindowDimensions();
   const isIPad = Platform.OS === "ios" && Platform.isPad;
+  const isCompactViewport = width <= 375;
   let { id } = useLocalSearchParams();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -144,6 +145,7 @@ export default function EReader() {
   const [thinking, setThinking] = useState(false);
   const [footnotesThinking, setFootnotesThinking] = useState(false);
   const [selectedText, setSelectedText] = useState("");
+  const [footnoteSourceHighlight, setFootnoteSourceHighlight] = useState("");
   const [quotes, setQuotes] = useState<QuoteType[]>([]);
   const [showMarginaliaModal, setShowMarginaliaModal] = useState(false);
   const [showArgumentModal, setShowArgumentModal] = useState(false);
@@ -529,7 +531,7 @@ export default function EReader() {
       type === "argument"
         ? "Argument"
         : type === "bullets"
-          ? "Summary Notes"
+          ? "Key Plot Points"
           : "Synopsis";
 
     setAssistLabel(nextLabel);
@@ -580,7 +582,9 @@ export default function EReader() {
   async function generateFootnotes() {
     if (!selectedText) return;
 
+    const highlight = selectedText;
     setFootnotes("");
+    setFootnoteSourceHighlight(highlight);
     setFootnotesThinking(true);
 
     try {
@@ -590,9 +594,23 @@ export default function EReader() {
         throw new Error("No valid session");
       }
 
+      const customerInfo = await Purchases.getCustomerInfo();
+      const hasSubscription =
+        !!customerInfo.entitlements.active[premiumEntitlementId];
+
+      if (!hasSubscription) {
+        setAssistLabel("Explanatory Notes");
+        setArgument(
+          "Upgrade to Premium to unlock AI-powered explanatory notes written in a critical style and explore your selected passages in greater depth.",
+        );
+        setNeedsPremium(true);
+        openArgumentModal();
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke("ai-footnotes", {
         body: {
-          highlight: selectedText,
+          highlight,
           author: extract.author,
           title: extract.title,
           chapter: extract.chapter,
@@ -611,6 +629,19 @@ export default function EReader() {
     }
   }
 
+  const splitFootnoteResult = (result: string, highlight: string) => {
+    const footnotePrefix = `${highlight}:`;
+
+    if (!highlight || !result.startsWith(footnotePrefix)) {
+      return { highlight: "", note: result };
+    }
+
+    return {
+      highlight: footnotePrefix,
+      note: result.slice(footnotePrefix.length).trimStart(),
+    };
+  };
+
   useEffect(() => {
     if (footnotes && footnotes.trim().length > 0) {
       openFootnotesModal();
@@ -620,6 +651,8 @@ export default function EReader() {
   const generateChapterArgument = () => callGrok("argument");
   const generateChapterBulletPoints = () => callGrok("bullets");
   const generateSynopsis = () => callGrok("synopsis");
+  const { highlight: footnoteHighlight, note: footnoteNote } =
+    splitFootnoteResult(footnotes, footnoteSourceHighlight);
 
   const isSameDay = (date1: Date, date2: Date): boolean => {
     return (
@@ -1009,11 +1042,17 @@ export default function EReader() {
         ) : (
           <View style={styles.contentContainer}>
             <View style={styles.mainReaderSection}>
-              <View style={styles.adjustFontSize}>
+              <View
+                style={[
+                  styles.adjustFontSize,
+                  isCompactViewport && styles.adjustFontSizeCompact,
+                ]}
+              >
                 <TouchableOpacity
                   style={[
                     styles.fontUp,
                     warmth === 4 && { backgroundColor: "#F6F7EB" },
+                    isCompactViewport && { height: 40, width: 40 },
                     isIPad && { height: 60, width: 60 },
                   ]}
                   onPress={fontUp}
@@ -1028,6 +1067,7 @@ export default function EReader() {
                   style={[
                     styles.fontDown,
                     warmth === 4 && { backgroundColor: "#F6F7EB" },
+                    isCompactViewport && { height: 40, width: 40 },
                     isIPad && { height: 60, width: 60 },
                   ]}
                   onPress={fontDown}
@@ -1042,6 +1082,7 @@ export default function EReader() {
                   style={[
                     styles.brightness,
                     warmth === 4 && { backgroundColor: "#F6F7EB" },
+                    isCompactViewport && { height: 40, width: 40 },
                     isIPad && { height: 60, width: 60 },
                   ]}
                   onPress={adjustBrightness}
@@ -1056,6 +1097,7 @@ export default function EReader() {
                   style={[
                     styles.summary,
                     warmth === 4 && { backgroundColor: "#F6F7EB" },
+                    isCompactViewport && { height: 40, width: 40 },
                     isIPad && { height: 60, width: 60 },
                   ]}
                   onPress={generateChapterArgument}
@@ -1070,6 +1112,7 @@ export default function EReader() {
                   style={[
                     styles.summary,
                     warmth === 4 && { backgroundColor: "#F6F7EB" },
+                    isCompactViewport && { height: 40, width: 40 },
                     isIPad && { height: 60, width: 60 },
                   ]}
                   onPress={generateChapterBulletPoints}
@@ -1084,6 +1127,7 @@ export default function EReader() {
                   style={[
                     styles.summary,
                     warmth === 4 && { backgroundColor: "#F6F7EB" },
+                    isCompactViewport && { height: 40, width: 40 },
                     isIPad && { height: 60, width: 60 },
                   ]}
                   onPress={generateSynopsis}
@@ -1098,6 +1142,7 @@ export default function EReader() {
                   style={[
                     styles.summary,
                     warmth === 4 && { backgroundColor: "#F6F7EB" },
+                    isCompactViewport && { height: 40, width: 40 },
                     isIPad && { height: 60, width: 60 },
                   ]}
                   onPress={openMarginaliaModal}
@@ -1217,7 +1262,11 @@ export default function EReader() {
             </View>
             <View style={styles.readingProgressContainer}>
               <Text
-                style={[styles.readingProgressText, isIPad && { fontSize: 24 }]}
+                style={[
+                  styles.readingProgressText,
+                  warmth === 4 && { color: "#F6F7EB" },
+                  isIPad && { fontSize: 24 },
+                ]}
               >
                 {Math.floor(readingProgress)}%
               </Text>
@@ -1559,13 +1608,25 @@ export default function EReader() {
                   contentContainerStyle={styles.argumentScrollContent}
                   showsVerticalScrollIndicator={true}
                 >
+                  {footnoteHighlight && (
+                    <Text
+                      style={[
+                        styles.argumentResultText,
+                        styles.footnoteHighlightText,
+                        isIPad && { fontSize: 24 },
+                      ]}
+                    >
+                      {footnoteHighlight}
+                    </Text>
+                  )}
                   <Text
                     style={[
                       styles.argumentResultText,
+                      styles.footnoteNoteText,
                       isIPad && { fontSize: 24 },
                     ]}
                   >
-                    {footnotes}
+                    {footnoteNote}
                   </Text>
                 </ScrollView>
               </View>
@@ -1772,6 +1833,9 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     alignItems: "flex-end",
   },
+  adjustFontSizeCompact: {
+    justifyContent: "center",
+  },
   fontUp: {
     alignItems: "center",
     justifyContent: "center",
@@ -1893,6 +1957,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#F6F7EB",
     lineHeight: 28,
+  },
+  footnoteHighlightText: {
+    fontStyle: "italic",
+  },
+  footnoteNoteText: {
+    marginTop: 8,
   },
   argumentLoadingState: {
     minHeight: 120,
