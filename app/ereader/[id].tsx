@@ -115,6 +115,8 @@ export default function EReader() {
   const argumentModalScale = useRef(new Animated.Value(0.8)).current;
   const footnoteModalOpacity = useRef(new Animated.Value(0)).current;
   const footnoteModalScale = useRef(new Animated.Value(0.8)).current;
+  const composeModalOpacity = useRef(new Animated.Value(0)).current;
+  const composeModalScale = useRef(new Animated.Value(0.8)).current;
 
   const [extract, setExtract] = useState<ExtractType>({
     id: 0,
@@ -159,6 +161,10 @@ export default function EReader() {
   const [scrollPosition, setScrollPosition] = useState(0);
   const [streak, setStreak] = useState<StreakType | null>(null);
   const [needsPremium, setNeedsPremium] = useState(false);
+  const [showComposeModal, setShowComposeModal] = useState(false);
+  const [composeText, setComposeText] = useState("");
+  const [composeGrade, setComposeGrade] = useState<string | null>(null);
+  const [composeLoading, setComposeLoading] = useState(false);
   const webViewRef = useRef<WebView>(null);
 
   const injectedJavaScript = `
@@ -519,6 +525,81 @@ export default function EReader() {
     ]).start(() => {
       setShowFootnotesModal(false);
     });
+  };
+
+  const openComposeModal = () => {
+    setComposeText("");
+    setComposeGrade(null);
+    setShowComposeModal(true);
+    composeModalOpacity.setValue(0);
+    composeModalScale.setValue(0.8);
+
+    Animated.parallel([
+      Animated.timing(composeModalOpacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.spring(composeModalScale, {
+        toValue: 1,
+        tension: 55,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const closeComposeModal = () => {
+    Animated.parallel([
+      Animated.timing(composeModalOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(composeModalScale, {
+        toValue: 0.8,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setShowComposeModal(false);
+    });
+  };
+
+  const submitCompose = async () => {
+    if (!composeText.trim()) return;
+
+    setComposeLoading(true);
+    setComposeGrade(null);
+
+    try {
+      const { data: session } = await supabase.auth.getSession();
+
+      if (!session?.session?.access_token) {
+        throw new Error("No valid session");
+      }
+
+      const { data, error } = await supabase.functions.invoke("ai-grading", {
+        body: {
+          chapter: extract.fulltext,
+          summary: composeText,
+        },
+        headers: {
+          Authorization: `Bearer ${session.session.access_token}`,
+        },
+      });
+      if (error) throw error;
+
+      setComposeGrade(String(data.result ?? data.grade ?? ""));
+    } catch (error) {
+      console.error("Error grading response:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error grading your response. Please try again.",
+      });
+    } finally {
+      setComposeLoading(false);
+    }
   };
 
   const goToSettingsFromArgument = () => {
@@ -1288,8 +1369,18 @@ export default function EReader() {
                     isIPad && { fontSize: 24 },
                   ]}
                 >
-                  Save Progress &amp;
+                  Return to Feed
                 </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.returnAnchor}
+                onPress={openComposeModal}
+              >
+                <Ionicons
+                  name="pencil"
+                  size={isIPad ? 36 : 24}
+                  color="#77966D"
+                />
                 <Text
                   style={[
                     styles.shoppingText,
@@ -1297,7 +1388,7 @@ export default function EReader() {
                     isIPad && { fontSize: 24 },
                   ]}
                 >
-                  Return to Feed
+                  Compose
                 </Text>
               </TouchableOpacity>
               <View style={styles.subscribeContainer}>
@@ -1629,6 +1720,106 @@ export default function EReader() {
                     {footnoteNote}
                   </Text>
                 </ScrollView>
+              </View>
+            </Animated.View>
+          </Animated.View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Compose Modal */}
+      <Modal
+        animationType="none"
+        transparent={true}
+        visible={showComposeModal}
+        onRequestClose={closeComposeModal}
+      >
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+        >
+          <Animated.View
+            style={[styles.modalOverlay, { opacity: composeModalOpacity }]}
+          >
+            <Animated.View
+              style={[
+                styles.modalContainer,
+                {
+                  opacity: composeModalOpacity,
+                  transform: [{ scale: composeModalScale }],
+                },
+              ]}
+            >
+              <View style={styles.modalHeader}>
+                <Text style={[styles.modalTitle, isIPad && { fontSize: 24 }]}>
+                  Compose
+                </Text>
+                {composeGrade !== null && (
+                  <Text
+                    style={[
+                      styles.composeGradeText,
+                      isIPad && { fontSize: 28 },
+                    ]}
+                  >
+                    {composeGrade}
+                  </Text>
+                )}
+                <TouchableOpacity
+                  onPress={closeComposeModal}
+                  style={styles.closeButton}
+                >
+                  <Ionicons name="close" size={24} color="#393E41" />
+                </TouchableOpacity>
+              </View>
+
+              <TextInput
+                style={[styles.marginaliaInput, { fontSize }]}
+                multiline={true}
+                numberOfLines={8}
+                value={composeText}
+                onChangeText={setComposeText}
+                placeholder="Write your response..."
+                placeholderTextColor="#666"
+                textAlignVertical="top"
+              />
+
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  onPress={closeComposeModal}
+                  style={styles.cancelButton}
+                >
+                  <Text
+                    style={[
+                      styles.cancelButtonText,
+                      isIPad && { fontSize: 24 },
+                    ]}
+                  >
+                    Cancel
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={submitCompose}
+                  style={[
+                    styles.saveButton,
+                    (composeLoading || !composeText.trim()) &&
+                      styles.disabledButton,
+                  ]}
+                  disabled={composeLoading || !composeText.trim()}
+                >
+                  {composeLoading ? (
+                    <ActivityIndicator size="small" color="#F6F7EB" />
+                  ) : (
+                    <Text
+                      style={[
+                        styles.saveButtonText,
+                        isIPad && { fontSize: 24 },
+                      ]}
+                    >
+                      Submit
+                    </Text>
+                  )}
+                </TouchableOpacity>
               </View>
             </Animated.View>
           </Animated.View>
@@ -2099,5 +2290,11 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.6,
+  },
+  composeGradeText: {
+    fontSize: 20,
+    fontFamily: "BeProVietnam",
+    color: "#FE7F2D",
+    marginHorizontal: 10,
   },
 });
