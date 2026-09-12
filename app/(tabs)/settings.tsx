@@ -478,18 +478,19 @@ export default function Settings() {
               {intervals.map((option) => (
                 <TouchableOpacity
                   key={option.value}
-                  style={styles.radioButtonContainer}
+                  style={[
+                    styles.radioButtonContainer,
+                    interval === option.value &&
+                      styles.radioButtonContainerSelected,
+                  ]}
+                  activeOpacity={0.7}
                   onPress={() => changeSubscriptionInterval(option.value)}
                 >
-                  <View
-                    style={[
-                      styles.radioButton,
-                      interval === option.value && styles.radioButtonSelected,
-                    ]}
-                  />
                   <Text
                     style={[
                       styles.radioButtonLabel,
+                      interval === option.value &&
+                        styles.radioButtonLabelSelected,
                       isIPad && { fontSize: 24 },
                     ]}
                   >
@@ -498,6 +499,14 @@ export default function Settings() {
                 </TouchableOpacity>
               ))}
             </View>
+
+            <TouchableOpacity style={styles.logoutButton} onPress={Logout}>
+              <Text
+                style={[styles.logoutButtonText, isIPad && { fontSize: 24 }]}
+              >
+                Logout
+              </Text>
+            </TouchableOpacity>
             <TouchableOpacity
               style={styles.deleteAccountButton}
               onPress={() => router.push("/deleteaccount" as never)}
@@ -509,13 +518,6 @@ export default function Settings() {
                 ]}
               >
                 Delete Account
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.logoutButton} onPress={Logout}>
-              <Text
-                style={[styles.logoutButtonText, isIPad && { fontSize: 24 }]}
-              >
-                Logout
               </Text>
             </TouchableOpacity>
           </View>
@@ -610,7 +612,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     width: "100%",
-    marginBottom: 16,
+    marginBottom: 40,
     marginTop: 16,
   },
   changeReaderTagButton: {
@@ -619,7 +621,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     width: "100%",
-    marginBottom: 12,
+    marginBottom: 40,
     marginTop: 16,
   },
   changeEmailButton: {
@@ -628,7 +630,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     width: "100%",
-    marginBottom: 12,
+    marginBottom: 40,
     marginTop: 16,
   },
   buttonLogout: {
@@ -705,33 +707,36 @@ const styles = StyleSheet.create({
   },
   intervalDropdown: {
     flex: 1,
-    alignItems: "flex-start",
+    alignItems: "stretch",
     justifyContent: "center",
     minHeight: 100,
   },
   radioButtonContainer: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    minHeight: 56,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
     marginBottom: 12,
-    minHeight: 20,
-  },
-  radioButton: {
-    height: 20,
-    width: 20,
-    borderRadius: 10,
+    borderRadius: 8,
     borderWidth: 2,
     borderColor: "#F6F7EB",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 8,
+    backgroundColor: "transparent",
+    opacity: 0.5,
   },
-  radioButtonSelected: {
+  radioButtonContainerSelected: {
     backgroundColor: "#F6F7EB",
+    opacity: 1,
   },
   radioButtonLabel: {
-    fontSize: 14,
+    fontSize: 16,
     color: "#F6F7EB",
     fontFamily: "BeProVietnam",
+    fontWeight: "600",
+  },
+  radioButtonLabelSelected: {
+    color: "#393E41",
   },
   selectedText: {
     marginTop: 16,
@@ -752,7 +757,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     width: "100%",
-    marginTop: 12,
+    marginTop: 56,
   },
   premiumActionButton: {
     backgroundColor: "#FE7F2D",
@@ -761,7 +766,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "100%",
     marginTop: 12,
-    marginBottom: 32,
+    marginBottom: 40,
   },
   premiumActionButtonText: {
     color: "#393E41",

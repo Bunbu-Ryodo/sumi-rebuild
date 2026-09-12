@@ -15,8 +15,8 @@ import {
   getUserSession,
   // hasActivePremiumSubscription,
 } from "../../supabase_queries/auth.js";
-import { getAllSeries, getStreak } from "../../supabase_queries/subscriptions";
-import { SeriesType, StreakType } from "../../types/types";
+import { getAllSeries } from "../../supabase_queries/subscriptions";
+import { SeriesType } from "../../types/types";
 import React from "react";
 import Series from "../../components/series";
 import { Link } from "expo-router";
@@ -25,16 +25,11 @@ export default function Subscriptions() {
   const { width } = useWindowDimensions();
   const isIPad = Platform.OS === "ios" && Platform.isPad;
   const [series, setSeries] = useState<SeriesType[]>([]);
-  const [streak, setStreak] = useState<StreakType | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchSubscriptionData = async () => {
     setLoading(true);
     const user = await getUserSession();
-    const streakData = await getStreak(user?.id || "");
-    if (streakData) {
-      setStreak(streakData);
-    }
     if (user) {
       const series = await getAllSeries(user.id);
       setSeries(series || []);
@@ -75,22 +70,6 @@ export default function Subscriptions() {
               </View>
             </View>
             <View style={styles.streakHeader}>
-              <Text
-                style={[styles.streakHeaderText, isIPad && { fontSize: 24 }]}
-              >
-                Current Login & Read Streak: {streak?.current_streak}
-              </Text>
-              <Text
-                style={[styles.streakHeaderText, isIPad && { fontSize: 24 }]}
-              >
-                Longest Streak:{" "}
-                {streak && streak.longest_streak > 0
-                  ? streak.longest_streak
-                  : streak?.current_streak}
-              </Text>
-              <View style={styles.headerIconContainer}>
-                <Ionicons name="calendar" size={24} color={"#393E41"} />
-              </View>
               <Link href="/leaderboards" asChild>
                 <TouchableOpacity style={styles.seeLeaderboardButton}>
                   <Text
@@ -146,11 +125,6 @@ const styles = StyleSheet.create({
   newInstallmentsHeader: {
     fontFamily: "BeProVietnam",
     fontSize: 20,
-    color: "#393E41",
-  },
-  streakHeaderText: {
-    fontFamily: "BeProVietnam",
-    fontSize: 16,
     color: "#393E41",
   },
   yourArtworks: {

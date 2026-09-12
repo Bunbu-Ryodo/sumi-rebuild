@@ -26,6 +26,15 @@ import {
 
 type BounceInProps = PropsWithChildren<{}>;
 
+const truncateAtWordBoundary = (text: string, limit: number) => {
+  if (text.length <= limit) return text;
+
+  const truncated = text.slice(0, limit);
+  const lastSpace = truncated.lastIndexOf(" ");
+
+  return lastSpace > -1 ? truncated.slice(0, lastSpace) : truncated;
+};
+
 const BounceView = forwardRef<any, BounceInProps>((props, ref) => {
   const scale = useRef(new Animated.Value(1)).current;
 
@@ -76,7 +85,9 @@ export default function Extract({
   const dividerDots = Array.from({ length: 48 });
   const { width } = useWindowDimensions();
   const isIPad = Platform.OS === "ios" && Platform.isPad;
-  const [preview] = useState(fulltext.slice(0, isIPad ? 840 : 420));
+  const [preview] = useState(
+    truncateAtWordBoundary(fulltext, isIPad ? 840 : 420),
+  );
   const [saved, setSaved] = useState(false);
   const router = useRouter();
   const thumbnailHeight = isIPad ? 500 : 250;

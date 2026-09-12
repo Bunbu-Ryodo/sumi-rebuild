@@ -26,9 +26,6 @@ import {
   getExtractByTextIdChapter,
   updateSubscription,
   appendExtractToSeries,
-  getStreak,
-  resetStreak,
-  createStreak,
 } from "../../supabase_queries/subscriptions";
 import { ExtractType } from "../../types/types.js";
 import Extract from "../../components/extract";
@@ -177,48 +174,10 @@ export default function FeedScreen() {
 
   const checkUserProfileStatus = async function (userId: string) {
     const userProfile = await lookUpUserProfile(userId);
-    const streak = await getStreak(userId);
-    if (!streak) {
-      console.log("Streak not found, creating new streak");
-      await createStreak(userId, userProfile?.username || "???");
-    }
     if (!userProfile) {
       console.log("Profile not found, creating new profile");
-      // const data = await createCustomer();
-      // console.log("Created customer and subscription data");
-
       await createNewProfile(userId, new Date());
     } else if (userProfile) {
-      // if (userProfile.subscription_status == "cancelled") {
-      // console.log("Subscription cancelled, creating new subscription");
-      // const { subscriptionId, status, clientSecret } =
-      //   // await createSubscription(userProfile.stripe_customer_id);
-      // await updateUserProfileSubscription(
-      //   userId,
-      //   subscriptionId,
-      //   status,
-      //   clientSecret,
-      // );
-      // }
-      const today = new Date();
-      const lastLogin = new Date(userProfile.lastLogin);
-      const daysDiff = Math.floor(
-        (today.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24),
-      );
-
-      if (daysDiff > 1) {
-        console.log("Streak broken, resetting streak count");
-
-        const streak = await getStreak(userId);
-        const currentStreak = streak ? streak.current_streak : 0;
-        const longestStreak = streak ? streak.longest_streak : 0;
-        if (currentStreak >= longestStreak) {
-          await resetStreak(userId, currentStreak);
-        } else {
-          await resetStreak(userId, longestStreak);
-        }
-        console.log("Streak reset, checking for new streak");
-      }
       await setLoginDateTime(userId, new Date());
     }
   };
