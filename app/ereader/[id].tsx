@@ -1154,7 +1154,7 @@ export default function EReader() {
                   onPress={generateSynopsis}
                 >
                   <Ionicons
-                    name="help-outline"
+                    name="information-circle"
                     size={isIPad ? 24 : 18}
                     color="#393E41"
                   ></Ionicons>
