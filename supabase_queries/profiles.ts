@@ -1,22 +1,41 @@
 import supabase from "../lib/supabase";
 
-export async function updateSubscriptionInterval(userId: string, interval: number){
+export async function updateSubscriptionInterval(
+  userId: string,
+  interval: number,
+) {
   const { error: fetchError } = await supabase
     .from("profiles")
-    .update({subscriptioninterval: interval})
-    .eq("user_id", userId)
+    .update({ subscriptioninterval: interval })
+    .eq("user_id", userId);
 
-  if(fetchError){
+  if (fetchError) {
     console.error("Error fetching profile:", fetchError);
     return false;
   } else {
-    console.log("Updated subscription interval")
+    console.log("Updated subscription interval");
   }
 }
 
-export async function setStreakChecking(userId: string, streakChecking: boolean){
+export async function setStreakChecking(
+  userId: string,
+  streakChecking: boolean,
+) {
   const { error: fetchError } = await supabase
     .from("profiles")
-    .update({checkForStreak: streakChecking})
-    .eq("user_id", userId)
+    .update({ checkForStreak: streakChecking })
+    .eq("user_id", userId);
+}
+
+export async function updateHighscore(userId: string, highscore: number) {
+  const { error } = await supabase
+    .from("profiles")
+    .update({ highscore })
+    .eq("user_id", userId);
+
+  if (error) {
+    console.error("Error updating highscore:", error);
+    return false;
+  }
+  return true;
 }

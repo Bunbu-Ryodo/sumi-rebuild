@@ -31,7 +31,7 @@ import {
   createReadingProgress,
   updateReadingProgress,
 } from "../../supabase_queries/extracts";
-import { ExtractType, QuoteType, StreakType } from "../../types/types";
+import { ExtractType, QuoteType } from "../../types/types";
 import {
   checkForSubscription,
   createSubscription,
@@ -42,8 +42,6 @@ import {
   hideSeries,
   checkForSeries,
   updateSeriesDueDate,
-  updateStreak,
-  getStreak,
 } from "../../supabase_queries/subscriptions";
 import {
   getUserSession,
@@ -58,10 +56,8 @@ import {
   saveUserQuote,
   getQuoteByUserAndExtract,
 } from "../../supabase_queries/quotes";
-import {
-  getMarginaliaByExtractAndUser,
-  saveMarginalia,
-} from "../../supabase_queries/marginalia";
+import { saveMarginalia } from "../../supabase_queries/marginalia";
+import { updateHighscore } from "../../supabase_queries/profiles";
 import Toast from "react-native-toast-message";
 import Purchases from "react-native-purchases";
 const useTestPayment = process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
@@ -109,8 +105,6 @@ export default function EReader() {
   let { id } = useLocalSearchParams();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const modalOpacity = useRef(new Animated.Value(0)).current;
-  const modalScale = useRef(new Animated.Value(0.8)).current;
   const argumentModalOpacity = useRef(new Animated.Value(0)).current;
   const argumentModalScale = useRef(new Animated.Value(0.8)).current;
   const footnoteModalOpacity = useRef(new Animated.Value(0)).current;
@@ -149,22 +143,20 @@ export default function EReader() {
   const [selectedText, setSelectedText] = useState("");
   const [footnoteSourceHighlight, setFootnoteSourceHighlight] = useState("");
   const [quotes, setQuotes] = useState<QuoteType[]>([]);
-  const [showMarginaliaModal, setShowMarginaliaModal] = useState(false);
   const [showArgumentModal, setShowArgumentModal] = useState(false);
   const [showFootnotesModal, setShowFootnotesModal] = useState(false);
-  const [marginaliaText, setMarginaliaText] = useState("");
-  const [marginaliaLoading, setMarginaliaLoading] = useState(false);
   const [hasPremium, setHasPremium] = useState(false);
   const [readingProgress, setReadingProgress] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
   const [viewHeight, setViewHeight] = useState(0);
   const [scrollPosition, setScrollPosition] = useState(0);
-  const [streak, setStreak] = useState<StreakType | null>(null);
   const [needsPremium, setNeedsPremium] = useState(false);
   const [showComposeModal, setShowComposeModal] = useState(false);
   const [composeText, setComposeText] = useState("");
   const [composeGrade, setComposeGrade] = useState<string | null>(null);
   const [composeLoading, setComposeLoading] = useState(false);
+  const [composeGraded, setComposeGraded] = useState(false);
+  const [composeSaving, setComposeSaving] = useState(false);
   const webViewRef = useRef<WebView>(null);
 
   const injectedJavaScript = `
@@ -350,94 +342,6 @@ export default function EReader() {
     }
   };
 
-  // Marginalia functions
-  const openMarginaliaModal = async () => {
-    setMarginaliaLoading(true);
-    setShowMarginaliaModal(true);
-
-    // Start fade-in animation
-    modalOpacity.setValue(0);
-    modalScale.setValue(0.8);
-
-    Animated.parallel([
-      Animated.timing(modalOpacity, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.spring(modalScale, {
-        toValue: 1,
-        tension: 50,
-        friction: 7,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    try {
-      const existingMarginalia = await getMarginaliaByExtractAndUser(
-        extract.id,
-        userid,
-      );
-      setMarginaliaText(existingMarginalia?.text || "");
-    } catch (error) {
-      console.error("Error fetching marginalia:", error);
-      setMarginaliaText("");
-    } finally {
-      setMarginaliaLoading(false);
-    }
-  };
-
-  const saveMarginaliaText = async () => {
-    setMarginaliaLoading(true);
-    try {
-      const customerInfo = await Purchases.getCustomerInfo();
-      const hasSubscription =
-        !!customerInfo.entitlements.active[premiumEntitlementId];
-
-      if (!hasSubscription) {
-        closeMarginaliaModal();
-        router.push("/settings");
-        return;
-      }
-
-      if (!marginaliaText.trim()) {
-        Alert.alert("Error", "Please enter some text for your marginalia.");
-        return;
-      }
-
-      await saveMarginalia(extract.id, userid, marginaliaText.trim());
-
-      closeMarginaliaModal();
-    } catch (error) {
-      console.error("Error saving marginalia:", error);
-    } finally {
-      setMarginaliaLoading(false);
-    }
-  };
-
-  const goToSettingsFromMarginalia = () => {
-    closeMarginaliaModal();
-    router.push("/settings");
-  };
-
-  const closeMarginaliaModal = () => {
-    Animated.parallel([
-      Animated.timing(modalOpacity, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(modalScale, {
-        toValue: 0.8,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      setShowMarginaliaModal(false);
-      setMarginaliaText("");
-    });
-  };
-
   const currentDue = useRef(new Date().getTime());
 
   const router = useRouter();
@@ -527,9 +431,45 @@ export default function EReader() {
     });
   };
 
+  const handleComposeTextChange = (text: string) => {
+    setComposeText(text);
+    setComposeGraded(false);
+  };
+
+  const saveComposeAttempt = async () => {
+    if (!composeText.trim()) return;
+
+    setComposeSaving(true);
+    try {
+      const score = composeGrade ? Number(composeGrade) : 0;
+
+      await saveMarginalia(extract.id, userid, composeText.trim(), score);
+
+      const profile = await lookUpUserProfile(userid);
+      if (profile && score > (profile.highscore ?? 0)) {
+        await updateHighscore(userid, score);
+      }
+
+      Toast.show({
+        type: "savedQuote",
+        text1: "Marginalia saved successfully",
+      });
+      closeComposeModal();
+    } catch (error) {
+      console.error("Error saving marginalia:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error saving your marginalia. Please try again.",
+      });
+    } finally {
+      setComposeSaving(false);
+    }
+  };
+
   const openComposeModal = () => {
     setComposeText("");
     setComposeGrade(null);
+    setComposeGraded(false);
     setShowComposeModal(true);
     composeModalOpacity.setValue(0);
     composeModalScale.setValue(0.8);
@@ -591,6 +531,7 @@ export default function EReader() {
       if (error) throw error;
 
       setComposeGrade(String(data.result ?? data.grade ?? ""));
+      setComposeGraded(true);
     } catch (error) {
       console.error("Error grading response:", error);
       Toast.show({
@@ -744,29 +685,6 @@ export default function EReader() {
   };
 
   const backToFeed = async () => {
-    if (streak) {
-      const lastUpdated = streak.last_updated
-        ? new Date(streak?.last_updated)
-        : null;
-      const today = new Date();
-      if (lastUpdated !== null && isSameDay(lastUpdated, today)) {
-        console.log("Already read today, streak not incremented");
-      } else {
-        console.log("Incrementing streak from");
-        const updatedStreak = await updateStreak(
-          userid,
-          streak.current_streak + 1,
-          new Date(),
-        );
-        if (updatedStreak) {
-          Toast.show({
-            type: "streakUp",
-            text1: "+1 to your reading streak!",
-          });
-        }
-      }
-    }
-
     await updateReadingProgress(
       userid,
       extract.id,
@@ -821,11 +739,6 @@ export default function EReader() {
     );
 
     const userProfile = await lookUpUserProfile(userId);
-
-    const currentStreak = await getStreak(userId);
-    if (currentStreak) {
-      setStreak(currentStreak);
-    }
 
     let duedate;
     if (userProfile.subscriptioninterval) {
@@ -1219,21 +1132,6 @@ export default function EReader() {
                     color="#393E41"
                   ></Ionicons>
                 </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.summary,
-                    warmth === 4 && { backgroundColor: "#F6F7EB" },
-                    isCompactViewport && { height: 40, width: 40 },
-                    isIPad && { height: 60, width: 60 },
-                  ]}
-                  onPress={openMarginaliaModal}
-                >
-                  <Ionicons
-                    name="create-outline"
-                    size={isIPad ? 24 : 18}
-                    color="#393E41"
-                  ></Ionicons>
-                </TouchableOpacity>
               </View>
               <View style={styles.titleBar}>
                 <Text
@@ -1415,141 +1313,6 @@ export default function EReader() {
           </View>
         )}
       </View>
-      {/* Marginalia Modal */}
-      <Modal
-        animationType="none"
-        transparent={true}
-        visible={showMarginaliaModal}
-        onRequestClose={closeMarginaliaModal}
-      >
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-        >
-          <Animated.View
-            style={[styles.modalOverlay, { opacity: modalOpacity }]}
-          >
-            <Animated.View
-              style={[
-                styles.modalContainer,
-                { backgroundColor: brightnessHex[warmth] },
-                {
-                  opacity: modalOpacity,
-                  transform: [{ scale: modalScale }],
-                },
-              ]}
-            >
-              <View style={styles.modalHeader}>
-                <Text
-                  style={[
-                    styles.modalTitle,
-                    warmth === 4 && { color: "#F6F7EB" },
-                    isIPad && { fontSize: 24 },
-                  ]}
-                >
-                  Reflections
-                </Text>
-                <TouchableOpacity
-                  onPress={closeMarginaliaModal}
-                  style={styles.closeButton}
-                >
-                  <Ionicons
-                    name="close"
-                    size={24}
-                    color={warmth === 4 ? "#F6F7EB" : "#393E41"}
-                  />
-                </TouchableOpacity>
-              </View>
-
-              <Text
-                style={[
-                  styles.modalSubtitle,
-                  warmth === 4 && { color: "#F6F7EB" },
-                  isIPad && { fontSize: 24 },
-                ]}
-              >
-                {extract.title} - Chapter {extract.chapter}
-              </Text>
-
-              <Text
-                style={[
-                  styles.modalHelperText,
-                  warmth === 4 && { color: "#F6F7EB" },
-                  isIPad && { fontSize: 22 },
-                ]}
-              >
-                A Sumi Premium subscription is required to save notes on
-                extracts.
-              </Text>
-
-              <TextInput
-                style={[
-                  styles.marginaliaInput,
-                  { fontSize },
-                  warmth === 4 && {
-                    backgroundColor: "#393E41",
-                    color: "#F6F7EB",
-                    borderColor: "#F6F7EB",
-                  },
-                ]}
-                multiline={true}
-                numberOfLines={8}
-                value={marginaliaText}
-                onChangeText={setMarginaliaText}
-                placeholder="Mark your extract, make it your own..."
-                placeholderTextColor={warmth === 4 ? "#B0B0B0" : "#666"}
-                textAlignVertical="top"
-              />
-
-              <View style={styles.modalButtons}>
-                <TouchableOpacity
-                  onPress={closeMarginaliaModal}
-                  style={[
-                    styles.cancelButton,
-                    warmth === 4 && { borderColor: "#F6F7EB" },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.cancelButtonText,
-                      warmth === 4 && { color: "#F6F7EB" },
-                      isIPad && { fontSize: 24 },
-                    ]}
-                  >
-                    Cancel
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={
-                    hasPremium ? saveMarginaliaText : goToSettingsFromMarginalia
-                  }
-                  style={[
-                    styles.saveButton,
-                    marginaliaLoading && styles.disabledButton,
-                  ]}
-                  disabled={marginaliaLoading}
-                >
-                  {marginaliaLoading ? (
-                    <ActivityIndicator size="small" color="#F6F7EB" />
-                  ) : (
-                    <Text
-                      style={[
-                        styles.saveButtonText,
-                        isIPad && { fontSize: 24 },
-                      ]}
-                    >
-                      {hasPremium ? "Save Notes" : "Get Premium"}
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </Animated.View>
-          </Animated.View>
-        </KeyboardAvoidingView>
-      </Modal>
-
       {/* AI Reading Assist Modal */}
       <Modal
         animationType="none"
@@ -1752,7 +1515,7 @@ export default function EReader() {
             >
               <View style={styles.modalHeader}>
                 <Text style={[styles.modalTitle, isIPad && { fontSize: 24 }]}>
-                  Compose
+                  Marginalia
                 </Text>
                 {composeGrade !== null && (
                   <Text
@@ -1773,39 +1536,49 @@ export default function EReader() {
               </View>
 
               <TextInput
-                style={[styles.marginaliaInput, { fontSize }]}
+                style={[styles.composeInput, { fontSize }]}
                 multiline={true}
                 numberOfLines={8}
                 value={composeText}
-                onChangeText={setComposeText}
-                placeholder="Write your response..."
+                onChangeText={handleComposeTextChange}
+                placeholder="Write about the text. What is the chapter (or the book as a whole) about? What is being said in detail? How is this conveyed? The best notes earn the highest score and rank on the leaderboard. (Aim for a score of 500+ points)."
                 placeholderTextColor="#666"
                 textAlignVertical="top"
               />
 
               <View style={styles.modalButtons}>
                 <TouchableOpacity
-                  onPress={closeComposeModal}
-                  style={styles.cancelButton}
+                  onPress={saveComposeAttempt}
+                  style={[
+                    styles.saveButton,
+                    (composeSaving || !composeText.trim()) &&
+                      styles.disabledButton,
+                  ]}
+                  disabled={composeSaving || !composeText.trim()}
                 >
-                  <Text
-                    style={[
-                      styles.cancelButtonText,
-                      isIPad && { fontSize: 24 },
-                    ]}
-                  >
-                    Cancel
-                  </Text>
+                  {composeSaving ? (
+                    <ActivityIndicator size="small" color="#F6F7EB" />
+                  ) : (
+                    <Text
+                      style={[
+                        styles.saveButtonText,
+                        isIPad && { fontSize: 24 },
+                      ]}
+                    >
+                      Save Attempt
+                    </Text>
+                  )}
                 </TouchableOpacity>
-
                 <TouchableOpacity
                   onPress={submitCompose}
                   style={[
                     styles.saveButton,
-                    (composeLoading || !composeText.trim()) &&
+                    (composeLoading || composeGraded || !composeText.trim()) &&
                       styles.disabledButton,
                   ]}
-                  disabled={composeLoading || !composeText.trim()}
+                  disabled={
+                    composeLoading || composeGraded || !composeText.trim()
+                  }
                 >
                   {composeLoading ? (
                     <ActivityIndicator size="small" color="#F6F7EB" />
@@ -1816,7 +1589,7 @@ export default function EReader() {
                         isIPad && { fontSize: 24 },
                       ]}
                     >
-                      Submit
+                      Grade
                     </Text>
                   )}
                 </TouchableOpacity>
@@ -2207,8 +1980,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F6F7EB",
     borderRadius: 12,
     padding: 20,
-    maxHeight: "95%",
-    minHeight: 300,
+    height: "75%",
   },
   modalScrollView: {
     flex: 1,
@@ -2221,7 +1993,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 20,
-    fontFamily: "EBGaramondItalic",
+    fontFamily: "EBGaramond",
     color: "#393E41",
     flex: 1,
   },
@@ -2256,15 +2028,29 @@ const styles = StyleSheet.create({
     maxHeight: 200,
     marginBottom: 15,
   },
+  composeInput: {
+    borderWidth: 1,
+    borderColor: "#393E41",
+    borderRadius: 8,
+    padding: 12,
+    fontFamily: "EBGaramond",
+    fontSize: 16,
+    backgroundColor: "#F6F7EB",
+    color: "#393E41",
+    height: "82%",
+    marginBottom: 15,
+  },
   modalButtons: {
     flexDirection: "row",
+    flexWrap: "wrap",
     justifyContent: "space-between",
     gap: 12,
     paddingTop: 10,
     backgroundColor: "inherit",
   },
   cancelButton: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: 100,
     padding: 12,
     borderWidth: 1,
     borderColor: "#393E41",
@@ -2277,16 +2063,18 @@ const styles = StyleSheet.create({
     color: "#393E41",
   },
   saveButton: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: 100,
     padding: 12,
-    backgroundColor: "#FE7F2D",
+    backgroundColor: "#393E41",
     borderRadius: 8,
     alignItems: "center",
   },
+
   saveButtonText: {
     fontFamily: "BeProVietnam",
     fontSize: 16,
-    color: "#393E41",
+    color: "#F6F7EB",
   },
   disabledButton: {
     opacity: 0.6,
