@@ -56,8 +56,12 @@ import {
   saveUserQuote,
   getQuoteByUserAndExtract,
 } from "../../supabase_queries/quotes";
-import { saveMarginalia } from "../../supabase_queries/marginalia";
+import {
+  getMarginaliaByExtractAndUser,
+  saveMarginalia,
+} from "../../supabase_queries/marginalia";
 import { updateHighscore } from "../../supabase_queries/profiles";
+import { updateUsername } from "../../supabase_queries/settings";
 import Toast from "react-native-toast-message";
 import Purchases from "react-native-purchases";
 const useTestPayment = process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
@@ -153,6 +157,7 @@ export default function EReader() {
   const [needsPremium, setNeedsPremium] = useState(false);
   const [showComposeModal, setShowComposeModal] = useState(false);
   const [composeText, setComposeText] = useState("");
+  const [composeUsername, setComposeUsername] = useState("");
   const [composeGrade, setComposeGrade] = useState<string | null>(null);
   const [composeLoading, setComposeLoading] = useState(false);
   const [composeGraded, setComposeGraded] = useState(false);
@@ -444,6 +449,7 @@ export default function EReader() {
       const score = composeGrade ? Number(composeGrade) : 0;
 
       await saveMarginalia(extract.id, userid, composeText.trim(), score);
+      await updateUsername(composeUsername.trim());
 
       const profile = await lookUpUserProfile(userid);
       if (profile && score > (profile.highscore ?? 0)) {
@@ -466,13 +472,29 @@ export default function EReader() {
     }
   };
 
-  const openComposeModal = () => {
+  const openComposeModal = async () => {
     setComposeText("");
     setComposeGrade(null);
     setComposeGraded(false);
     setShowComposeModal(true);
     composeModalOpacity.setValue(0);
     composeModalScale.setValue(0.8);
+
+    try {
+      const existing = await getMarginaliaByExtractAndUser(extract.id, userid);
+      if (existing?.text) {
+        setComposeText(existing.text);
+      }
+    } catch (error) {
+      // no existing marginalia for this extract/user
+    }
+
+    try {
+      const profile = await lookUpUserProfile(userid);
+      setComposeUsername(profile?.username || "");
+    } catch (error) {
+      setComposeUsername("");
+    }
 
     Animated.parallel([
       Animated.timing(composeModalOpacity, {
@@ -545,6 +567,11 @@ export default function EReader() {
 
   const goToSettingsFromArgument = () => {
     closeArgumentModal();
+    router.push("/settings");
+  };
+
+  const goToSettingsFromCompose = () => {
+    closeComposeModal();
     router.push("/settings");
   };
 
@@ -1260,15 +1287,15 @@ export default function EReader() {
                   size={isIPad ? 36 : 24}
                   color="#8980F5"
                 />
-                <Text
+                {/* <Text
                   style={[
                     styles.shoppingText,
                     warmth === 4 && { color: "#F6F7EB" },
                     isIPad && { fontSize: 24 },
                   ]}
                 >
-                  Return to Feed
-                </Text>
+                  Return to Fe
+                </Text> */}
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.returnAnchor}
@@ -1279,7 +1306,7 @@ export default function EReader() {
                   size={isIPad ? 36 : 24}
                   color="#77966D"
                 />
-                <Text
+                {/* <Text
                   style={[
                     styles.shoppingText,
                     warmth === 4 && { color: "#F6F7EB" },
@@ -1287,7 +1314,7 @@ export default function EReader() {
                   ]}
                 >
                   Compose
-                </Text>
+                </Text> */}
               </TouchableOpacity>
               <View style={styles.subscribeContainer}>
                 <TouchableOpacity onPress={subscribe}>
@@ -1299,7 +1326,7 @@ export default function EReader() {
                     />
                   </BounceView>
                 </TouchableOpacity>
-                <Text
+                {/* <Text
                   style={[
                     styles.bookmarkText,
                     warmth === 4 && { color: "#F6F7EB" },
@@ -1307,7 +1334,7 @@ export default function EReader() {
                   ]}
                 >
                   Subscribe
-                </Text>
+                </Text> */}
               </View>
             </View>
           </View>
@@ -1330,8 +1357,7 @@ export default function EReader() {
           >
             <Animated.View
               style={[
-                styles.modalContainer,
-                styles.argumentModalContainer,
+                styles.assistModalContainer,
                 {
                   opacity: argumentModalOpacity,
                   transform: [{ scale: argumentModalScale }],
@@ -1393,11 +1419,11 @@ export default function EReader() {
                 {needsPremium && !thinking && (
                   <TouchableOpacity
                     onPress={goToSettingsFromArgument}
-                    style={styles.saveButton}
+                    style={styles.getPremiumButton}
                   >
                     <Text
                       style={[
-                        styles.saveButtonText,
+                        styles.getPremiumButtonText,
                         isIPad && { fontSize: 24 },
                       ]}
                     >
@@ -1428,8 +1454,7 @@ export default function EReader() {
           >
             <Animated.View
               style={[
-                styles.modalContainer,
-                styles.argumentModalContainer,
+                styles.assistModalContainer,
                 {
                   opacity: footnoteModalOpacity,
                   transform: [{ scale: footnoteModalScale }],
@@ -1536,12 +1561,21 @@ export default function EReader() {
               </View>
 
               <TextInput
+                style={styles.composeUsernameInput}
+                value={composeUsername}
+                onChangeText={setComposeUsername}
+                placeholder="Pick a nickname for the leaderboard"
+                placeholderTextColor="#666"
+                autoCapitalize="none"
+              />
+
+              <TextInput
                 style={[styles.composeInput, { fontSize }]}
                 multiline={true}
                 numberOfLines={8}
                 value={composeText}
                 onChangeText={handleComposeTextChange}
-                placeholder="Write about the text. What is the chapter (or the book as a whole) about? What is being said in detail? How is this conveyed? The best notes earn the highest score and rank on the leaderboard. (Aim for a score of 500+ points)."
+                placeholder="Write about the text. What is the chapter about? What is being said in detail? How is it done, and why does it matter? The best notes earn the highest score and rank on the leaderboard. Premium subscription required to rank. (Aim for a score of 500+ points)."
                 placeholderTextColor="#666"
                 textAlignVertical="top"
               />
@@ -1569,30 +1603,52 @@ export default function EReader() {
                     </Text>
                   )}
                 </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={submitCompose}
-                  style={[
-                    styles.saveButton,
-                    (composeLoading || composeGraded || !composeText.trim()) &&
-                      styles.disabledButton,
-                  ]}
-                  disabled={
-                    composeLoading || composeGraded || !composeText.trim()
-                  }
-                >
-                  {composeLoading ? (
-                    <ActivityIndicator size="small" color="#F6F7EB" />
-                  ) : (
+                {hasPremium ? (
+                  <TouchableOpacity
+                    onPress={submitCompose}
+                    style={[
+                      styles.saveButton,
+                      (composeLoading ||
+                        composeGraded ||
+                        !composeText.trim() ||
+                        !composeUsername.trim()) &&
+                        styles.disabledButton,
+                    ]}
+                    disabled={
+                      composeLoading ||
+                      composeGraded ||
+                      !composeText.trim() ||
+                      !composeUsername.trim()
+                    }
+                  >
+                    {composeLoading ? (
+                      <ActivityIndicator size="small" color="#F6F7EB" />
+                    ) : (
+                      <Text
+                        style={[
+                          styles.saveButtonText,
+                          isIPad && { fontSize: 24 },
+                        ]}
+                      >
+                        Grade
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    onPress={goToSettingsFromCompose}
+                    style={styles.getPremiumButton}
+                  >
                     <Text
                       style={[
-                        styles.saveButtonText,
+                        styles.getPremiumButtonText,
                         isIPad && { fontSize: 24 },
                       ]}
                     >
-                      Grade
+                      Get Premium
                     </Text>
-                  )}
-                </TouchableOpacity>
+                  </TouchableOpacity>
+                )}
               </View>
             </Animated.View>
           </Animated.View>
@@ -1906,8 +1962,7 @@ const styles = StyleSheet.create({
     borderColor: "#4A4F53",
     borderRadius: 8,
     backgroundColor: "#393E41",
-    minHeight: 140,
-    maxHeight: 260,
+    flex: 1,
     marginBottom: 15,
   },
   argumentScroll: {
@@ -1940,8 +1995,13 @@ const styles = StyleSheet.create({
     fontFamily: "EBGaramond",
     color: "#F6F7EB",
   },
-  argumentModalContainer: {
+  assistModalContainer: {
+    width: "100%",
+    maxWidth: 500,
     backgroundColor: "#2F3337",
+    borderRadius: 12,
+    padding: 20,
+    height: "45%",
   },
   argumentModalHeader: {
     flexDirection: "row",
@@ -2037,8 +2097,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: "#F6F7EB",
     color: "#393E41",
-    height: "82%",
+    flex: 1,
+    minHeight: 80,
     marginBottom: 15,
+  },
+  composeUsernameInput: {
+    borderWidth: 1,
+    borderColor: "#393E41",
+    borderRadius: 8,
+    height: 44,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontFamily: "BeProVietnam",
+    fontSize: 16,
+    backgroundColor: "#F6F7EB",
+    color: "#393E41",
+    marginBottom: 10,
+    flexGrow: 0,
+    flexShrink: 0,
+    width: "100%",
   },
   modalButtons: {
     flexDirection: "row",
@@ -2070,7 +2147,19 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
   },
-
+  getPremiumButton: {
+    flexGrow: 1,
+    flexBasis: 100,
+    padding: 12,
+    backgroundColor: "#FE7F2D",
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  getPremiumButtonText: {
+    fontFamily: "BeProVietnam",
+    fontSize: 16,
+    color: "#393E41",
+  },
   saveButtonText: {
     fontFamily: "BeProVietnam",
     fontSize: 16,

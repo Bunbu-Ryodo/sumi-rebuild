@@ -12,8 +12,8 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useEffect, useState } from "react";
 import React from "react";
 import { useRouter } from "expo-router";
-import { StreakType } from "../types/types";
-import { getLeaderBoard } from "../supabase_queries/subscriptions";
+import { ProfileHighscoreType } from "../types/types";
+import { getHighscoreLeaderboard } from "../supabase_queries/profiles";
 import { getUserSession } from "../supabase_queries/auth";
 import Purchases from "react-native-purchases";
 
@@ -21,8 +21,9 @@ export default function Leaderboards() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isIPad = Platform.OS === "ios" && Platform.isPad;
-  const [leaderboard, setLeaderboard] = useState<StreakType[]>([]);
-  const [currentUserRow, setCurrentUserRow] = useState<StreakType | null>(null);
+  const [leaderboard, setLeaderboard] = useState<ProfileHighscoreType[]>([]);
+  const [currentUserRow, setCurrentUserRow] =
+    useState<ProfileHighscoreType | null>(null);
   const [currentUserRank, setCurrentUserRank] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasPremium, setHasPremium] = useState(false);
@@ -36,27 +37,25 @@ export default function Leaderboards() {
     const premiumStatus =
       !!customerInfo.entitlements.active[premiumEntitlementId];
 
-    setHasPremium(premiumStatus);
+    // TODO: re-enable paywall - temporarily bypassed to preview the leaderboard
+    // setHasPremium(premiumStatus);
+    setHasPremium(true);
 
-    if (!premiumStatus) {
-      setLeaderboard([]);
-      setCurrentUserRow(null);
-      setCurrentUserRank(null);
-      setLoading(false);
-      return;
-    }
+    // if (!premiumStatus) {
+    //   setLeaderboard([]);
+    //   setCurrentUserRow(null);
+    //   setCurrentUserRank(null);
+    //   setLoading(false);
+    //   return;
+    // }
 
-    const leaderboardData = await getLeaderBoard();
+    const leaderboardData = await getHighscoreLeaderboard();
     if (leaderboardData) {
       setLeaderboard(leaderboardData || []);
 
       if (user) {
         const matchedIndex = leaderboardData.findIndex(
-          (streak) =>
-            (streak as { user_id?: string; userid?: string }).user_id ===
-              user.id ||
-            (streak as { user_id?: string; userid?: string }).userid ===
-              user.id,
+          (profile) => profile.user_id === user.id,
         );
 
         if (matchedIndex !== -1) {
@@ -134,11 +133,8 @@ export default function Leaderboards() {
                 <Text style={[styles.tableHeaderText, styles.usernameColumn]}>
                   User
                 </Text>
-                <Text style={[styles.tableHeaderText, styles.streakColumn]}>
-                  Streak
-                </Text>
                 <Text style={[styles.tableHeaderText, styles.recordColumn]}>
-                  Record
+                  Score
                 </Text>
               </View>
               <View style={[styles.tableRow, styles.currentUserRow]}>
@@ -165,22 +161,12 @@ export default function Leaderboards() {
                 <Text
                   style={[
                     styles.tableCellText,
-                    styles.streakColumn,
-                    { fontSize: isIPad ? 22 : 16 },
-                  ]}
-                >
-                  {currentUserRow.current_streak} days
-                </Text>
-                <Text
-                  style={[
-                    styles.tableCellText,
                     styles.recordColumn,
                     { fontSize: isIPad ? 22 : 16 },
                   ]}
                   numberOfLines={1}
                 >
-                  {currentUserRow.longest_streak ||
-                    currentUserRow.current_streak}
+                  {currentUserRow.highscore}
                 </Text>
               </View>
             </View>
@@ -191,18 +177,15 @@ export default function Leaderboards() {
               <Text style={[styles.tableHeaderText, styles.usernameColumn]}>
                 User
               </Text>
-              <Text style={[styles.tableHeaderText, styles.streakColumn]}>
-                Streak
-              </Text>
               <Text style={[styles.tableHeaderText, styles.recordColumn]}>
-                Record
+                Score
               </Text>
             </View>
           ) : null}
           {!loading &&
             hasPremium &&
-            leaderboard.map((streak, index) => (
-              <View key={streak.id} style={styles.tableRow}>
+            leaderboard.map((profile, index) => (
+              <View key={profile.user_id} style={styles.tableRow}>
                 <View style={styles.rankColumn}>
                   <Text
                     style={[
@@ -230,20 +213,7 @@ export default function Leaderboards() {
                   ]}
                   numberOfLines={1}
                 >
-                  {streak.username}
-                </Text>
-                <Text
-                  style={[
-                    styles.tableCellText,
-                    styles.streakColumn,
-                    {
-                      fontFamily: "BeProVietnam",
-                      fontSize: isIPad ? 24 : 18,
-                      color: "#393E41",
-                    },
-                  ]}
-                >
-                  {streak.current_streak} days
+                  {profile.username}
                 </Text>
                 <Text
                   style={[
@@ -253,9 +223,7 @@ export default function Leaderboards() {
                   ]}
                   numberOfLines={1}
                 >
-                  {streak.longest_streak
-                    ? streak.longest_streak
-                    : streak.current_streak}
+                  {profile.highscore}
                 </Text>
               </View>
             ))}
@@ -408,11 +376,6 @@ const styles = StyleSheet.create({
     flex: 1.4,
     textAlign: "left",
     paddingRight: 8,
-  },
-  streakColumn: {
-    flex: 0.7,
-    textAlign: "center",
-    paddingHorizontal: 4,
   },
   recordColumn: {
     flex: 0.9,

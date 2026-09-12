@@ -39,3 +39,18 @@ export async function updateHighscore(userId: string, highscore: number) {
   }
   return true;
 }
+
+export async function getHighscoreLeaderboard() {
+  const { data: leaderBoard, error } = await supabase
+    .from("profiles")
+    .select("user_id, username, highscore")
+    .not("username", "is", null)
+    .order("highscore", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching highscore leaderboard:", error);
+    return null;
+  }
+
+  return leaderBoard;
+}

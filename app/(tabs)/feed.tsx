@@ -178,11 +178,6 @@ export default function FeedScreen() {
       console.log("Profile not found, creating new profile");
       await createNewProfile(userId, new Date());
     } else if (userProfile) {
-      const today = new Date();
-      const lastLogin = new Date(userProfile.lastLogin);
-      const daysDiff = Math.floor(
-        (today.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24),
-      );
       await setLoginDateTime(userId, new Date());
     }
   };
