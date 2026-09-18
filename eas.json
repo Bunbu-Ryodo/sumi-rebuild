@@ -25,6 +25,10 @@
         "EXPO_PUBLIC_USE_TEST_PAYMENTS": "true"
       }
     },
+    "development-physical": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
     "testing": {
       "distribution": "internal",
       "ios": {

@@ -14,6 +14,10 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 // import { syncStripeCustomerEmailForCurrentUser } from "../supabase_queries/settings";
 import { Platform } from "react-native";
 import Purchases, { LOG_LEVEL } from "react-native-purchases";
+import * as Notifications from "expo-notifications";
+import { useRouter } from "expo-router";
+import { registerForPushNotificationsAsync } from "../lib/notifications";
+import { clearPushToken } from "../supabase_queries/notifications";
 
 const SupabaseContext = createContext(supabase);
 const useTestPayments = process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
@@ -30,6 +34,7 @@ export const useSupabase = () => {
 };
 
 export default function RootLayout() {
+  const router = useRouter();
   const [loaded, error] = useFonts({
     BeProVietnam: require("../assets/fonts/BeVietnamPro-Light.ttf"),
     EBGaramond: require("../assets/fonts/EBGaramondVariable.ttf"),
@@ -108,6 +113,48 @@ export default function RootLayout() {
       authListener.subscription.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    let currentUserId: string | null = null;
+
+    const syncPushToken = async (
+      userId: string | null,
+      previousUserId: string | null,
+    ) => {
+      if (previousUserId && previousUserId !== userId) {
+        await clearPushToken(previousUserId);
+      }
+      if (userId) {
+        await registerForPushNotificationsAsync(userId);
+      }
+    };
+
+    supabase.auth.getSession().then(({ data }) => {
+      currentUserId = data.session?.user?.id ?? null;
+      syncPushToken(currentUserId, null);
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        const nextUserId = session?.user?.id ?? null;
+        syncPushToken(nextUserId, currentUserId);
+        currentUserId = nextUserId;
+      },
+    );
+
+    const responseListener =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        const extractId = response.notification.request.content.data?.extractId;
+        if (extractId) {
+          router.push(`/ereader/${extractId}`);
+        }
+      });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+      responseListener.remove();
+    };
+  }, [router]);
 
   if (!loaded && !error) {
     return null;
