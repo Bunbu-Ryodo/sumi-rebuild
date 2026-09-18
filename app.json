@@ -48,6 +48,13 @@
         {
           "urlScheme": "sumirebuild"
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/ios-icon.png",
+          "color": "#393E41"
+        }
       ]
     ],
     "experiments": {
