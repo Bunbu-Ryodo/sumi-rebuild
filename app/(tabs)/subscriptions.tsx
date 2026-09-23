@@ -15,17 +15,36 @@ import {
   getUserSession,
   // hasActivePremiumSubscription,
 } from "../../supabase_queries/auth.js";
-import { getAllSeries } from "../../supabase_queries/subscriptions";
+import {
+  getAllSeries,
+  processSubscriptions,
+} from "../../supabase_queries/subscriptions";
 import { SeriesType } from "../../types/types";
 import React from "react";
 import Series from "../../components/series";
 import { Link } from "expo-router";
+import Toast from "react-native-toast-message";
 
 export default function Subscriptions() {
   const { width } = useWindowDimensions();
   const isIPad = Platform.OS === "ios" && Platform.isPad;
   const [series, setSeries] = useState<SeriesType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [checkingForInstalments, setCheckingForInstalments] = useState(false);
+
+  const displayNewInstalmentsToast = (count: number) => {
+    Toast.show({
+      type: "newInstalments",
+      text1: `${count} new instalment${count > 1 ? "s" : ""}!`,
+    });
+  };
+
+  const displayErrorToast = (message: string) => {
+    Toast.show({
+      type: "settingsUpdateError",
+      text1: message,
+    });
+  };
 
   const fetchSubscriptionData = async () => {
     setLoading(true);
@@ -34,6 +53,30 @@ export default function Subscriptions() {
       const series = await getAllSeries(user.id);
       setSeries(series || []);
       setLoading(false);
+    }
+  };
+
+  const checkForNewInstalments = async () => {
+    setCheckingForInstalments(true);
+    try {
+      const user = await getUserSession();
+      if (user) {
+        const count = await processSubscriptions(user.id);
+        if (count > 0) {
+          displayNewInstalmentsToast(count);
+          await fetchSubscriptionData();
+        } else {
+          Toast.show({
+            type: "newInstalments",
+            text1: "No new instalments yet",
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Subscription processing error:", err);
+      displayErrorToast("Failed to check for new instalments.");
+    } finally {
+      setCheckingForInstalments(false);
     }
   };
 
@@ -65,16 +108,15 @@ export default function Subscriptions() {
               >
                 {series.length > 0 ? "" : "Subscribe To A Series!"}
               </Text>
-              <View style={styles.headerIconContainer}>
-                <Ionicons name="mail-unread" size={24} color={"#393E41"} />
-              </View>
             </View>
             <View style={styles.streakHeader}>
               <Link href="/leaderboards" asChild>
                 <TouchableOpacity style={styles.seeLeaderboardButton}>
+                  <Ionicons name="globe" size={20} color={"#F6F7EB"} />
                   <Text
                     style={[
                       styles.secondaryButtonText,
+                      styles.checkInstalmentsButtonText,
                       isIPad && { fontSize: 24 },
                     ]}
                   >
@@ -82,6 +124,25 @@ export default function Subscriptions() {
                   </Text>
                 </TouchableOpacity>
               </Link>
+              <TouchableOpacity
+                style={styles.checkInstalmentsButton}
+                onPress={checkForNewInstalments}
+                disabled={checkingForInstalments}
+              >
+                <Ionicons name="mail-unread" size={20} color={"#F6F7EB"} />
+                <Text
+                  style={[
+                    styles.secondaryButtonText,
+                    styles.checkInstalmentsButtonText,
+                    isIPad && { fontSize: 24 },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {checkingForInstalments
+                    ? "Checking..."
+                    : "Check For New Instalments"}
+                </Text>
+              </TouchableOpacity>
             </View>
             <View style={styles.subscriptionSection}>
               {series
@@ -113,7 +174,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   streakHeader: {
-    marginTop: 12,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -132,14 +192,8 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: "#393E41",
   },
-  headerIconContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: 8,
-  },
   extractWrapper: {
     padding: 16,
-    marginTop: 12,
     width: "100%",
   },
   subscriptionSection: {
@@ -189,17 +243,32 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   seeLeaderboardButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 16,
     backgroundColor: "#363E41",
     borderRadius: 8,
-    alignItems: "center",
-    width: "50%",
+    width: "80%",
     marginBottom: 12,
-    marginTop: 16,
+  },
+  checkInstalmentsButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    backgroundColor: "#363E41",
+    borderRadius: 8,
+    width: "80%",
+    marginBottom: 12,
   },
   secondaryButtonText: {
     color: "#F6F7EB",
     fontFamily: "BeProVietnam",
     fontSize: 16,
+  },
+  checkInstalmentsButtonText: {
+    marginLeft: 8,
   },
 });

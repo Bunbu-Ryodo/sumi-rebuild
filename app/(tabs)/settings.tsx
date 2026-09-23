@@ -382,7 +382,7 @@ export default function Settings() {
               </TouchableOpacity>
             )}
             <Text style={[styles.formLabel, isIPad && { fontSize: 24 }]}>
-              Change ReaderTag
+              Pen Name
             </Text>
             <TextInput
               defaultValue={username}
@@ -399,11 +399,11 @@ export default function Settings() {
                   isIPad && { fontSize: 24 },
                 ]}
               >
-                Change ReaderTag
+                Change Pen Name
               </Text>
             </TouchableOpacity>
             <Text style={[styles.formLabel, isIPad && { fontSize: 24 }]}>
-              Change Email
+              Email
             </Text>
             <TextInput
               defaultValue={email}

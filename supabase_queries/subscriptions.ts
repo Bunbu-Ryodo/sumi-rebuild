@@ -1,45 +1,55 @@
-import supabase from '../lib/supabase';
+import supabase from "../lib/supabase";
+import { lookUpUserProfile } from "./auth.js";
 
-export async function getStreak(userId: string){
-  if(!userId){
+export async function getStreak(userId: string) {
+  if (!userId) {
     throw new Error("Missing required parameters");
-  } 
+  }
 
   const { data: streak } = await supabase
-    .from('streaks')
+    .from("streaks")
     .select()
-    .eq('user_id', userId)
+    .eq("user_id", userId)
     .single();
 
-    return streak;
+  return streak;
 }
 
-export async function createStreak(userId: string, username: string){
-  if(!userId){
+export async function createStreak(userId: string, username: string) {
+  if (!userId) {
     throw new Error("Missing required parameters");
-  } 
+  }
 
   const { data: newStreak } = await supabase
-    .from('streaks')
-    .insert({ user_id: userId,  current_streak: 0, longest_streak: 0, username: username})
+    .from("streaks")
+    .insert({
+      user_id: userId,
+      current_streak: 0,
+      longest_streak: 0,
+      username: username,
+    })
     .select()
     .single();
-    return newStreak;
+  return newStreak;
 }
 
-export async function updateStreak(userId: string, newStreakCount: number, lastUpdated: Date){
-  if(!userId || newStreakCount === undefined){
+export async function updateStreak(
+  userId: string,
+  newStreakCount: number,
+  lastUpdated: Date,
+) {
+  if (!userId || newStreakCount === undefined) {
     throw new Error("Missing required parameters");
   }
 
   const { data: updatedStreaks, error } = await supabase
-    .from('streaks')
+    .from("streaks")
     .update({ current_streak: newStreakCount, last_updated: lastUpdated })
-    .eq('user_id', userId)
+    .eq("user_id", userId)
     .select()
     .single();
 
-  if(error){
+  if (error) {
     console.error("Error updating streaks:", error);
     return null;
   }
@@ -47,13 +57,13 @@ export async function updateStreak(userId: string, newStreakCount: number, lastU
   return updatedStreaks;
 }
 
-export async function getLeaderBoard(){
+export async function getLeaderBoard() {
   const { data: leaderBoard, error } = await supabase
-    .from('streaks')
+    .from("streaks")
     .select()
-    .order('current_streak', { ascending: false })
+    .order("current_streak", { ascending: false });
 
-  if(error){
+  if (error) {
     console.error("Error fetching leaderboard:", error);
     return null;
   }
@@ -61,51 +71,74 @@ export async function getLeaderBoard(){
   return leaderBoard;
 }
 
-export async function changeUserNameOnStreak(userId: string, newUsername: string){
-  if(!userId || !newUsername){  
+export async function changeUserNameOnStreak(
+  userId: string,
+  newUsername: string,
+) {
+  if (!userId || !newUsername) {
     throw new Error("Missing required parameters");
   }
-   await supabase
-    .from('streaks')
-    .update({ username: newUsername})
-    .eq('user_id', userId)
+  await supabase
+    .from("streaks")
+    .update({ username: newUsername })
+    .eq("user_id", userId)
     .select()
     .single();
 }
 
-export async function resetStreak(userId: string, longest_streak: number){
-  if(!userId){
+export async function resetStreak(userId: string, longest_streak: number) {
+  if (!userId) {
     throw new Error("Missing required parameters");
   }
 
   const { data: resetStreaks, error } = await supabase
-    .from('streaks')
+    .from("streaks")
     .update({ current_streak: 0, longest_streak: longest_streak })
-    .eq('user_id', userId)
+    .eq("user_id", userId)
     .select()
     .single();
 }
 
-export async function createSubscription(userId: string, textId: number, chapter: number, due: number, subscribeart: string, title: string, author: string){
+export async function createSubscription(
+  userId: string,
+  textId: number,
+  chapter: number,
+  due: number,
+  subscribeart: string,
+  title: string,
+  author: string,
+) {
   if (!userId || !textId || !chapter || !due || !title || !author) {
     throw new Error("Missing required parameters");
   }
 
   const { data: newSubscription } = await supabase
-  .from('subscriptions')
-  .insert({ userid: userId, textid: textId, chapter: chapter, due: due, subscribeart: subscribeart }).select().single()
+    .from("subscriptions")
+    .insert({
+      userid: userId,
+      textid: textId,
+      chapter: chapter,
+      due: due,
+      subscribeart: subscribeart,
+    })
+    .select()
+    .single();
 
   return newSubscription;
 }
 
-export async function activateSubscription(id: number, due: number){
-  if(!id || !due){
+export async function activateSubscription(id: number, due: number) {
+  if (!id || !due) {
     throw new Error("Missing required parameters");
   }
 
-  const { data, error: subscriptionUpdateError } = await supabase.from('subscriptions').update({active: true, due: due }).eq('id', id).select();
+  const { data, error: subscriptionUpdateError } = await supabase
+    .from("subscriptions")
+    .update({ active: true, due: due })
+    .eq("id", id)
+    .select();
 
-  if(subscriptionUpdateError){
+  if (subscriptionUpdateError) {
     console.error("Error activating subscription:", subscriptionUpdateError);
     return null;
   }
@@ -113,91 +146,99 @@ export async function activateSubscription(id: number, due: number){
   return data;
 }
 
-export async function deactivateSubscription(id: number){
-  const { data, error: subscriptionDeactivateError } = await supabase.from('subscriptions').update({active: false}).eq('id', id).select();
+export async function deactivateSubscription(id: number) {
+  const { data, error: subscriptionDeactivateError } = await supabase
+    .from("subscriptions")
+    .update({ active: false })
+    .eq("id", id)
+    .select();
 
-  if(subscriptionDeactivateError){
-    console.error("Error deactivating subscription:", subscriptionDeactivateError);
+  if (subscriptionDeactivateError) {
+    console.error(
+      "Error deactivating subscription:",
+      subscriptionDeactivateError,
+    );
     return null;
   }
 
   return data;
 }
 
-export async function checkForSubscription(userId: string, textId: number){
-    if (!userId || !textId) {
-        throw new Error("Missing required parameters");
-    }
+export async function checkForSubscription(userId: string, textId: number) {
+  if (!userId || !textId) {
+    throw new Error("Missing required parameters");
+  }
 
-    const { data: existingSubscription } = await supabase
-        .from('subscriptions')
-        .select()
-        .match({ userid: userId, textid: textId })
-        .select()
-        .single();
+  const { data: existingSubscription } = await supabase
+    .from("subscriptions")
+    .select()
+    .match({ userid: userId, textid: textId })
+    .select()
+    .single();
 
-    return existingSubscription;
+  return existingSubscription;
 }
 
 export async function getAllDueSubscriptions(userId: string) {
-  if(!userId){
-    throw new Error("Missing required parameters");
-  }
-
-
-  const { data: subscriptions, error } = await supabase
-    .from('subscriptions')
-    .select()
-    .match({ userid: userId, active: true })
-    .lt('due', new Date().getTime())
-    .select();
-
-    if(error){
-      console.error("Error fetching due subscriptions:", error);
-      return null;
-    }
-    return subscriptions;
-}
-
-export async function getAllUpcomingSubscriptions(userId: string){
-  if(!userId){
+  if (!userId) {
     throw new Error("Missing required parameters");
   }
 
   const { data: subscriptions, error } = await supabase
-    .from('subscriptions')
+    .from("subscriptions")
     .select()
     .match({ userid: userId, active: true })
-    .gt('due', new Date().getTime())
+    .lt("due", new Date().getTime())
     .select();
 
-    if(error){
-      console.error("Error fetching active subscriptions:", error);
-      return null;
-    }
-    return subscriptions;
-
+  if (error) {
+    console.error("Error fetching due subscriptions:", error);
+    return null;
+  }
+  return subscriptions;
 }
 
-export async function getExtractByTextIdChapter(textId: number, chapter: number){
-  if(!textId){
+export async function getAllUpcomingSubscriptions(userId: string) {
+  if (!userId) {
+    throw new Error("Missing required parameters");
+  }
+
+  const { data: subscriptions, error } = await supabase
+    .from("subscriptions")
+    .select()
+    .match({ userid: userId, active: true })
+    .gt("due", new Date().getTime())
+    .select();
+
+  if (error) {
+    console.error("Error fetching active subscriptions:", error);
+    return null;
+  }
+  return subscriptions;
+}
+
+export async function getExtractByTextIdChapter(
+  textId: number,
+  chapter: number,
+) {
+  if (!textId) {
     throw new Error("Missing required parameters");
   }
 
   const { data: extract, error } = await supabase
-    .from('extracts')
+    .from("extracts")
     .select()
     .match({ textid: textId, chapter: chapter })
     .single();
 
-    if(error){
-      return null;
-    }
-    return extract;
+  if (error) {
+    return null;
+  }
+  return extract;
 }
 
-export async function unhideSeries(userId: string, subscriptionid: number){
-  if(!userId || !subscriptionid){
+export async function unhideSeries(userId: string, subscriptionid: number) {
+  if (!userId || !subscriptionid) {
     throw new Error("Missing required parameters");
   }
 
@@ -214,8 +255,8 @@ export async function unhideSeries(userId: string, subscriptionid: number){
   return updatedSeries;
 }
 
-export async function hideSeries(userId: string, subscriptionid: number){
-  if(!userId || !subscriptionid){
+export async function hideSeries(userId: string, subscriptionid: number) {
+  if (!userId || !subscriptionid) {
     throw new Error("Missing required parameters");
   }
 
@@ -232,14 +273,13 @@ export async function hideSeries(userId: string, subscriptionid: number){
   return updatedSeries;
 }
 
-
-export async function checkForSeries(userId: string, subscriptionid: number){
-  if(!userId || !subscriptionid){
+export async function checkForSeries(userId: string, subscriptionid: number) {
+  if (!userId || !subscriptionid) {
     throw new Error("Missing required parameters");
   }
 
   const { data: existingSeries } = await supabase
-    .from('series')
+    .from("series")
     .select()
     .match({ userid: userId, subscriptionid: subscriptionid })
     .single();
@@ -247,13 +287,42 @@ export async function checkForSeries(userId: string, subscriptionid: number){
   return existingSeries;
 }
 
-export async function createSeries(userId: string, title: string, author: string, subscriptionid: number, subscribeart: string, extracts: any[], earnedchapters: number, totalchapters: number, sequeldue?: number) {
-    if (!userId || !title || !author || !subscriptionid || !subscribeart || !extracts || earnedchapters === undefined || totalchapters === undefined) {
+export async function createSeries(
+  userId: string,
+  title: string,
+  author: string,
+  subscriptionid: number,
+  subscribeart: string,
+  extracts: any[],
+  earnedchapters: number,
+  totalchapters: number,
+  sequeldue?: number,
+) {
+  if (
+    !userId ||
+    !title ||
+    !author ||
+    !subscriptionid ||
+    !subscribeart ||
+    !extracts ||
+    earnedchapters === undefined ||
+    totalchapters === undefined
+  ) {
     throw new Error("Missing required parameters");
   }
   const { data: instalment, error } = await supabase
-    .from('series')
-    .insert({ userid: userId, title: title, author: author, subscriptionid: subscriptionid, subscribeart: subscribeart, extracts: extracts, earnedchapters: earnedchapters, totalchapters: totalchapters, sequeldue: sequeldue })
+    .from("series")
+    .insert({
+      userid: userId,
+      title: title,
+      author: author,
+      subscriptionid: subscriptionid,
+      subscribeart: subscribeart,
+      extracts: extracts,
+      earnedchapters: earnedchapters,
+      totalchapters: totalchapters,
+      sequeldue: sequeldue,
+    })
     .select()
     .single();
 
@@ -265,54 +334,67 @@ export async function createSeries(userId: string, title: string, author: string
   return instalment;
 }
 
-export async function appendExtractToSeries(userid: string, subscriptionid: number, extract: any, sequeldue: number){
-  if(!userid || !subscriptionid){
+export async function appendExtractToSeries(
+  userid: string,
+  subscriptionid: number,
+  extract: any,
+  sequeldue: number,
+) {
+  if (!userid || !subscriptionid) {
     throw new Error("Missing required parameters");
   }
 
-   const { data: currentSeries, error: cantFindRow } = await supabase
-     .from("series")
-     .select("*")
-     .match({ userid: userid, subscriptionid: subscriptionid })
-     .single();
+  const { data: currentSeries, error: cantFindRow } = await supabase
+    .from("series")
+    .select("*")
+    .match({ userid: userid, subscriptionid: subscriptionid })
+    .single();
 
-     if(cantFindRow){
-       console.error("Error finding instalment row:", cantFindRow);
-       return null;
-     }
+  if (cantFindRow) {
+    console.error("Error finding instalment row:", cantFindRow);
+    return null;
+  }
 
-     const currentExtracts = currentSeries?.extracts || [];
+  const currentExtracts = currentSeries?.extracts || [];
 
-     const updatedExtracts = [...currentExtracts, extract];
+  const updatedExtracts = [...currentExtracts, extract];
 
   const { data: updatedSeries, error } = await supabase
     .from("series")
-    .update({ extracts: updatedExtracts, earnedchapters: currentSeries?.earnedchapters + 1, sequeldue: sequeldue })
+    .update({
+      extracts: updatedExtracts,
+      earnedchapters: currentSeries?.earnedchapters + 1,
+      sequeldue: sequeldue,
+    })
     .match({ userid: userid, subscriptionid: subscriptionid })
     .select()
     .single();
 
-  if(error){
+  if (error) {
     console.error("Error adding extract to instalment:", error);
     return null;
   }
 
-  return updatedSeries
+  return updatedSeries;
 }
 
-export async function updateSeriesDueDate(userId: string, subscriptionid: number, sequeldue: number){
-  if(!userId || !subscriptionid || !sequeldue){
+export async function updateSeriesDueDate(
+  userId: string,
+  subscriptionid: number,
+  sequeldue: number,
+) {
+  if (!userId || !subscriptionid || !sequeldue) {
     throw new Error("Missing required parameters");
   }
 
   const { data: updatedSeries, error } = await supabase
-    .from('series')
+    .from("series")
     .update({ sequeldue: sequeldue })
     .match({ userid: userId, subscriptionid: subscriptionid })
     .select()
     .single();
 
-  if(error){
+  if (error) {
     console.error("Error updating series due date:", error);
     return null;
   }
@@ -320,41 +402,110 @@ export async function updateSeriesDueDate(userId: string, subscriptionid: number
   return updatedSeries;
 }
 
-export async function updateSubscription(subscriptionId: number, chapter: number, due: number){
-  if(!subscriptionId){
+export async function updateSubscription(
+  subscriptionId: number,
+  chapter: number,
+  due: number,
+) {
+  if (!subscriptionId) {
     throw new Error("Missing required parameters");
   }
 
   const { data: updatedSubscription, error } = await supabase
-    .from('subscriptions')
-    .update({chapter: chapter, due: due}) 
-    .eq('id', subscriptionId)
+    .from("subscriptions")
+    .update({ chapter: chapter, due: due })
+    .eq("id", subscriptionId)
     .select()
     .single();
 
-  if(error){
+  if (error) {
     console.error("Error updating subscription:", error);
     return null;
   }
 
-    return updatedSubscription;
+  return updatedSubscription;
 }
 
-export async function getAllSeries(userId: string){
-  if(!userId){
+export async function getAllSeries(userId: string) {
+  if (!userId) {
     throw new Error("Missing required parameters");
   }
 
   const { data: series, error } = await supabase
-    .from('series')
+    .from("series")
     .select()
     .match({ userid: userId, hidden: false })
     .select();
 
-    if(error){
-      console.error("Error fetching series:", error);
-      return null;
+  if (error) {
+    console.error("Error fetching series:", error);
+    return null;
+  }
+
+  return series;
+}
+
+// Turns any due subscriptions into new instalments, returns the number created.
+export async function processSubscriptions(userId: string) {
+  if (!userId) {
+    throw new Error("Missing required parameters");
+  }
+
+  const subscriptions = await getAllDueSubscriptions(userId);
+  let count = 0;
+
+  if (!subscriptions?.length) {
+    console.log("Subscriptions up to date");
+    return count;
+  }
+
+  console.log("User has subscriptions due");
+
+  for (let i = 0; i < subscriptions.length; i++) {
+    const extract = await getExtractByTextIdChapter(
+      subscriptions[i].textid,
+      subscriptions[i].chapter,
+    );
+
+    if (!extract) {
+      console.log("No extract found, possibly end of the text");
+      continue;
     }
 
-    return series;
+    const userProfile = await lookUpUserProfile(userId);
+    let duedate;
+    if (userProfile.subscriptioninterval) {
+      duedate =
+        new Date().getTime() + userProfile.subscriptioninterval * 86400000;
+    } else {
+      duedate = new Date().getTime() + 7 * 86400000;
+    }
+
+    const preciseDate = new Date(duedate);
+    const dueDateMidnight = preciseDate.setHours(0, 0, 0, 0);
+
+    console.log("Set new due date");
+
+    const newInstalment = await appendExtractToSeries(
+      userId,
+      subscriptions[i].id,
+      extract,
+      dueDateMidnight,
+    );
+
+    if (newInstalment) {
+      console.log("Updating subscription to track next due instalment");
+      const updatedSubscription = await updateSubscription(
+        subscriptions[i].id,
+        subscriptions[i].chapter + 1,
+        dueDateMidnight,
+      );
+      if (updatedSubscription) {
+        count++;
+        console.log("Instalment created successfully");
+      }
+    }
+  }
+
+  return count;
 }

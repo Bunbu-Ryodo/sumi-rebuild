@@ -6,19 +6,15 @@ import {
   RefreshControl,
   Platform,
   useWindowDimensions,
-  TouchableOpacity,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useEffect, useState } from "react";
 import React from "react";
-import { useRouter } from "expo-router";
 import { ProfileHighscoreType } from "../types/types";
 import { getHighscoreLeaderboard } from "../supabase_queries/profiles";
 import { getUserSession } from "../supabase_queries/auth";
-import Purchases from "react-native-purchases";
 
 export default function Leaderboards() {
-  const router = useRouter();
   const { width } = useWindowDimensions();
   const isIPad = Platform.OS === "ios" && Platform.isPad;
   const [leaderboard, setLeaderboard] = useState<ProfileHighscoreType[]>([]);
@@ -26,28 +22,10 @@ export default function Leaderboards() {
     useState<ProfileHighscoreType | null>(null);
   const [currentUserRank, setCurrentUserRank] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const [hasPremium, setHasPremium] = useState(false);
-  const useTestPayment = process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
-  const premiumEntitlementId = useTestPayment ? "Sumi Premium" : "premium";
 
   const fetchLeaderboardData = async () => {
     setLoading(true);
     const user = await getUserSession();
-    const customerInfo = await Purchases.getCustomerInfo();
-    const premiumStatus =
-      !!customerInfo.entitlements.active[premiumEntitlementId];
-
-    // TODO: re-enable paywall - temporarily bypassed to preview the leaderboard
-    // setHasPremium(premiumStatus);
-    setHasPremium(true);
-
-    // if (!premiumStatus) {
-    //   setLeaderboard([]);
-    //   setCurrentUserRow(null);
-    //   setCurrentUserRank(null);
-    //   setLoading(false);
-    //   return;
-    // }
 
     const leaderboardData = await getHighscoreLeaderboard();
     if (leaderboardData) {
@@ -92,38 +70,7 @@ export default function Leaderboards() {
         }
       >
         <View style={styles.streakWrapper}>
-          <View style={styles.leaderBoardHeader}>
-            <View style={styles.headerIconContainer}>
-              <Ionicons
-                name="globe"
-                size={isIPad ? 32 : 24}
-                color={"#393E41"}
-              />
-            </View>
-          </View>
-
-          {!loading && !hasPremium ? (
-            <View style={styles.premiumGateCard}>
-              <Text style={styles.premiumGateTitle}>
-                Leaderboard is premium
-              </Text>
-              <Text style={styles.premiumGateCopy}>
-                Unlock the full leaderboard and see how you rank against the
-                rest of the Sumi community.
-              </Text>
-              <TouchableOpacity
-                style={styles.premiumGateButton}
-                onPress={() => router.push("/settings")}
-              >
-                <Text style={styles.premiumGateButtonText}>Get Premium</Text>
-              </TouchableOpacity>
-            </View>
-          ) : null}
-
-          {!loading &&
-          hasPremium &&
-          currentUserRow &&
-          currentUserRank !== null ? (
+          {!loading && currentUserRow && currentUserRank !== null ? (
             <View style={styles.currentUserCard}>
               <Text style={styles.currentUserTitle}>Your ranking</Text>
               <View style={styles.tableHeader}>
@@ -171,7 +118,7 @@ export default function Leaderboards() {
               </View>
             </View>
           ) : null}
-          {!loading && hasPremium && leaderboard.length > 0 ? (
+          {!loading && leaderboard.length > 0 ? (
             <View style={styles.tableHeader}>
               <Text style={[styles.tableHeaderText, styles.rankColumn]}>#</Text>
               <Text style={[styles.tableHeaderText, styles.usernameColumn]}>
@@ -183,7 +130,6 @@ export default function Leaderboards() {
             </View>
           ) : null}
           {!loading &&
-            hasPremium &&
             leaderboard.map((profile, index) => (
               <View key={profile.user_id} style={styles.tableRow}>
                 <View style={styles.rankColumn}>
@@ -243,12 +189,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F6F7EB",
   },
-  leaderBoardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    margin: 8,
-  },
   streakHeader: {
     marginTop: 12,
     alignItems: "center",
@@ -274,49 +214,10 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: "#393E41",
   },
-  headerIconContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: 8,
-  },
   streakWrapper: {
     padding: 16,
     marginTop: 8,
     width: "100%",
-  },
-  premiumGateCard: {
-    width: "100%",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "rgba(57,62,65,0.18)",
-    backgroundColor: "rgba(57,62,65,0.06)",
-    padding: 16,
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  premiumGateTitle: {
-    fontFamily: "BeProVietnam",
-    fontSize: 18,
-    color: "#393E41",
-    marginBottom: 8,
-  },
-  premiumGateCopy: {
-    fontFamily: "BeProVietnam",
-    fontSize: 14,
-    color: "#393E41",
-    lineHeight: 20,
-    marginBottom: 16,
-  },
-  premiumGateButton: {
-    backgroundColor: "#FE7F2D",
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  premiumGateButtonText: {
-    fontFamily: "BeProVietnam",
-    fontSize: 16,
-    color: "#393E41",
   },
   currentUserCard: {
     width: "100%",

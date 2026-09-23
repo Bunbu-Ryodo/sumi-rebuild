@@ -63,9 +63,6 @@ import {
 import { updateHighscore } from "../../supabase_queries/profiles";
 import { updateUsername } from "../../supabase_queries/settings";
 import Toast from "react-native-toast-message";
-import Purchases from "react-native-purchases";
-const useTestPayment = process.env.EXPO_PUBLIC_USE_TEST_PAYMENTS === "true";
-const premiumEntitlementId = useTestPayment ? "Sumi Premium" : "premium";
 
 type BounceInProps = PropsWithChildren<{}>;
 
@@ -149,12 +146,10 @@ export default function EReader() {
   const [quotes, setQuotes] = useState<QuoteType[]>([]);
   const [showArgumentModal, setShowArgumentModal] = useState(false);
   const [showFootnotesModal, setShowFootnotesModal] = useState(false);
-  const [hasPremium, setHasPremium] = useState(false);
   const [readingProgress, setReadingProgress] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
   const [viewHeight, setViewHeight] = useState(0);
   const [scrollPosition, setScrollPosition] = useState(0);
-  const [needsPremium, setNeedsPremium] = useState(false);
   const [showComposeModal, setShowComposeModal] = useState(false);
   const [composeText, setComposeText] = useState("");
   const [composeUsername, setComposeUsername] = useState("");
@@ -565,16 +560,6 @@ export default function EReader() {
     }
   };
 
-  const goToSettingsFromArgument = () => {
-    closeArgumentModal();
-    router.push("/settings");
-  };
-
-  const goToSettingsFromCompose = () => {
-    closeComposeModal();
-    router.push("/settings");
-  };
-
   const callGrok = async (type: "argument" | "bullets" | "synopsis") => {
     const nextLabel =
       type === "argument"
@@ -585,7 +570,6 @@ export default function EReader() {
 
     setAssistLabel(nextLabel);
     setThinking(true);
-    setNeedsPremium(false);
     setArgument("");
     openArgumentModal();
 
@@ -594,18 +578,6 @@ export default function EReader() {
 
       if (!session?.session?.access_token) {
         throw new Error("No valid session");
-      }
-
-      const customerInfo = await Purchases.getCustomerInfo();
-      const hasSubscription =
-        !!customerInfo.entitlements.active[premiumEntitlementId];
-
-      if (!hasSubscription) {
-        setArgument(
-          "Upgrade to Premium to unlock AI-powered reading assists! Generate chapter arguments, bullet point summaries, and synopses to help you engage with the text in a deeper way.",
-        );
-        setNeedsPremium(true);
-        return;
       }
 
       const { data, error } = await supabase.functions.invoke("ai-summary", {
@@ -641,20 +613,6 @@ export default function EReader() {
 
       if (!session?.session?.access_token) {
         throw new Error("No valid session");
-      }
-
-      const customerInfo = await Purchases.getCustomerInfo();
-      const hasSubscription =
-        !!customerInfo.entitlements.active[premiumEntitlementId];
-
-      if (!hasSubscription) {
-        setAssistLabel("Explanatory Notes");
-        setArgument(
-          "Upgrade to Premium to unlock AI-powered explanatory notes written in a critical style and explore your selected passages in greater depth.",
-        );
-        setNeedsPremium(true);
-        openArgumentModal();
-        return;
       }
 
       const { data, error } = await supabase.functions.invoke("ai-footnotes", {
@@ -843,15 +801,6 @@ export default function EReader() {
     const user = await getUserSession();
     if (user) {
       setUserid(user.id);
-
-      const customerInfo = await Purchases.getCustomerInfo();
-      const premiumStatus =
-        !!customerInfo.entitlements.active[premiumEntitlementId];
-
-      setHasPremium(premiumStatus);
-
-      // const premiumStatus = await hasActivePremiumSubscription(user.id);
-      // setHasPremium(premiumStatus);
 
       const extract = await getExtract(id);
 
@@ -1042,15 +991,7 @@ export default function EReader() {
         </html>
       `,
     }),
-    [
-      argument,
-      extract.fulltext,
-      fontSize,
-      needsPremium,
-      quotes,
-      thinking,
-      warmth,
-    ],
+    [argument, extract.fulltext, fontSize, quotes, thinking, warmth],
   );
 
   return (
@@ -1415,23 +1356,7 @@ export default function EReader() {
                 )}
               </View>
 
-              <View style={styles.modalButtons}>
-                {needsPremium && !thinking && (
-                  <TouchableOpacity
-                    onPress={goToSettingsFromArgument}
-                    style={styles.getPremiumButton}
-                  >
-                    <Text
-                      style={[
-                        styles.getPremiumButtonText,
-                        isIPad && { fontSize: 24 },
-                      ]}
-                    >
-                      Get Premium
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
+              <View style={styles.modalButtons}></View>
             </Animated.View>
           </Animated.View>
         </KeyboardAvoidingView>
@@ -1564,7 +1489,7 @@ export default function EReader() {
                 style={styles.composeUsernameInput}
                 value={composeUsername}
                 onChangeText={setComposeUsername}
-                placeholder="Pick a nickname for the leaderboard"
+                placeholder="Choose a pen name."
                 placeholderTextColor="#666"
                 autoCapitalize="none"
               />
@@ -1603,52 +1528,36 @@ export default function EReader() {
                     </Text>
                   )}
                 </TouchableOpacity>
-                {hasPremium ? (
-                  <TouchableOpacity
-                    onPress={submitCompose}
-                    style={[
-                      styles.saveButton,
-                      (composeLoading ||
-                        composeGraded ||
-                        !composeText.trim() ||
-                        !composeUsername.trim()) &&
-                        styles.disabledButton,
-                    ]}
-                    disabled={
-                      composeLoading ||
+                <TouchableOpacity
+                  onPress={submitCompose}
+                  style={[
+                    styles.saveButton,
+                    (composeLoading ||
                       composeGraded ||
                       !composeText.trim() ||
-                      !composeUsername.trim()
-                    }
-                  >
-                    {composeLoading ? (
-                      <ActivityIndicator size="small" color="#F6F7EB" />
-                    ) : (
-                      <Text
-                        style={[
-                          styles.saveButtonText,
-                          isIPad && { fontSize: 24 },
-                        ]}
-                      >
-                        Grade
-                      </Text>
-                    )}
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity
-                    onPress={goToSettingsFromCompose}
-                    style={styles.getPremiumButton}
-                  >
+                      !composeUsername.trim()) &&
+                      styles.disabledButton,
+                  ]}
+                  disabled={
+                    composeLoading ||
+                    composeGraded ||
+                    !composeText.trim() ||
+                    !composeUsername.trim()
+                  }
+                >
+                  {composeLoading ? (
+                    <ActivityIndicator size="small" color="#F6F7EB" />
+                  ) : (
                     <Text
                       style={[
-                        styles.getPremiumButtonText,
+                        styles.saveButtonText,
                         isIPad && { fontSize: 24 },
                       ]}
                     >
-                      Get Premium
+                      Grade
                     </Text>
-                  </TouchableOpacity>
-                )}
+                  )}
+                </TouchableOpacity>
               </View>
             </Animated.View>
           </Animated.View>
@@ -2108,8 +2017,8 @@ const styles = StyleSheet.create({
     height: 44,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    fontFamily: "BeProVietnam",
-    fontSize: 16,
+    fontFamily: "EBGaramondItalic",
+    fontSize: 18,
     backgroundColor: "#F6F7EB",
     color: "#393E41",
     marginBottom: 10,
