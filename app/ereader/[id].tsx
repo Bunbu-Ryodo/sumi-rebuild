@@ -64,7 +64,7 @@ import {
   updateHighscore,
   getLeaderboardEntry,
   createLeaderboardEntry,
-  updateLeaderboardHighscore,
+  updateLeaderboardEntry,
 } from "../../supabase_queries/profiles";
 import { updateUsername } from "../../supabase_queries/settings";
 import Toast from "react-native-toast-message";
@@ -464,8 +464,13 @@ export default function EReader() {
       const leaderboardEntry = await getLeaderboardEntry(userid);
       if (!leaderboardEntry) {
         await createLeaderboardEntry(userid, composeUsername.trim(), score);
-      } else if (score > (leaderboardEntry.highscore ?? 0)) {
-        await updateLeaderboardHighscore(userid, score);
+      } else {
+        const nextHighscore = Math.max(score, leaderboardEntry.highscore ?? 0);
+        await updateLeaderboardEntry(
+          userid,
+          composeUsername.trim(),
+          nextHighscore,
+        );
       }
 
       Toast.show({

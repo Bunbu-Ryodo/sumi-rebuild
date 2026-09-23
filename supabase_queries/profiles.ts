@@ -88,17 +88,18 @@ export async function createLeaderboardEntry(
   return leaderboardEntry;
 }
 
-export async function updateLeaderboardHighscore(
+export async function updateLeaderboardEntry(
   userId: string,
+  username: string,
   highscore: number,
 ) {
   const { error } = await supabase
     .from("leaderboard")
-    .update({ highscore })
+    .update({ username, highscore })
     .eq("user_id", userId);
 
   if (error) {
-    console.error("Error updating leaderboard highscore:", error);
+    console.error("Error updating leaderboard entry:", error);
     return false;
   }
 
