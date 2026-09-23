@@ -37,17 +37,15 @@ export default function Leaderboards() {
     const premiumStatus =
       !!customerInfo.entitlements.active[premiumEntitlementId];
 
-    // TODO: re-enable paywall - temporarily bypassed to preview the leaderboard
-    // setHasPremium(premiumStatus);
-    setHasPremium(true);
+    setHasPremium(premiumStatus);
 
-    // if (!premiumStatus) {
-    //   setLeaderboard([]);
-    //   setCurrentUserRow(null);
-    //   setCurrentUserRank(null);
-    //   setLoading(false);
-    //   return;
-    // }
+    if (!premiumStatus) {
+      setLeaderboard([]);
+      setCurrentUserRow(null);
+      setCurrentUserRank(null);
+      setLoading(false);
+      return;
+    }
 
     const leaderboardData = await getHighscoreLeaderboard();
     if (leaderboardData) {
@@ -92,16 +90,6 @@ export default function Leaderboards() {
         }
       >
         <View style={styles.streakWrapper}>
-          <View style={styles.leaderBoardHeader}>
-            <View style={styles.headerIconContainer}>
-              <Ionicons
-                name="globe"
-                size={isIPad ? 32 : 24}
-                color={"#393E41"}
-              />
-            </View>
-          </View>
-
           {!loading && !hasPremium ? (
             <View style={styles.premiumGateCard}>
               <Text style={styles.premiumGateTitle}>
@@ -243,12 +231,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F6F7EB",
   },
-  leaderBoardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    margin: 8,
-  },
   streakHeader: {
     marginTop: 12,
     alignItems: "center",
@@ -273,11 +255,6 @@ const styles = StyleSheet.create({
     fontFamily: "BeProVietnam",
     fontSize: 20,
     color: "#393E41",
-  },
-  headerIconContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: 8,
   },
   streakWrapper: {
     padding: 16,

@@ -528,6 +528,16 @@ export default function EReader() {
     });
   };
 
+  const goToSettingsFromArgument = () => {
+    closeArgumentModal();
+    router.push("/settings");
+  };
+
+  const goToSettingsFromCompose = () => {
+    closeComposeModal();
+    router.push("/settings");
+  };
+
   const submitCompose = async () => {
     if (!composeText.trim()) return;
 
@@ -563,16 +573,6 @@ export default function EReader() {
     } finally {
       setComposeLoading(false);
     }
-  };
-
-  const goToSettingsFromArgument = () => {
-    closeArgumentModal();
-    router.push("/settings");
-  };
-
-  const goToSettingsFromCompose = () => {
-    closeComposeModal();
-    router.push("/settings");
   };
 
   const callGrok = async (type: "argument" | "bullets" | "synopsis") => {
@@ -849,9 +849,6 @@ export default function EReader() {
         !!customerInfo.entitlements.active[premiumEntitlementId];
 
       setHasPremium(premiumStatus);
-
-      // const premiumStatus = await hasActivePremiumSubscription(user.id);
-      // setHasPremium(premiumStatus);
 
       const extract = await getExtract(id);
 
@@ -1564,7 +1561,7 @@ export default function EReader() {
                 style={styles.composeUsernameInput}
                 value={composeUsername}
                 onChangeText={setComposeUsername}
-                placeholder="Pick a nickname for the leaderboard"
+                placeholder="Choose a pen name."
                 placeholderTextColor="#666"
                 autoCapitalize="none"
               />
@@ -2108,8 +2105,8 @@ const styles = StyleSheet.create({
     height: 44,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    fontFamily: "BeProVietnam",
-    fontSize: 16,
+    fontFamily: "EBGaramondItalic",
+    fontSize: 18,
     backgroundColor: "#F6F7EB",
     color: "#393E41",
     marginBottom: 10,

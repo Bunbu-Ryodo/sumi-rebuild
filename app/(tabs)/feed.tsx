@@ -21,12 +21,7 @@ import {
   // hasActivePremiumSubscription,
 } from "../../supabase_queries/auth.js";
 import { getExtracts } from "../../supabase_queries/feed";
-import {
-  getAllDueSubscriptions,
-  getExtractByTextIdChapter,
-  updateSubscription,
-  appendExtractToSeries,
-} from "../../supabase_queries/subscriptions";
+import { processSubscriptions } from "../../supabase_queries/subscriptions";
 import { ExtractType } from "../../types/types.js";
 import Extract from "../../components/extract";
 import { useRef } from "react";
@@ -88,9 +83,11 @@ export default function FeedScreen() {
         await checkUserProfileStatus(user.id);
         await fetchExtracts();
         setRefreshing(false);
-        processSubscriptions(user.id).catch((err) =>
-          console.error("Subscription processing error:", err),
-        );
+        processSubscriptions(user.id)
+          .then((count) => {
+            if (count > 0) displayNewInstalmentsToast(count);
+          })
+          .catch((err) => console.error("Subscription processing error:", err));
       }
     };
     checkUserAuthenticated();
@@ -189,73 +186,6 @@ export default function FeedScreen() {
       }
       return prev.filter((extract) => extract.id !== id);
     });
-  };
-
-  const processSubscriptions = async function (userId: string) {
-    const user = await getUserSession();
-    const subscriptions = await getAllDueSubscriptions(userId);
-    if (user && subscriptions?.length) {
-      console.log("User has subscriptions due");
-      let count = 0;
-
-      for (let i = 0; i < subscriptions.length; i++) {
-        const extract = await getExtractByTextIdChapter(
-          subscriptions[i].textid,
-          subscriptions[i].chapter,
-        );
-
-        if (!extract) {
-          console.log("No extract found, possibly end of the text");
-          continue;
-        }
-
-        const userProfile = await lookUpUserProfile(userId);
-        let duedate;
-        if (userProfile.subscriptioninterval) {
-          duedate =
-            new Date().getTime() + userProfile.subscriptioninterval * 86400000;
-        } else {
-          duedate = new Date().getTime() + 7 * 86400000;
-        }
-
-        // Comment 162-169, and uncomment 173 for testing
-        // let duedate = new Date().getTime() + 1000;
-
-        const preciseDate = new Date(duedate);
-        const dueDateMidnight = preciseDate.setHours(0, 0, 0, 0);
-
-        console.log("Set new due date");
-
-        if (extract) {
-          console.log("Creating new instalment");
-          const newInstalment = await appendExtractToSeries(
-            userId,
-            subscriptions[i].id,
-            extract,
-            dueDateMidnight,
-          );
-
-          if (newInstalment) {
-            console.log("Updating subscription to track next due instalment");
-            const updatedSubscription = await updateSubscription(
-              subscriptions[i].id,
-              subscriptions[i].chapter + 1,
-              dueDateMidnight,
-            );
-            if (updatedSubscription) {
-              count++;
-              console.log("Instalment created successfully");
-            }
-          }
-        }
-      }
-
-      if (count > 0) {
-        displayNewInstalmentsToast(count);
-      }
-    } else {
-      console.log("Subscriptions up to date");
-    }
   };
 
   const fetchExtracts = async function () {
