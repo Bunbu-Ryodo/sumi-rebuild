@@ -99,16 +99,6 @@ export default function Subscriptions() {
       >
         {!loading && (
           <View style={styles.extractWrapper}>
-            <View style={styles.subscriptionsHeader}>
-              <Text
-                style={[
-                  styles.newInstallmentsHeader,
-                  isIPad && { fontSize: 24 },
-                ]}
-              >
-                {series.length > 0 ? "" : "Subscribe To A Series!"}
-              </Text>
-            </View>
             <View style={styles.streakHeader}>
               <Link href="/leaderboards" asChild>
                 <TouchableOpacity style={styles.seeLeaderboardButton}>
@@ -251,6 +241,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     width: "80%",
     marginBottom: 12,
+    marginTop: 24,
   },
   checkInstalmentsButton: {
     flexDirection: "row",

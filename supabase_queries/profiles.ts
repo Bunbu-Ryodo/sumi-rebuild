@@ -54,3 +54,68 @@ export async function getHighscoreLeaderboard() {
 
   return leaderBoard;
 }
+
+export async function getLeaderboardEntry(userId: string) {
+  const { data: leaderboardEntry, error } = await supabase
+    .from("leaderboard")
+    .select("*")
+    .eq("user_id", userId)
+    .single();
+
+  if (error) {
+    return null;
+  }
+
+  return leaderboardEntry;
+}
+
+export async function createLeaderboardEntry(
+  userId: string,
+  username: string,
+  highscore: number,
+) {
+  const { data: leaderboardEntry, error } = await supabase
+    .from("leaderboard")
+    .insert({ user_id: userId, username, highscore })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error creating leaderboard entry:", error);
+    return null;
+  }
+
+  return leaderboardEntry;
+}
+
+export async function updateLeaderboardEntry(
+  userId: string,
+  username: string,
+  highscore: number,
+) {
+  const { error } = await supabase
+    .from("leaderboard")
+    .update({ username, highscore })
+    .eq("user_id", userId);
+
+  if (error) {
+    console.error("Error updating leaderboard entry:", error);
+    return false;
+  }
+
+  return true;
+}
+
+export async function getLeaderboard() {
+  const { data: leaderBoard, error } = await supabase
+    .from("leaderboard")
+    .select("user_id, username, highscore")
+    .order("highscore", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching leaderboard:", error);
+    return null;
+  }
+
+  return leaderBoard;
+}
