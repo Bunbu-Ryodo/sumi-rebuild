@@ -13,7 +13,7 @@ import { useEffect, useState } from "react";
 import React from "react";
 import { useRouter } from "expo-router";
 import { ProfileHighscoreType } from "../types/types";
-import { getHighscoreLeaderboard } from "../supabase_queries/profiles";
+import { getLeaderboard } from "../supabase_queries/profiles";
 import { getUserSession } from "../supabase_queries/auth";
 import Purchases from "react-native-purchases";
 
@@ -47,7 +47,7 @@ export default function Leaderboards() {
       return;
     }
 
-    const leaderboardData = await getHighscoreLeaderboard();
+    const leaderboardData = await getLeaderboard();
     if (leaderboardData) {
       setLeaderboard(leaderboardData || []);
 

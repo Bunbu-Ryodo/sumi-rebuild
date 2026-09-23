@@ -60,7 +60,12 @@ import {
   getMarginaliaByExtractAndUser,
   saveMarginalia,
 } from "../../supabase_queries/marginalia";
-import { updateHighscore } from "../../supabase_queries/profiles";
+import {
+  updateHighscore,
+  getLeaderboardEntry,
+  createLeaderboardEntry,
+  updateLeaderboardHighscore,
+} from "../../supabase_queries/profiles";
 import { updateUsername } from "../../supabase_queries/settings";
 import Toast from "react-native-toast-message";
 import Purchases from "react-native-purchases";
@@ -454,6 +459,13 @@ export default function EReader() {
       const profile = await lookUpUserProfile(userid);
       if (profile && score > (profile.highscore ?? 0)) {
         await updateHighscore(userid, score);
+      }
+
+      const leaderboardEntry = await getLeaderboardEntry(userid);
+      if (!leaderboardEntry) {
+        await createLeaderboardEntry(userid, composeUsername.trim(), score);
+      } else if (score > (leaderboardEntry.highscore ?? 0)) {
+        await updateLeaderboardHighscore(userid, score);
       }
 
       Toast.show({
@@ -1572,7 +1584,7 @@ export default function EReader() {
                 numberOfLines={8}
                 value={composeText}
                 onChangeText={handleComposeTextChange}
-                placeholder="Write about the text. What is the chapter about? What is being said in detail? How is it done, and why does it matter? The best notes earn the highest score and rank on the leaderboard. Premium subscription required to rank. (Aim for a score of 500+ points)."
+                placeholder="Write about the text. What is the chapter about? What is being said in detail? How is it done, and why does it matter? The best notes earn the highest score and rank on the leaderboard. When happy with your attempt, grade and save it to appear on the leaderboard. Premium subscription required to rank. (Aim for a score of 500+ points)."
                 placeholderTextColor="#666"
                 textAlignVertical="top"
               />
