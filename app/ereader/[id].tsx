@@ -1584,7 +1584,7 @@ export default function EReader() {
                 numberOfLines={8}
                 value={composeText}
                 onChangeText={handleComposeTextChange}
-                placeholder="Write about the text. What is the chapter about? What is being said in detail? How is it done, and why does it matter? The best notes earn the highest score and rank on the leaderboard. When happy with your attempt, grade and save it to appear on the leaderboard. Premium subscription required to rank. (Aim for a score of 500+ points)."
+                placeholder="Write about the text. What is the chapter about? What is being said in detail? How is it done, and why does it matter? The best notes earn the highest score and rank on the leaderboard. When happy with your attempt, grade and save it to rank on the leaderboard. Premium subscription required to rank. (Aim for a score of 500+ points)."
                 placeholderTextColor="#666"
                 textAlignVertical="top"
               />
