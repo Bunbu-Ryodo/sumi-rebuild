@@ -23,6 +23,7 @@ export default function Index() {
   const [taglineIndex, setTaglineIndex] = useState(0);
   const [displayedTagline, setDisplayedTagline] = useState("");
   const [typing, setTyping] = useState(true);
+  const [signInButtonHeight, setSignInButtonHeight] = useState(52);
 
   const router = useRouter();
 
@@ -154,7 +155,13 @@ export default function Index() {
           onChangeText={setPassword}
         ></TextInput>
 
-        <TouchableOpacity style={styles.signInButton} onPress={signInUser}>
+        <TouchableOpacity
+          style={styles.signInButton}
+          onPress={signInUser}
+          onLayout={({ nativeEvent }) =>
+            setSignInButtonHeight(nativeEvent.layout.height)
+          }
+        >
           <Text style={[styles.signInButtonText, isIPad && { fontSize: 24 }]}>
             Sign In
           </Text>
@@ -163,7 +170,7 @@ export default function Index() {
           buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
           buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
           cornerRadius={8}
-          style={styles.button}
+          style={[styles.button, { height: signInButtonHeight }]}
           onPress={signInWithApple}
         />
         <Link href="../register" asChild>
@@ -256,7 +263,6 @@ const styles = StyleSheet.create({
   button: {
     marginTop: 8,
     width: "100%",
-    height: 52,
   },
   signInButton: {
     marginTop: 8,

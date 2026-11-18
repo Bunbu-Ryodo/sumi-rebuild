@@ -7,10 +7,10 @@ import {
   Animated,
   Easing,
   Platform,
-  useWindowDimensions,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import React, {
+  useEffect,
   useImperativeHandle,
   forwardRef,
   useRef,
@@ -83,14 +83,32 @@ export default function Extract({
   userid,
 }: ExtractComponent) {
   const dividerDots = Array.from({ length: 48 });
-  const { width } = useWindowDimensions();
   const isIPad = Platform.OS === "ios" && Platform.isPad;
   const [preview] = useState(
     truncateAtWordBoundary(fulltext, isIPad ? 840 : 420),
   );
   const [saved, setSaved] = useState(false);
+  const [coverAspectRatio, setCoverAspectRatio] = useState(1);
   const router = useRouter();
-  const thumbnailHeight = isIPad ? 500 : 250;
+
+  useEffect(() => {
+    let active = true;
+    setCoverAspectRatio(1);
+    if (coverart) {
+      Image.getSize(
+        coverart,
+        (imageWidth, imageHeight) => {
+          if (active && imageWidth > 0 && imageHeight > 0) {
+            setCoverAspectRatio(imageWidth / imageHeight);
+          }
+        },
+        () => {},
+      );
+    }
+    return () => {
+      active = false;
+    };
+  }, [coverart]);
 
   const handleNavigation = () => {
     router.push({
@@ -195,13 +213,15 @@ export default function Extract({
           </Text>
         )}
       </TouchableOpacity>
-      <TouchableOpacity
-        onPress={handleNavigation}
-        style={[styles.thumbnail, { height: thumbnailHeight }]}
-      >
+      <TouchableOpacity onPress={handleNavigation} style={styles.thumbnail}>
         <Image
           source={{ uri: coverart }}
-          style={[styles.thumbnail, { height: thumbnailHeight }]}
+          style={{
+            width: "100%",
+            aspectRatio: coverAspectRatio,
+            borderRadius: 8,
+          }}
+          resizeMode="contain"
         />
       </TouchableOpacity>
     </View>
@@ -226,7 +246,6 @@ const styles = StyleSheet.create({
     maxWidth: 768,
     alignItems: "center",
     borderRadius: 8,
-    height: 250,
     cursor: "pointer",
   },
   previewText: {
